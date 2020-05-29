@@ -12,33 +12,7 @@
  *   See the License for the specific language governing permissions and  limitations under the License.
  */
 
-package encoding
+package etcd
 
-import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
-
-type T struct {
-	S string
-	I int
-	B bool
-}
-
-func TestEncodeDecode(t *testing.T) {
-
-	data := T{
-		S: "String",
-		I: 1,
-		B: true,
-	}
-
-	encode, err := Encode(data)
-	assert.NoError(t, err, "unexpected encode error")
-
-	var decode T
-	err = Decode(encode, &decode)
-	assert.NoError(t, err, "unexpected decode error")
-
-	assert.Equal(t, data, decode, "Encode and decode values are not equal")
+type Transaction struct {
 }

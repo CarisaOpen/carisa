@@ -14,19 +14,27 @@
 
 package storage
 
+// Entity defines entity context
+type Entity interface {
+	// ToString convert entity to string
+	ToString() string
+}
+
 // CRUD defines the CRUD operations
 type CRUD interface {
-	// Create creates the entity
+	// Create creates the context to create the entity. This context is added to the transaction.
+	// See Txn interface
 	Create()
 }
 
-// Txn defines the transaction operation
+// Txn defines the transaction operations
 type Txn interface {
 	// Do save the operation to transaction
 	Do(ope interface{})
 }
 
-// KVMetadata defines information of the entity for doing CRUD operations
+// KVMetadata defines information of the entity for doing CRUD operations.
+// KVMetadata just works with key-value platforms
 type KVMetadata interface {
 	// GetKey gets the key
 	GetKey(entity interface{}) string

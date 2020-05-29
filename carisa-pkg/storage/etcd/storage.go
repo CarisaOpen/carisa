@@ -16,8 +16,11 @@
 package etcd
 
 import (
+	"fmt"
+	"github.com/carisa/pkg/encoding"
 	"github.com/carisa/pkg/storage"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/pkg/errors"
 )
 
 // Store defines the CRUD operations for etcd
@@ -26,6 +29,16 @@ type Store struct {
 }
 
 // Create implements storage.interface.CRUD.Create
-func (s *Store) Create(entity interface{}, txn storage.Txn) {
-	//txn.Do(clientv3.OpPut(s.info.GetKey(entity),  entity))
+func (s *Store) Create(entity storage.Entity) (error, interface{}) {
+
+	encode, err := encoding.Encode(entity)
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf(
+				"Unexpected encode error creating entity into etcd store. Entity: (%v)",
+				entity.ToString())), nil
+	}
+
+	return err, clientv3.OpPut(s.info.GetKey(entity), encode)
 }
