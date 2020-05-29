@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"github.com/carisa/pkg/encoding"
 	"github.com/carisa/pkg/storage"
-	"github.com/coreos/etcd/clientv3"
 	"github.com/pkg/errors"
+	"go.etcd.io/etcd/clientv3"
 )
 
 // Store defines the CRUD operations for etcd
@@ -29,7 +29,7 @@ type Store struct {
 }
 
 // Create implements storage.interface.CRUD.Create
-func (s *Store) Create(entity storage.Entity) (error, interface{}) {
+func (s *Store) Create(entity storage.Entity) (error, clientv3.Op) {
 
 	encode, err := encoding.Encode(entity)
 	if err != nil {
