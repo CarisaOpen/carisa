@@ -14,10 +14,6 @@
 
 package storage
 
-import (
-	"go.etcd.io/etcd/clientv3"
-)
-
 // Entity defines entity context
 type (
 	Entity interface {
@@ -42,6 +38,6 @@ type (
 	// Txn defines the transaction operations
 	Txn interface {
 		// Do save the operation to transaction
-		Do(ope clientv3.Op)
+		Do(ope bag)
 	}
 )
