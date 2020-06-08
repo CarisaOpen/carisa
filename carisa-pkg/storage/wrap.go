@@ -16,15 +16,8 @@ package storage
 
 import "go.etcd.io/etcd/clientv3"
 
-// bag uncouples the store from its use. Exchanges operations with transactions
-type bag struct {
+// opeWrap uncouples the store from its use. Exchanges operations with transactions
+// This avoids the use of an interface that is slower
+type opeWrap struct {
 	opeEtcd clientv3.Op
-}
-
-func (w bag) ope() clientv3.Op {
-	return w.opeEtcd
-}
-
-func bagEtcd(op clientv3.Op) bag {
-	return bag{opeEtcd: op}
 }

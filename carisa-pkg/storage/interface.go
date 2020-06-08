@@ -14,17 +14,16 @@
 
 package storage
 
+import "context"
+
 // Entity defines entity context
 type (
 	Entity interface {
 		// ToString convert entity to string
 		ToString() string
-	}
-	// KVMetadata defines information of the entity for doing CRUD operations.
-	// KVMetadata just works with key-value platforms
-	KVMetadata interface {
+
 		// GetKey gets the key
-		GetKey(entity Entity) string
+		GetKey() string
 	}
 )
 
@@ -33,11 +32,21 @@ type (
 	CRUD interface {
 		// Create creates the context to create the entity. This context is added to the transaction.
 		// See Txn interface
-		Create()
+		Create(entity Entity) (opeWrap, error)
 	}
+
 	// Txn defines the transaction operations
 	Txn interface {
-		// Do save the operation to transaction
-		Do(ope bag)
+		// Find checks if exists the keyValue. If it is found does DoFound or else does DoNotFound into commit
+		Find(keyValue string)
+
+		// DoFound saves the operations to transaction if it is found into commit
+		DoFound(ope opeWrap)
+
+		// DoNotFound saves the operations to transaction if it is not found into commit
+		DoNotFound(ope opeWrap)
+
+		// Commit commits the transaction
+		Commit(ctx context.Context) (bool, error)
 	}
 )
