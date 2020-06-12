@@ -25,8 +25,13 @@ import (
 
 const message = "message"
 
+type Item struct {
+	t zapcore.FieldType
+	f Field
+}
+
 type tests struct {
-	fields []Field
+	items []Item
 }
 
 func TestZapWrapInfo(t *testing.T) {
@@ -35,7 +40,7 @@ func TestZapWrapInfo(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.InfoLevel)
 
-		l.Info(message, tt.fields...)
+		l.Info(message, convertTo(tt.items)...)
 		check(t, recorded, tt)
 	}
 }
@@ -46,7 +51,7 @@ func TestZapWrapWarn(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.WarnLevel)
 
-		l.Warn(message, tt.fields...)
+		l.Warn(message, convertTo(tt.items)...)
 		check(t, recorded, tt)
 	}
 }
@@ -57,7 +62,7 @@ func TestZapWrapDebug(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.DebugLevel)
 
-		l.Debug(message, tt.fields...)
+		l.Debug(message, convertTo(tt.items)...)
 		check(t, recorded, tt)
 	}
 }
@@ -68,7 +73,7 @@ func TestZapWrapError(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.ErrorLevel)
 
-		l.Error(message, tt.fields...)
+		l.Error(message, convertTo(tt.items)...)
 		check(t, recorded, tt)
 	}
 }
@@ -79,7 +84,7 @@ func TestZapWrapPanic(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.PanicLevel)
 
-		assert.Panics(t, func() { l.Panic(message, tt.fields...) })
+		assert.Panics(t, func() { l.Panic(message, convertTo(tt.items)...) })
 		check(t, recorded, tt)
 	}
 }
@@ -90,7 +95,7 @@ func TestZapWrapCheck(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.InfoLevel)
 
-		l.Check(InfoLevel, message, tt.fields...)
+		l.Check(InfoLevel, message, convertTo(tt.items)...)
 		check(t, recorded, tt)
 	}
 }
@@ -112,13 +117,14 @@ func TestZapWrapOutOfRangeFields(t *testing.T) {
 func check(t *testing.T, recorded *observer.ObservedLogs, tt tests) {
 	for _, logs := range recorded.All() {
 		assert.Equal(t, message, logs.Message, "Message")
-		lenF := len(tt.fields) - 1
+		lenF := len(tt.items) - 1
 		for idx, f := range logs.Context {
 			if idx > lenF {
 				assert.Equal(t, zapcore.SkipType, f.Type, "Key")
 				continue
 			}
-			assert.Equal(t, tt.fields[idx].key, f.Key, "Key")
+			assert.Equal(t, tt.items[idx].f.key, f.Key, "Key")
+			assert.Equal(t, tt.items[idx].t, f.Type, "Type")
 		}
 	}
 }
@@ -128,19 +134,42 @@ func newLogger(level zapcore.Level) (*observer.ObservedLogs, Logger) {
 	return obs, &ZapWrap{zap.New(core)}
 }
 
+func convertTo(items []Item) []Field {
+	fields := make([]Field, len(items))
+	for i, item := range items {
+		fields[i] = item.f
+	}
+	return fields
+}
+
 func testdd() []tests {
 	return []tests{
 		{
-			fields: []Field{
-				Bool("key", true),
+			items: []Item{
+				{
+					f: Bool("key", true),
+					t: zapcore.BoolType,
+				},
 			},
 		},
 		{
-			fields: []Field{
-				Bool("key", true),
-				Bool("key1", true),
-				Bool("key2", true),
-				Bool("key3", true),
+			items: []Item{
+				{
+					f: Bool("key", true),
+					t: zapcore.BoolType,
+				},
+				{
+					f: String("key1", "value"),
+					t: zapcore.StringType,
+				},
+				{
+					f: Bool("key2", true),
+					t: zapcore.BoolType,
+				},
+				{
+					f: Bool("key3", true),
+					t: zapcore.BoolType,
+				},
 			},
 		},
 	}
