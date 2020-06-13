@@ -22,7 +22,8 @@ import (
 
 const fieldsSize = 4
 
-// zapWrap is a zap wrapper
+// zapWrap is a zap wrapper.
+// I define a field size fixed to not escape to heap
 type ZapWrap struct {
 	log *zap.Logger
 }
@@ -30,7 +31,7 @@ type ZapWrap struct {
 // Info implements logging.Logger.Info
 func (z *ZapWrap) Info(msg string, fields ...Field) {
 	fSource := convertToZap(fields...)
-	fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
+	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
 	}
@@ -40,7 +41,7 @@ func (z *ZapWrap) Info(msg string, fields ...Field) {
 // Warn implements logging.Logger.Warn
 func (z *ZapWrap) Warn(msg string, fields ...Field) {
 	fSource := convertToZap(fields...)
-	fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
+	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
 	}
@@ -50,7 +51,7 @@ func (z *ZapWrap) Warn(msg string, fields ...Field) {
 // Debug implements logging.Logger.Debug
 func (z *ZapWrap) Debug(msg string, fields ...Field) {
 	fSource := convertToZap(fields...)
-	fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
+	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
 	}
@@ -60,7 +61,7 @@ func (z *ZapWrap) Debug(msg string, fields ...Field) {
 // Error implements logging.Logger.Error
 func (z *ZapWrap) Error(msg string, fields ...Field) {
 	fSource := convertToZap(fields...)
-	fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
+	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
 	}
@@ -70,7 +71,7 @@ func (z *ZapWrap) Error(msg string, fields ...Field) {
 // Panic implements logging.Logger.Panic
 func (z *ZapWrap) Panic(msg string, fields ...Field) {
 	fSource := convertToZap(fields...)
-	fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
+	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
 	}
@@ -78,15 +79,20 @@ func (z *ZapWrap) Panic(msg string, fields ...Field) {
 }
 
 // Check implements logging.Logger.Check
-func (z *ZapWrap) Check(l Level, msg string, fields ...Field) {
+func (z *ZapWrap) Check(l Level, msg string) *checkWrap {
 	if ce := z.log.Check(zapcore.Level(l), msg); ce != nil {
-		fSource := convertToZap(fields...)
-		fTarget := make([]zap.Field, fieldsSize) // does not escape to heap
-		for i := 0; i < fieldsSize; i++ {
-			fTarget[i] = fSource[i]
-		}
-		ce.Write(fTarget...)
+		return &checkWrap{ce}
 	}
+	return nil
+}
+
+func (z *ZapWrap) Write(wrap *checkWrap, fields ...Field) {
+	fSource := convertToZap(fields...)
+	fTarget := make([]zap.Field, fieldsSize)
+	for i := 0; i < fieldsSize; i++ {
+		fTarget[i] = fSource[i]
+	}
+	wrap.zapCheck.Write(fTarget...)
 }
 
 // The size of the array is fixed so that it does not escape to heap

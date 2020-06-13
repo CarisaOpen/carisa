@@ -59,6 +59,10 @@ type Logger interface {
 	Panic(msg string, fields ...Field)
 
 	// Check checks if logging a message at the specified level
-	// is enabled. If it allows level writes into log
-	Check(l Level, msg string, fields ...Field)
+	// is enabled.
+	// If disabled, it returns null, otherwise it returns the element to be written
+	Check(l Level, msg string) *checkWrap
+
+	// Writes log. See Check
+	Write(wrap *checkWrap, fields ...Field)
 }

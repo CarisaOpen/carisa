@@ -95,7 +95,9 @@ func TestZapWrapCheck(t *testing.T) {
 	for _, tt := range tests {
 		recorded, l := newLogger(zapcore.InfoLevel)
 
-		l.Check(InfoLevel, message, convertTo(tt.items)...)
+		if ce := l.Check(InfoLevel, message); ce != nil {
+			l.Write(ce, convertTo(tt.items)...)
+		}
 		check(t, recorded, tt)
 	}
 }
