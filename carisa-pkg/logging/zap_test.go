@@ -102,6 +102,12 @@ func TestZapWrapCheck(t *testing.T) {
 	}
 }
 
+func TestZapWrapCheckNoMatchLevel(t *testing.T) {
+	_, l := newLogger(zapcore.PanicLevel)
+	ce := l.Check(InfoLevel, "message")
+	assert.Nil(t, ce)
+}
+
 func TestZapWrapOutOfRangeFields(t *testing.T) {
 	_, l := newLogger(zapcore.InfoLevel)
 
