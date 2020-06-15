@@ -7,7 +7,8 @@
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software  distributed under the License is distributed on an "AS IS" BASIS,
+ * Unless required by applicable law or agreed to in writing,
+ * software  distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and  limitations under the License.
  *
@@ -17,6 +18,7 @@ package storage
 
 import (
 	"context"
+
 	"github.com/carisa/pkg/encoding"
 	"github.com/carisa/pkg/strings"
 	"github.com/pkg/errors"
@@ -35,7 +37,6 @@ func NewEtcdStore(client *clientv3.Client) CRUD {
 
 // Create implements storage.interface.CRUD.Create
 func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
-
 	encode, err := encoding.Encode(entity)
 	if err != nil {
 		return opeWrap{},
@@ -84,7 +85,6 @@ func (txn *etcdTxn) DoNotFound(ope opeWrap) {
 
 // Commit implements storage.interface.Txn.Commit
 func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
-
 	if txn.indexF == 0 && txn.indexNf == 0 {
 		panic("There aren't operations")
 	}
@@ -95,7 +95,7 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	tx := txn.client.KV.Txn(ctx)
 
 	if txn.indexF > 0 && txn.indexNf > 0 {
-		txn.ifThen(tx, ">", txn.opeFound, txn.indexF)
+		tx = txn.ifThen(tx, ">", txn.opeFound, txn.indexF)
 		if txn.indexNf == 1 {
 			tx = tx.Else(txn.opeNoFound[0].opeEtcd)
 		} else {
@@ -104,11 +104,11 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	} else {
 		if txn.indexF > 0 {
 			// > 0 means that the key has been found
-			txn.ifThen(tx, ">", txn.opeFound, txn.indexF)
+			tx = txn.ifThen(tx, ">", txn.opeFound, txn.indexF)
 		}
 		if txn.indexNf > 0 {
 			// = 0 means that the key has not been found
-			txn.ifThen(tx, "=", txn.opeNoFound, txn.indexNf)
+			tx = txn.ifThen(tx, "=", txn.opeNoFound, txn.indexNf)
 		}
 	}
 
@@ -120,11 +120,10 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	return result.Succeeded, nil
 }
 
-func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]opeWrap, index uint8) {
+func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]opeWrap, index uint8) clientv3.Txn {
 	tx = tx.If(clientv3.Compare(clientv3.ModRevision(txn.keyValue), compare, 0))
 	if index == 1 {
-		tx = tx.Then(opes[0].opeEtcd)
-	} else {
-		tx = tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
+		return tx.Then(opes[0].opeEtcd)
 	}
+	return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
 }

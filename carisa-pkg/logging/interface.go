@@ -7,7 +7,8 @@
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software  distributed under the License is distributed on an "AS IS" BASIS,
+ * Unless required by applicable law or agreed to in writing,
+ * software  distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and  limitations under the License.
  *
@@ -61,8 +62,8 @@ type Logger interface {
 	// Check checks if logging a message at the specified level
 	// is enabled.
 	// If disabled, it returns null, otherwise it returns the element to be written
-	Check(l Level, msg string) *checkWrap
+	Check(l Level, msg string) *CheckWrap
 
 	// Writes log. See Check
-	Write(wrap *checkWrap, fields ...Field)
+	Write(wrap *CheckWrap, fields ...Field)
 }

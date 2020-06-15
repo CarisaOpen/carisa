@@ -7,16 +7,18 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *   Unless required by applicable law or agreed to in writing, software  distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and  limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software  distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and  limitations under the License.
  */
 
 package encoding
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type T struct {
@@ -26,7 +28,6 @@ type T struct {
 }
 
 func TestEncodeDecode(t *testing.T) {
-
 	data := T{
 		S: "String",
 		I: 1,
