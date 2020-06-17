@@ -7,7 +7,8 @@
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software  distributed under the License is distributed on an "AS IS" BASIS,
+ * Unless required by applicable law or agreed to in writing,
+ * software  distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and  limitations under the License.
  *
@@ -17,14 +18,15 @@ package instance
 
 import (
 	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
-	"github.com/carisa/pkg/strings"
-	"github.com/pkg/errors"
 )
+
+const loc = "Instance.Service"
 
 // Service implements the instance domain service
 type Service struct {
-	cnf   runtime.Config
+	cnt   runtime.Container
 	store storage.CRUD
 }
 
@@ -37,16 +39,17 @@ func (s *Service) Create(inst Instance) (bool, error) {
 
 	create, err := s.store.Create(inst)
 	if err != nil {
+		s.cnt.Log.Error(err.Error(), loc)
 		return false, err
 	}
 
 	txn.DoNotFound(create)
 
-	ctx, cancel := s.cnf.StoreWithTimeout()
+	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
-		return false, errors.Wrap(err, strings.Concat("Commit creating. ", inst.ToString()))
+		return false, s.cnt.Log.ErrWrap(err, "Commit creating", loc, logging.String("Instance", inst.ToString()))
 	}
 
 	return ok, nil

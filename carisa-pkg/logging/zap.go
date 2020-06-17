@@ -17,6 +17,7 @@
 package logging
 
 import (
+	"github.com/carisa/pkg/strings"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -24,14 +25,29 @@ import (
 const fieldsSize = 4
 
 // zapWrap is a zap wrapper.
-// I define a field size fixed to not escape to heap
-type ZapWrap struct {
+// it is defined a field size fixed to not escape to heap
+type zapWrap struct {
 	log *zap.Logger
+	loggerComp
+	locName string
+}
+
+// NewZapWrap creates zapWrap. If loc parameter is empty, loc is configured to "location"
+func NewZapWrap(log *zap.Logger, loc string) Logger {
+	if len(loc) == 0 {
+		loc = "location"
+	}
+	zq := &zapWrap{
+		log:     log,
+		locName: loc,
+	}
+	zq.loggerComp.log = zq
+	return zq
 }
 
 // Info implements logging.Logger.Info
-func (z *ZapWrap) Info(msg string, fields ...Field) {
-	fSource := convertToZap(fields...)
+func (z *zapWrap) Info(msg string, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -40,8 +56,8 @@ func (z *ZapWrap) Info(msg string, fields ...Field) {
 }
 
 // Warn implements logging.Logger.Warn
-func (z *ZapWrap) Warn(msg string, fields ...Field) {
-	fSource := convertToZap(fields...)
+func (z *zapWrap) Warn(msg string, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -50,8 +66,8 @@ func (z *ZapWrap) Warn(msg string, fields ...Field) {
 }
 
 // Debug implements logging.Logger.Debug
-func (z *ZapWrap) Debug(msg string, fields ...Field) {
-	fSource := convertToZap(fields...)
+func (z *zapWrap) Debug(msg string, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -60,8 +76,8 @@ func (z *ZapWrap) Debug(msg string, fields ...Field) {
 }
 
 // Error implements logging.Logger.Error
-func (z *ZapWrap) Error(msg string, fields ...Field) {
-	fSource := convertToZap(fields...)
+func (z *zapWrap) Error(msg string, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -70,8 +86,8 @@ func (z *ZapWrap) Error(msg string, fields ...Field) {
 }
 
 // Panic implements logging.Logger.Panic
-func (z *ZapWrap) Panic(msg string, fields ...Field) {
-	fSource := convertToZap(fields...)
+func (z *zapWrap) Panic(msg string, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -80,15 +96,16 @@ func (z *ZapWrap) Panic(msg string, fields ...Field) {
 }
 
 // Check implements logging.Logger.Check
-func (z *ZapWrap) Check(l Level, msg string) *CheckWrap {
+func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
 	if ce := z.log.Check(zapcore.Level(l), msg); ce != nil {
 		return &CheckWrap{ce}
 	}
 	return nil
 }
 
-func (z *ZapWrap) Write(wrap *CheckWrap, fields ...Field) {
-	fSource := convertToZap(fields...)
+// Write implements logging.Logger.Write
+func (z *zapWrap) Write(wrap *CheckWrap, loc string, fields ...Field) {
+	fSource := z.convertToZap(loc, fields...)
 	fTarget := make([]zap.Field, fieldsSize)
 	for i := 0; i < fieldsSize; i++ {
 		fTarget[i] = fSource[i]
@@ -97,18 +114,20 @@ func (z *ZapWrap) Write(wrap *CheckWrap, fields ...Field) {
 }
 
 // The size of the array is fixed so that it does not escape to heap
-func convertToZap(fields ...Field) [fieldsSize]zap.Field {
+func (z *zapWrap) convertToZap(loc string, fields ...Field) [fieldsSize]zap.Field {
 	var fZap [fieldsSize]zap.Field
-	actualFSize := len(fields)
+	actualFSize := len(fields) + 1 // loc is added
 	if actualFSize > fieldsSize {
-		panic("Log fields size cannot be more than 5")
+		panic(strings.Concat("Log fields and location size cannot be more than ", string(fieldsSize)))
 	}
-	for i := 0; i < fieldsSize; i++ {
+
+	fZap[0] = zap.String(z.locName, loc)
+	for i := 1; i < fieldsSize; i++ {
 		if i >= actualFSize { // The rest are skip until fill buffer
 			fZap[i] = zap.Skip()
 			continue
 		}
-		f := fields[i]
+		f := fields[i-1]
 		switch f.tpy {
 		case stringType:
 			fZap[i] = zap.String(f.key, f.stringV)

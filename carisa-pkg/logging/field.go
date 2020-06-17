@@ -17,6 +17,11 @@
 // logging values wrapper
 package logging
 
+import (
+	"strconv"
+	"strings"
+)
+
 // A FieldType indicates which member of the Field union struct should be used
 type fieldType uint8
 
@@ -48,4 +53,28 @@ func Bool(key string, value bool) Field {
 		tpy:   boolType,
 		boolV: value,
 	}
+}
+
+// Compose composes message and fields in a string
+func Compose(msg string, fields ...Field) string {
+	var b strings.Builder
+	b.Grow((1 + len(fields)) * 15)
+
+	b.WriteString(msg)
+	b.WriteString(". ")
+
+	for i, f := range fields {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(f.key)
+		b.WriteString(": ")
+		switch f.tpy {
+		case stringType:
+			b.WriteString(f.stringV)
+		case boolType:
+			b.WriteString(strconv.FormatBool(f.boolV))
+		}
+	}
+	return b.String()
 }

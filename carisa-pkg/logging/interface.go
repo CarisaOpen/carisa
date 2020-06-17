@@ -16,6 +16,10 @@
 
 package logging
 
+import (
+	"github.com/pkg/errors"
+)
+
 // A Level is a logging priority.
 type Level int8
 
@@ -38,26 +42,21 @@ const (
 
 // Looger implements operations for several logging platforms
 type Logger interface {
-	// Info logs a message at InfoLevel. The message includes any fields passed
-	// The limit are 5 fields
-	Info(msg string, fields ...Field)
+	// Info logs a message at InfoLevel. The message includes any fields passed and location
+	Info(msg string, loc string, fields ...Field)
 
-	// Warn logs a message at WarnLevel. The message includes any fields passed
-	// The limit are 5 fields
-	Warn(msg string, fields ...Field)
+	// Warn logs a message at WarnLevel. The message includes any fields passed and location
+	Warn(msg string, loc string, fields ...Field)
 
-	// Debug logs a message at DebugLevel. The message includes any fields passed
-	// The limit are 5 fields
-	Debug(msg string, fields ...Field)
+	// Debug logs a message at DebugLevel. The message includes any fields passed and location
+	Debug(msg string, loc string, fields ...Field)
 
-	// Error logs a message at ErrorLevel. The message includes any fields passed
-	// The limit are 5 fields
-	Error(msg string, fields ...Field)
+	// Error logs a message at ErrorLevel. The message includes any fields passed and location
+	Error(msg string, loc string, fields ...Field)
 
-	// Panic logs a message at PanicLevel. The message includes any fields passed
-	// The limit are 5 fields
+	// Panic logs a message at PanicLevel. The message includes any fields passed and location
 	// The logger then panics, even if logging at PanicLevel is disabled.
-	Panic(msg string, fields ...Field)
+	Panic(msg string, loc string, fields ...Field)
 
 	// Check checks if logging a message at the specified level
 	// is enabled.
@@ -65,5 +64,19 @@ type Logger interface {
 	Check(l Level, msg string) *CheckWrap
 
 	// Writes log. See Check
-	Write(wrap *CheckWrap, fields ...Field)
+	Write(wrap *CheckWrap, loc string, fields ...Field)
+
+	// ErrWrap generates a trace in logging and return a wrap error
+	ErrWrap(err error, msg string, loc string, fields ...Field) error
+}
+
+// Looger composition
+type loggerComp struct {
+	log Logger
+}
+
+// ErrWrap implements logging.Logger.ErrWrap
+func (l *loggerComp) ErrWrap(err error, msg string, loc string, fields ...Field) error {
+	l.log.Error(msg, loc, fields...)
+	return errors.Wrap(err, Compose(msg, fields...))
 }

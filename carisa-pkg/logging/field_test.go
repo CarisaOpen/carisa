@@ -42,3 +42,31 @@ func TestBool(t *testing.T) {
 	assert.Equal(t, f.tpy, boolType)
 	assert.True(t, f.boolV)
 }
+
+func TestCompose(t *testing.T) {
+	tests := []struct {
+		msg string
+		fs  []Field
+		r   string
+	}{
+		{
+			msg: "message",
+			fs: []Field{
+				String("key", "value"),
+			},
+			r: "message. key: value",
+		},
+		{
+			msg: "message",
+			fs: []Field{
+				String("key", "value"),
+				Bool("key1", false),
+			},
+			r: "message. key: value, key1: false",
+		},
+	}
+	for _, tt := range tests {
+		r := Compose(tt.msg, tt.fs...)
+		assert.Equal(t, tt.r, r)
+	}
+}

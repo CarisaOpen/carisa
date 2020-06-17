@@ -14,24 +14,14 @@
  *
  */
 
-package instance
+package runtime
 
 import (
-	"github.com/carisa/api/internal/common"
-	"github.com/carisa/pkg/strings"
+	"github.com/carisa/pkg/logging"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	id string
-	common.Descriptor
-}
-
-func (i Instance) ToString() string {
-	return strings.Concat("Instance:", i.id)
-}
-
-func (i Instance) GetKey() string {
-	return i.id
+// Container defines the info and tools for application
+type Container struct {
+	Config
+	Log logging.Logger
 }

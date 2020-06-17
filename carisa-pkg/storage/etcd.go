@@ -19,8 +19,9 @@ package storage
 import (
 	"context"
 
+	"github.com/carisa/pkg/logging"
+
 	"github.com/carisa/pkg/encoding"
-	"github.com/carisa/pkg/strings"
 	"github.com/pkg/errors"
 	"go.etcd.io/etcd/clientv3"
 )
@@ -42,9 +43,8 @@ func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
 		return opeWrap{},
 			errors.Wrap(
 				err,
-				strings.Concat(
-					"Unexpected encode error creating entity into etcd store. Entity: ",
-					entity.ToString()))
+				logging.Compose("Unexpected encode error creating entity into etcd store",
+					logging.String("Entity", entity.ToString())))
 	}
 
 	return opeWrap{clientv3.OpPut(entity.GetKey(), encode)}, err

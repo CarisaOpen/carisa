@@ -1,6 +1,8 @@
 package strings
 
-import "strings"
+import (
+	"strings"
+)
 
 // Concat joins many strings
 func Concat(params ...string) string {
