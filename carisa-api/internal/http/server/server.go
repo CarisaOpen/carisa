@@ -14,23 +14,23 @@
  *
  */
 
-package instance
+package server
 
 import (
-	"github.com/carisa/api/internal/common"
-	"github.com/carisa/pkg/strings"
+	"github.com/carisa/api/internal/http/handler"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	common.Descriptor
+// Middleware configure security and behaviour of http
+func Middleware(e *echo.Echo) {
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 }
 
-func (i Instance) ToString() string {
-	return strings.Concat("Instance: ", i.ID.String())
-}
-
-func (i Instance) GetKey() string {
-	return i.ID.String()
+// Router defines all http route for API
+func Router(e *echo.Echo, hands handler.Handlers) {
+	// Instance
+	e.POST("/api/", hands.InstHandler.Create)
 }

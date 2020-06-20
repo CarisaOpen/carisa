@@ -18,6 +18,11 @@ package storage
 
 import (
 	"context"
+	"time"
+
+	"github.com/carisa/pkg/strings"
+
+	"google.golang.org/grpc"
 
 	"github.com/carisa/pkg/logging"
 
@@ -26,9 +31,75 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
+// EtcdConfig defines the configuration for store framework
+type EtcdConfig struct {
+	// DialTimeout is the timeout for failing to establish a connection in seconds. Default value: 2 seconds.
+	DialTimeout uint8 `yaml:"dialTimeout,omitempty"`
+	// DialKeepAliveTime is the time after which client pings the server to see if
+	// transport is alive in seconds. Default value: 10 seconds.
+	DialKeepAliveTime uint8 `yaml:"dialKeepAliveTime,omitempty"`
+	// DialKeepAliveTimeout is the time that the client waits for a response for the
+	// keep-alive probe. If the response is not received in this time, the connection is closed.
+	DialKeepAliveTimeout uint8 `yaml:"dialKeepAliveTimeout,omitempty"`
+	// RequestTimeout in seconds. Default value: 10 seconds.
+	RequestTimeout uint8 `yaml:"requestTimeout,omitempty"`
+	// Endpoints is a list of URLs.
+	Endpoints []string `yaml:"endpoints,omitempty"`
+}
+
 // etcdStore defines the CRUD operations for etcd
 type etcdStore struct {
 	client *clientv3.Client
+}
+
+// NewEtcdConfig builds a store to CRUD operations based on etcd3 from config
+func NewEtcdConfig(cnf EtcdConfig) CRUD {
+	client, err := clientv3.New(config(cnf))
+	if err != nil {
+		panic(strings.Concat("Error creating etcd client: ", err.Error()))
+	}
+	return NewEtcdStore(client)
+}
+
+// Done for test
+func config(cnf EtcdConfig) clientv3.Config {
+	var dialTimeout time.Duration
+	var dialKeepAliveTime time.Duration
+	var dialKeepAliveTimeout time.Duration
+	var endpoints []string
+
+	if cnf.DialTimeout == 0 {
+		dialTimeout = 2 * time.Second
+	} else {
+		dialTimeout = time.Duration(cnf.DialTimeout) * time.Second
+	}
+	if cnf.DialKeepAliveTime == 0 {
+		dialKeepAliveTime = 10 * time.Second
+	} else {
+		dialKeepAliveTime = time.Duration(cnf.DialKeepAliveTime) * time.Second
+	}
+	if cnf.DialKeepAliveTimeout == 0 {
+		dialKeepAliveTimeout = 2 * dialTimeout
+	} else {
+		dialKeepAliveTimeout = time.Duration(cnf.DialKeepAliveTimeout) * time.Second
+	}
+	if cnf.Endpoints == nil || len(cnf.Endpoints) == 0 {
+		endpoints = append(endpoints, "localhost:2379")
+	} else {
+		endpoints = make([]string, len(cnf.Endpoints))
+		copy(endpoints, cnf.Endpoints)
+	}
+
+	dialOptions := []grpc.DialOption{
+		grpc.WithBlock(), // block until the underlying connection is up
+	}
+	return clientv3.Config{
+		DialTimeout:          dialTimeout,
+		DialKeepAliveTime:    dialKeepAliveTime,
+		DialKeepAliveTimeout: dialKeepAliveTimeout,
+		DialOptions:          dialOptions,
+		Endpoints:            endpoints,
+	}
 }
 
 // NewEtcdStore builds a store to CRUD operations based on etcd3

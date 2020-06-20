@@ -16,16 +16,15 @@
 
 package common
 
+import "github.com/rs/xid"
+
 // Descriptor describes the entity with name and description
 type Descriptor struct {
-	name string
-	desc string
+	ID   xid.ID `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+	Desc string `json:"description,omitempty"`
 }
 
-func (d *Descriptor) Name() string {
-	return d.name
-}
-
-func (d *Descriptor) Description() string {
-	return d.desc
+func (d *Descriptor) AutoID() {
+	d.ID = xid.New()
 }

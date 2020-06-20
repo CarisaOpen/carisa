@@ -21,12 +21,12 @@ import (
 )
 
 // A Level is a logging priority.
-type Level int8
+type Level uint8
 
 const (
 	// DebugLevel logs are typically voluminous, and are usually disabled in
 	// production.
-	DebugLevel Level = iota - 1
+	DebugLevel Level = iota + 1
 	// InfoLevel is the default logging priority.
 	InfoLevel
 	// WarnLevel logs are more important than Info, but don't need individual
@@ -68,6 +68,9 @@ type Logger interface {
 
 	// ErrWrap generates a trace in logging and return a wrap error
 	ErrWrap(err error, msg string, loc string, fields ...Field) error
+
+	// ErrorE logs a message at ErrorLevel. The message includes any fields passed and location
+	ErrorE(err error, loc string, fields ...Field)
 }
 
 // Looger composition
@@ -75,8 +78,14 @@ type loggerComp struct {
 	log Logger
 }
 
+// ErrorE implements logging.Logger.ErrorE
+func (l *loggerComp) ErrorE(err error, loc string, fields ...Field) {
+	l.log.Error(err.Error(), loc, fields...)
+}
+
 // ErrWrap implements logging.Logger.ErrWrap
 func (l *loggerComp) ErrWrap(err error, msg string, loc string, fields ...Field) error {
-	l.log.Error(msg, loc, fields...)
-	return errors.Wrap(err, Compose(msg, fields...))
+	errW := errors.Wrap(err, Compose(msg, fields...))
+	l.log.Error(errW.Error(), loc)
+	return errW
 }

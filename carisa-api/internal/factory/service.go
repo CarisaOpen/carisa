@@ -14,23 +14,22 @@
  *
  */
 
-package instance
+package factory
 
 import (
-	"github.com/carisa/api/internal/common"
-	"github.com/carisa/pkg/strings"
+	"github.com/carisa/api/internal/instance"
+	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/pkg/storage"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	common.Descriptor
+// Service configures all transversal services for API
+type service struct {
+	instanceSrv instance.Service
 }
 
-func (i Instance) ToString() string {
-	return strings.Concat("Instance: ", i.ID.String())
-}
-
-func (i Instance) GetKey() string {
-	return i.ID.String()
+// configService builds the services
+func configService(cnt runtime.Container, store storage.CRUD) service {
+	return service{
+		instanceSrv: instance.NewService(cnt, store),
+	}
 }

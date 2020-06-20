@@ -24,12 +24,46 @@ import (
 
 const fieldsSize = 4
 
+// ZapConfig defines the configuration for log framework
+type ZapConfig struct {
+	// Development mode. Default value: false
+	Development bool `yaml:"development,omitempty"`
+	// Level. See logging.Level. Default value: Depending of Development flag
+	Level Level `yaml:"level,omitempty"`
+	// Encoding type. Default value: Depending of Development flag
+	// The values can be: j -> json format, c -> console format
+	Encoding string `yaml:"encoding,omitempty"`
+}
+
 // zapWrap is a zap wrapper.
-// it is defined a field size fixed to not escape to heap
+// Remark: it is defined a fields size fixed to not escape to heap
 type zapWrap struct {
 	log *zap.Logger
 	loggerComp
 	locName string
+}
+
+// NewZapLogger builds a zap logger from config
+func NewZapLogger(config ZapConfig) Logger {
+	var log zap.Config
+	if config.Development {
+		log = zap.NewDevelopmentConfig()
+	} else {
+		log = zap.NewProductionConfig()
+	}
+	if config.Level > 0 {
+		log.Level = zap.NewAtomicLevelAt(ConvertZapLevel(config.Level))
+	}
+	if len(config.Encoding) > 0 {
+		log.Encoding = config.Encoding
+	}
+
+	l, err := log.Build()
+	if err != nil {
+		panic("Error creating zap logger")
+	}
+
+	return NewZapWrap(l, "")
 }
 
 // NewZapWrap creates zapWrap. If loc parameter is empty, loc is configured to "location"
@@ -97,7 +131,7 @@ func (z *zapWrap) Panic(msg string, loc string, fields ...Field) {
 
 // Check implements logging.Logger.Check
 func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
-	if ce := z.log.Check(zapcore.Level(l), msg); ce != nil {
+	if ce := z.log.Check(ConvertZapLevel(l), msg); ce != nil {
 		return &CheckWrap{ce}
 	}
 	return nil
@@ -136,4 +170,21 @@ func (z *zapWrap) convertToZap(loc string, fields ...Field) [fieldsSize]zap.Fiel
 		}
 	}
 	return fZap
+}
+
+// ConvertZapLevel convert level to zap level
+func ConvertZapLevel(level Level) zapcore.Level {
+	switch level {
+	case DebugLevel:
+		return zap.DebugLevel
+	case InfoLevel:
+		return zap.InfoLevel
+	case WarnLevel:
+		return zap.WarnLevel
+	case ErrorLevel:
+		return zap.ErrorLevel
+	case PanicLevel:
+		return zap.PanicLevel
+	}
+	panic("Logging level is wrong")
 }

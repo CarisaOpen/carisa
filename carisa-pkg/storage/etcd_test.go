@@ -19,6 +19,9 @@ package storage
 import (
 	"context"
 	"testing"
+	"time"
+
+	"go.etcd.io/etcd/clientv3"
 
 	"github.com/stretchr/testify/assert"
 	"go.etcd.io/etcd/integration"
@@ -35,6 +38,63 @@ func (e *EntityTest) ToString() string {
 
 func (e *EntityTest) GetKey() string {
 	return e.Prop1
+}
+
+func TestConfig(t *testing.T) {
+	tests := []struct {
+		s EtcdConfig
+		t clientv3.Config
+	}{
+		{
+			s: EtcdConfig{
+				DialTimeout:          0,
+				DialKeepAliveTime:    0,
+				DialKeepAliveTimeout: 0,
+				Endpoints:            nil,
+			},
+			t: clientv3.Config{
+				DialTimeout:          2 * time.Second,
+				DialKeepAliveTime:    10 * time.Second,
+				DialKeepAliveTimeout: 2 * 2 * time.Second,
+				Endpoints:            []string{"localhost:2379"},
+			},
+		},
+		{
+			s: EtcdConfig{
+				DialTimeout:          0,
+				DialKeepAliveTime:    0,
+				DialKeepAliveTimeout: 0,
+				Endpoints:            []string{},
+			},
+			t: clientv3.Config{
+				DialTimeout:          2 * time.Second,
+				DialKeepAliveTime:    10 * time.Second,
+				DialKeepAliveTimeout: 2 * 2 * time.Second,
+				Endpoints:            []string{"localhost:2379"},
+			},
+		},
+		{
+			s: EtcdConfig{
+				DialTimeout:          1,
+				DialKeepAliveTime:    2,
+				DialKeepAliveTimeout: 3,
+				Endpoints:            []string{"server"},
+			},
+			t: clientv3.Config{
+				DialTimeout:          1 * time.Second,
+				DialKeepAliveTime:    2 * time.Second,
+				DialKeepAliveTimeout: 3 * time.Second,
+				Endpoints:            []string{"server"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		r := config(tt.s)
+		assert.Equal(t, tt.t.DialTimeout, r.DialTimeout, "DialTimeout")
+		assert.Equal(t, tt.t.DialKeepAliveTime, r.DialKeepAliveTime, "DialKeepAliveTime")
+		assert.Equal(t, tt.t.DialKeepAliveTimeout, r.DialKeepAliveTimeout, "DialKeepAliveTimeout")
+		assert.Equal(t, tt.t.Endpoints, r.Endpoints, "Endpoints")
+	}
 }
 
 func TestEtcdCreate(t *testing.T) {

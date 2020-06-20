@@ -14,23 +14,30 @@
  *
  */
 
-package instance
+package http
 
 import (
-	"github.com/carisa/api/internal/common"
-	"github.com/carisa/pkg/strings"
+	nethttp "net/http"
+
+	"github.com/carisa/pkg/logging"
+	"github.com/labstack/echo/v4"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	common.Descriptor
+// NewHTTPErrorLog creates http error and sending a log error
+func NewHTTPErrorLog(
+	status int,
+	msg string, err error,
+	logger logging.Logger,
+	loc string, fields ...logging.Field) *echo.HTTPError {
+	_ = logger.ErrWrap(err, msg, loc, fields...)
+	return echo.NewHTTPError(status, logging.Compose(msg, fields...))
 }
 
-func (i Instance) ToString() string {
-	return strings.Concat("Instance: ", i.ID.String())
-}
-
-func (i Instance) GetKey() string {
-	return i.ID.String()
+// status return status for create handler
+func CreateStatus(found bool) int {
+	status := nethttp.StatusCreated
+	if found {
+		status = nethttp.StatusFound
+	}
+	return status
 }

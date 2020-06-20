@@ -14,23 +14,9 @@
  *
  */
 
-package instance
+package handler
 
-import (
-	"github.com/carisa/api/internal/common"
-	"github.com/carisa/pkg/strings"
-)
-
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	common.Descriptor
-}
-
-func (i Instance) ToString() string {
-	return strings.Concat("Instance: ", i.ID.String())
-}
-
-func (i Instance) GetKey() string {
-	return i.ID.String()
+// Handlers is a handler container
+type Handlers struct {
+	InstHandler Instance
 }
