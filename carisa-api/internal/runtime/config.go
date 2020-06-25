@@ -30,20 +30,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const envConfig = "carisa_api"
+
 type Server struct {
 	Port uint16 `yaml:"port"`
 }
 
 // Config defines the global information
 type Config struct {
-	storage.EtcdConfig `yaml:"etcd,omitempty"`
-	logging.ZapConfig  `yaml:"zapLog,omitempty"`
 	Server             `yaml:"server,omitempty"`
+	logging.ZapConfig  `yaml:"log,omitempty"`
+	storage.EtcdConfig `yaml:"etcd,omitempty"`
 }
 
 // LoadConfig loads the configuration from environment variable
 func LoadConfig() Config {
-	env := os.Getenv("carisa_api")
+	env := os.Getenv(envConfig)
 
 	cnf := Config{
 		Server: Server{
@@ -58,6 +60,11 @@ func LoadConfig() Config {
 			panic(strings.Concat("Configuration environment variable cannot be loaded: ", err.Error()))
 		}
 	}
+	// Default values not treated in the factories
+	if cnf.RequestTimeout == 0 {
+		cnf.RequestTimeout = 10
+	}
+
 	return cnf
 }
 

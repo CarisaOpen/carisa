@@ -149,9 +149,15 @@ func TestEtcdCreate(t *testing.T) {
 	}
 }
 
+func TestClose(t *testing.T) {
+	_, _, store := newStore(t)
+	err := store.Close()
+	assert.Nil(t, err)
+}
+
 func newStore(t *testing.T) (*integration.ClusterV3, context.Context, CRUD) {
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
-	store := NewEtcdStore(cluster.RandClient())
+	store := NewEtcd(cluster.RandClient())
 	ctx := context.TODO()
 	return cluster, ctx, store
 }

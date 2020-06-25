@@ -21,6 +21,7 @@ import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
+	"go.etcd.io/etcd/integration"
 )
 
 // Factory builds the application flow
@@ -31,9 +32,18 @@ type Factory struct {
 
 // Build builds the services, store, log, etc..
 func Build() Factory {
+	return build(nil)
+}
+
+func build(cluster *integration.ClusterV3 /*for test*/) Factory {
 	// Server
 	cnf := runtime.LoadConfig()
-	store := storage.NewEtcdConfig(cnf.EtcdConfig)
+	var store storage.CRUD
+	if cluster != nil {
+		store = storage.NewEtcd(cluster.RandClient())
+	} else {
+		store = storage.NewEtcdConfig(cnf.EtcdConfig)
+	}
 	log := logging.NewZapLogger(cnf.ZapConfig)
 	cnt := runtime.Container{
 		Config: cnf,
@@ -44,7 +54,7 @@ func Build() Factory {
 	srv := configService(cnt, store)
 
 	// Handlers
-	instHandler := handler.NewInstanceHnd(srv.instanceSrv, cnt)
+	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
 
 	return Factory{
 		Config: cnf,

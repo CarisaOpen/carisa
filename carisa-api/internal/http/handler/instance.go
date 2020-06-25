@@ -33,7 +33,7 @@ type Instance struct {
 	cnt runtime.Container
 }
 
-func NewInstanceHnd(srv instance.Service, cnt runtime.Container) Instance {
+func NewInstanceHandl(srv instance.Service, cnt runtime.Container) Instance {
 	return Instance{
 		srv: srv,
 		cnt: cnt,

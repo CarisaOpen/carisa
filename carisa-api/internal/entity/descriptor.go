@@ -14,7 +14,7 @@
  *
  */
 
-package common
+package entity
 
 import "github.com/rs/xid"
 

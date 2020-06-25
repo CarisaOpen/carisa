@@ -14,16 +14,23 @@
  *
  */
 
-package storage
+package server
 
-// NewTxn return a transaction depending of the store
-func NewTxn(store CRUD) Txn {
-	switch s := store.(type) {
-	case *etcdStore:
-		return &etcdTxn{client: s.client}
-	case *MockCRUD:
-		return &MockTxn{}
-	default:
-		panic("Store type not defined")
-	}
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/carisa/api/internal/http/handler"
+
+	"github.com/labstack/echo/v4"
+)
+
+func TestRouter(t *testing.T) {
+	e := echo.New()
+	h := handler.Handlers{}
+
+	Router(e, h)
+
+	assert.Equal(t, 1, len(e.Routes()))
 }

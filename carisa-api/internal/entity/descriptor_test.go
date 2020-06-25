@@ -14,16 +14,16 @@
  *
  */
 
-package storage
+package entity
 
-// NewTxn return a transaction depending of the store
-func NewTxn(store CRUD) Txn {
-	switch s := store.(type) {
-	case *etcdStore:
-		return &etcdTxn{client: s.client}
-	case *MockCRUD:
-		return &MockTxn{}
-	default:
-		panic("Store type not defined")
-	}
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestAutoID(t *testing.T) {
+	d := Descriptor{}
+	d.AutoID()
+	assert.NotEmpty(t, d.ID)
 }

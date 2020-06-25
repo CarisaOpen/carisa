@@ -52,13 +52,18 @@ type etcdStore struct {
 	client *clientv3.Client
 }
 
+// NewEtcd builds a store to CRUD operations from client
+func NewEtcd(client *clientv3.Client) CRUD {
+	return &etcdStore{client}
+}
+
 // NewEtcdConfig builds a store to CRUD operations based on etcd3 from config
 func NewEtcdConfig(cnf EtcdConfig) CRUD {
 	client, err := clientv3.New(config(cnf))
 	if err != nil {
 		panic(strings.Concat("Error creating etcd client: ", err.Error()))
 	}
-	return NewEtcdStore(client)
+	return &etcdStore{client: client}
 }
 
 // Done for test
@@ -102,11 +107,6 @@ func config(cnf EtcdConfig) clientv3.Config {
 	}
 }
 
-// NewEtcdStore builds a store to CRUD operations based on etcd3
-func NewEtcdStore(client *clientv3.Client) CRUD {
-	return &etcdStore{client}
-}
-
 // Create implements storage.interface.CRUD.Create
 func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
 	encode, err := encoding.Encode(entity)
@@ -119,6 +119,11 @@ func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
 	}
 
 	return opeWrap{clientv3.OpPut(entity.GetKey(), encode)}, err
+}
+
+// Create implements storage.interface.CRUD.Close
+func (s *etcdStore) Close() error {
+	return s.client.Close()
 }
 
 // etcdStore defines the operations of a transaction

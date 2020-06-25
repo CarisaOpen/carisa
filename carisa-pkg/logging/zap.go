@@ -66,6 +66,12 @@ func NewZapLogger(config ZapConfig) Logger {
 	return NewZapWrap(l, "")
 }
 
+// NewZapWrapDev creates ZapWrap for development
+func NewZapWrapDev() (Logger, error) {
+	log, err := zap.NewDevelopment()
+	return NewZapWrap(log, ""), err
+}
+
 // NewZapWrap creates zapWrap. If loc parameter is empty, loc is configured to "location"
 func NewZapWrap(log *zap.Logger, loc string) Logger {
 	if len(loc) == 0 {

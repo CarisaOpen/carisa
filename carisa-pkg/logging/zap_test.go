@@ -233,6 +233,14 @@ func TestNewZapLogger(t *testing.T) {
 	}
 }
 
+func TestNewZapWrapDev(t *testing.T) {
+	log, err := NewZapWrapDev()
+	if err != nil {
+		t.Error(err)
+	}
+	assert.NotNil(t, log.(*zapWrap).log)
+}
+
 func check(t *testing.T, recorded *observer.ObservedLogs, tt tests) {
 	for _, logs := range recorded.All() {
 		assert.Equal(t, message, logs.Message, "Message")

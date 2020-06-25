@@ -14,16 +14,30 @@
  *
  */
 
-package storage
+package factory
 
-// NewTxn return a transaction depending of the store
-func NewTxn(store CRUD) Txn {
-	switch s := store.(type) {
-	case *etcdStore:
-		return &etcdTxn{client: s.client}
-	case *MockCRUD:
-		return &MockTxn{}
-	default:
-		panic("Store type not defined")
+import (
+	"testing"
+
+	"go.etcd.io/etcd/integration"
+
+	"github.com/carisa/pkg/storage"
+
+	"github.com/carisa/api/internal/runtime"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestBuild(t *testing.T) {
+	cnf := runtime.Config{
+		Server:     runtime.Server{Port: 8080},
+		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 	}
+
+	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
+	defer cluster.Terminate(t)
+
+	factory := build(cluster)
+
+	assert.Equal(t, cnf, factory.Config, "Config")
+	assert.NotNil(t, cnf, factory.Handlers.InstHandler, "Instance Handler")
 }

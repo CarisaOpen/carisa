@@ -34,6 +34,9 @@ type (
 		// Create creates the context to create the entity. This context is added to the transaction.
 		// See Txn interface
 		Create(entity Entity) (opeWrap, error)
+
+		// Close close resources
+		Close() error
 	}
 
 	// Txn defines the transaction operations

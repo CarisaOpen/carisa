@@ -16,14 +16,34 @@
 
 package storage
 
-// NewTxn return a transaction depending of the store
-func NewTxn(store CRUD) Txn {
-	switch s := store.(type) {
-	case *etcdStore:
-		return &etcdTxn{client: s.client}
-	case *MockCRUD:
-		return &MockTxn{}
-	default:
-		panic("Store type not defined")
+import (
+	"reflect"
+	"testing"
+
+	"go.etcd.io/etcd/integration"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNewTxn(t *testing.T) {
+	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
+	defer cluster.Terminate(t)
+
+	tests := []struct {
+		store CRUD
+		typeN string
+	}{
+		{
+			store: NewEtcd(cluster.RandClient()),
+			typeN: "*storage.etcdTxn",
+		},
+		{
+			store: &MockCRUD{},
+			typeN: "*storage.MockTxn",
+		},
+	}
+	for _, tt := range tests {
+		txn := NewTxn(tt.store)
+		assert.Equal(t, tt.typeN, reflect.TypeOf(txn).String())
 	}
 }
