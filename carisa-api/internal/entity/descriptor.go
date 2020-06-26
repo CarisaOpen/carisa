@@ -25,6 +25,12 @@ type Descriptor struct {
 	Desc string `json:"description,omitempty"`
 }
 
+func NewDescriptor() Descriptor {
+	return Descriptor{
+		ID: xid.New(),
+	}
+}
+
 func (d *Descriptor) AutoID() {
 	d.ID = xid.New()
 }

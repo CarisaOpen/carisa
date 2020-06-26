@@ -18,7 +18,10 @@ package storage
 
 import (
 	"context"
+	"testing"
 	"time"
+
+	"go.etcd.io/etcd/integration"
 
 	"github.com/carisa/pkg/strings"
 
@@ -202,4 +205,24 @@ func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]opeWrap, ind
 		return tx.Then(opes[0].opeEtcd)
 	}
 	return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
+}
+
+type etcdIntegra struct {
+	integra *integration.ClusterV3
+	t       *testing.T
+}
+
+func NewEctdIntegra(t *testing.T) Integration {
+	return &etcdIntegra{
+		integra: integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1}),
+		t:       t,
+	}
+}
+
+func (e *etcdIntegra) Store() CRUD {
+	return NewEtcd(e.integra.RandClient())
+}
+
+func (e *etcdIntegra) Close() {
+	e.integra.Terminate(e.t)
 }

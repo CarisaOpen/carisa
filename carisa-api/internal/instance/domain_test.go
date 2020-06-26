@@ -14,32 +14,22 @@
  *
  */
 
-package storage
+package instance
 
 import (
-	"reflect"
 	"testing"
 
-	"go.etcd.io/etcd/integration"
+	"github.com/carisa/pkg/strings"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewTxn(t *testing.T) {
-	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
-	defer cluster.Terminate(t)
+func TestToString(t *testing.T) {
+	i := NewInstance()
+	assert.Equal(t, strings.Concat("Instance: ", i.ID.String()), i.ToString())
+}
 
-	tests := []struct {
-		store CRUD
-		typeN string
-	}{
-		{
-			store: NewEtcd(cluster.RandClient()),
-			typeN: "*storage.etcdTxn",
-		},
-	}
-	for _, tt := range tests {
-		txn := NewTxn(tt.store)
-		assert.Equal(t, tt.typeN, reflect.TypeOf(txn).String())
-	}
+func TestGetKey(t *testing.T) {
+	i := NewInstance()
+	assert.Equal(t, i.ID.String(), i.GetKey())
 }

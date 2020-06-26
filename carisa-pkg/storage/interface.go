@@ -15,7 +15,9 @@
 
 package storage
 
-import "context"
+import (
+	"context"
+)
 
 // Entity defines entity context
 type (
@@ -54,3 +56,12 @@ type (
 		Commit(ctx context.Context) (bool, error)
 	}
 )
+
+// Integration defines the function to test
+type Integration interface {
+	// Store gets a store from integration
+	Store() CRUD
+
+	// Close closes the connections
+	Close()
+}

@@ -14,32 +14,27 @@
  *
  */
 
-package storage
+package mock
 
 import (
-	"reflect"
 	"testing"
 
-	"go.etcd.io/etcd/integration"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/pkg/logging"
+	"github.com/carisa/pkg/storage"
 )
 
-func TestNewTxn(t *testing.T) {
-	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
-	defer cluster.Terminate(t)
+func NewContainerFake() runtime.Container {
+	log, err := logging.NewZapWrapDev()
+	if err != nil {
+		panic(err)
+	}
+	return runtime.Container{
+		Config: runtime.LoadConfig(),
+		Log:    log,
+	}
+}
 
-	tests := []struct {
-		store CRUD
-		typeN string
-	}{
-		{
-			store: NewEtcd(cluster.RandClient()),
-			typeN: "*storage.etcdTxn",
-		},
-	}
-	for _, tt := range tests {
-		txn := NewTxn(tt.store)
-		assert.Equal(t, tt.typeN, reflect.TypeOf(txn).String())
-	}
+func NewStorageFake(t *testing.T) storage.Integration {
+	return storage.NewEctdIntegra(t)
 }

@@ -27,24 +27,6 @@ import (
 )
 
 func TestCreateStatus(t *testing.T) {
-	log, err := logging.NewZapWrapDev()
-	if err != nil {
-		t.Error(err)
-	}
-
-	errLog := NewHTTPErrorLog(
-		http.StatusBadRequest,
-		"error",
-		errors.New("error parent"),
-		log,
-		"loc",
-		logging.String("key", "value"))
-
-	assert.Equal(t, http.StatusBadRequest, errLog.Code, "Error status")
-	assert.Equal(t, "error. key: value", errLog.Message, "Message")
-}
-
-func TestNewHTTPErrorLog(t *testing.T) {
 	tests := []struct {
 		found  bool
 		status int
@@ -62,4 +44,22 @@ func TestNewHTTPErrorLog(t *testing.T) {
 	for _, tt := range tests {
 		assert.Equal(t, tt.status, CreateStatus(tt.found))
 	}
+}
+
+func TestNewHTTPErrorLog(t *testing.T) {
+	log, err := logging.NewZapWrapDev()
+	if err != nil {
+		t.Error(err)
+	}
+
+	errLog := NewHTTPErrorLog(
+		http.StatusBadRequest,
+		"error",
+		errors.New("error parent"),
+		log,
+		"loc",
+		logging.String("key", "value"))
+
+	assert.Equal(t, http.StatusBadRequest, errLog.Code, "Error status")
+	assert.Equal(t, "error. key: value", errLog.Message, "Message")
 }

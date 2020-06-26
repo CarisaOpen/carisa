@@ -21,7 +21,6 @@ import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
-	"go.etcd.io/etcd/integration"
 )
 
 // Factory builds the application flow
@@ -35,26 +34,10 @@ func Build() Factory {
 	return build(nil)
 }
 
-func build(cluster *integration.ClusterV3 /*for test*/) Factory {
-	// Server
-	cnf := runtime.LoadConfig()
-	var store storage.CRUD
-	if cluster != nil {
-		store = storage.NewEtcd(cluster.RandClient())
-	} else {
-		store = storage.NewEtcdConfig(cnf.EtcdConfig)
-	}
-	log := logging.NewZapLogger(cnf.ZapConfig)
-	cnt := runtime.Container{
-		Config: cnf,
-		Log:    log,
-	}
-
-	// Services
-	srv := configService(cnt, store)
-
-	// Handlers
-	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
+func build(mng storage.Integration /*for test*/) Factory {
+	cnf, cnt, store := servers(mng)
+	srv := services(cnt, store)
+	instHandler := handlers(srv, cnt)
 
 	return Factory{
 		Config: cnf,
@@ -62,4 +45,30 @@ func build(cluster *integration.ClusterV3 /*for test*/) Factory {
 			InstHandler: instHandler,
 		},
 	}
+}
+
+func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD) {
+	cnf := runtime.LoadConfig()
+	log := logging.NewZapLogger(cnf.ZapConfig)
+	cnt := runtime.Container{
+		Config: cnf,
+		Log:    log,
+	}
+	var store storage.CRUD
+	if mng != nil {
+		store = mng.Store()
+	} else {
+		store = storage.NewEtcdConfig(cnf.EtcdConfig)
+	}
+	return cnf, cnt, store
+}
+
+func services(cnt runtime.Container, store storage.CRUD) service {
+	srv := configService(cnt, store)
+	return srv
+}
+
+func handlers(srv service, cnt runtime.Container) handler.Instance {
+	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
+	return instHandler
 }

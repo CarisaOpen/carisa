@@ -28,11 +28,13 @@ import (
 
 const loc = "Instance.Http"
 
+// Instance hands the http request of the instance
 type Instance struct {
 	srv instance.Service
 	cnt runtime.Container
 }
 
+// NewInstanceHandl creates handler
 func NewInstanceHandl(srv instance.Service, cnt runtime.Container) Instance {
 	return Instance{
 		srv: srv,
@@ -52,7 +54,6 @@ func (i *Instance) Create(c echo.Context) error {
 			loc)
 	}
 
-	inst.AutoID()
 	found, err := i.srv.Create(inst)
 	if err != nil {
 		return echo.NewHTTPError(nethttp.StatusInternalServerError, "It was impossible to create the instance")

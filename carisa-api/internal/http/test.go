@@ -14,32 +14,20 @@
  *
  */
 
-package storage
+package http
 
 import (
-	"reflect"
-	"testing"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 
-	"go.etcd.io/etcd/integration"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/labstack/echo/v4"
 )
 
-func TestNewTxn(t *testing.T) {
-	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
-	defer cluster.Terminate(t)
-
-	tests := []struct {
-		store CRUD
-		typeN string
-	}{
-		{
-			store: NewEtcd(cluster.RandClient()),
-			typeN: "*storage.etcdTxn",
-		},
-	}
-	for _, tt := range tests {
-		txn := NewTxn(tt.store)
-		assert.Equal(t, tt.typeN, reflect.TypeOf(txn).String())
-	}
+func MockHttp(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
+	req := httptest.NewRequest(http.MethodPost, url, strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	return
 }

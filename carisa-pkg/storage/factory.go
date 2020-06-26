@@ -21,8 +21,6 @@ func NewTxn(store CRUD) Txn {
 	switch s := store.(type) {
 	case *etcdStore:
 		return &etcdTxn{client: s.client}
-	case *MockCRUD:
-		return &MockTxn{}
 	default:
 		panic("Store type not defined")
 	}

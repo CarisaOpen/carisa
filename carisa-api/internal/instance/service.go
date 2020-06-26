@@ -30,7 +30,8 @@ type Service struct {
 	store storage.CRUD
 }
 
-// NewService builds instance service
+// Create creates a instance into of the repository
+// If the instance exists returns false
 func NewService(cnt runtime.Container, store storage.CRUD) Service {
 	return Service{
 		cnt:   cnt,
@@ -38,14 +39,14 @@ func NewService(cnt runtime.Container, store storage.CRUD) Service {
 	}
 }
 
-// Create creates a instance into of the repository
-// If the instance exists returns false
+// Create implements instance.Service.Create
 func (s *Service) Create(inst Instance) (bool, error) {
 	txn := storage.NewTxn(s.store)
 
 	txn.Find(inst.GetKey())
 
-	create, err := s.store.Create(inst)
+	inst.AutoID()
+	create, err := s.store.Create(&inst)
 	if err != nil {
 		s.cnt.Log.ErrorE(err, loc)
 		return false, err

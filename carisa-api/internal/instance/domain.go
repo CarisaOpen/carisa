@@ -27,10 +27,16 @@ type Instance struct {
 	entity.Descriptor
 }
 
-func (i Instance) ToString() string {
+func NewInstance() Instance {
+	return Instance{
+		Descriptor: entity.NewDescriptor(),
+	}
+}
+
+func (i *Instance) ToString() string {
 	return strings.Concat("Instance: ", i.ID.String())
 }
 
-func (i Instance) GetKey() string {
+func (i *Instance) GetKey() string {
 	return i.ID.String()
 }

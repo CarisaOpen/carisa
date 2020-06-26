@@ -19,7 +19,7 @@ package factory
 import (
 	"testing"
 
-	"go.etcd.io/etcd/integration"
+	"github.com/carisa/api/internal/mock"
 
 	"github.com/carisa/pkg/storage"
 
@@ -33,11 +33,11 @@ func TestBuild(t *testing.T) {
 		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 	}
 
-	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
-	defer cluster.Terminate(t)
+	sMock := mock.NewStorageFake(t)
+	defer sMock.Close()
 
-	factory := build(cluster)
+	factory := build(sMock)
 
 	assert.Equal(t, cnf, factory.Config, "Config")
-	assert.NotNil(t, cnf, factory.Handlers.InstHandler, "Instance Handler")
+	assert.NotNil(t, factory.Handlers.InstHandler, "Instance Handler")
 }

@@ -27,3 +27,8 @@ func TestAutoID(t *testing.T) {
 	d.AutoID()
 	assert.NotEmpty(t, d.ID)
 }
+
+func TestNewDescriptor(t *testing.T) {
+	d := NewDescriptor()
+	assert.NotEmpty(t, d.ID)
+}
