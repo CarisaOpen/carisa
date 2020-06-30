@@ -52,12 +52,12 @@ type (
 		// DoNotFound saves the operations to transaction if it is not found into commit
 		DoNotFound(ope opeWrap)
 
-		// Commit commits the transaction
+		// Commit commits the transaction. If it is returned true the transaction is successfully
 		Commit(ctx context.Context) (bool, error)
 	}
 )
 
-// Integration defines the function to test
+// Integration defines the functions to test
 type Integration interface {
 	// Store gets a store from integration
 	Store() CRUD

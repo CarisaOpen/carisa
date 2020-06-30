@@ -29,12 +29,23 @@ func NewContainerFake() runtime.Container {
 	if err != nil {
 		panic(err)
 	}
+	return runtime.NewContainer(runtime.LoadConfig(), log)
+}
+
+func NewContainerMock() (runtime.Container, *storage.ErrMockTxn) {
+	txn := &storage.ErrMockTxn{}
+	log, err := logging.NewZapWrapDev()
+	if err != nil {
+		panic(err)
+	}
 	return runtime.Container{
 		Config: runtime.LoadConfig(),
 		Log:    log,
-	}
+		NewTxn: func(s storage.CRUD) storage.Txn { return txn },
+	}, txn
 }
 
 func NewStorageFake(t *testing.T) storage.Integration {
+	// If the store framework is changed, also it changes runtime.TestNewContainer
 	return storage.NewEctdIntegra(t)
 }

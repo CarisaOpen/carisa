@@ -103,6 +103,13 @@ etcd:
 	}
 }
 
+func TestLoadConfigPanic(t *testing.T) {
+	err := os.Setenv(envConfig, "Panic")
+	if assert.NoError(t, err) {
+		assert.Panics(t, func() { LoadConfig() })
+	}
+}
+
 func TestStoreWithTimeout(t *testing.T) {
 	c := Config{}
 	ctx, _ := c.StoreWithTimeout()

@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/carisa/pkg/logging"
 
 	"github.com/stretchr/testify/assert"
@@ -32,11 +34,11 @@ func TestCreateStatus(t *testing.T) {
 		status int
 	}{
 		{
-			found:  false,
+			found:  true,
 			status: http.StatusCreated,
 		},
 		{
-			found:  true,
+			found:  false,
 			status: http.StatusFound,
 		},
 	}
@@ -62,4 +64,9 @@ func TestNewHTTPErrorLog(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, errLog.Code, "Error status")
 	assert.Equal(t, "error. key: value", errLog.Message, "Message")
+}
+
+func TestClose(t *testing.T) {
+	e := echo.New()
+	Close(e)
 }

@@ -117,7 +117,7 @@ func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
 		return opeWrap{},
 			errors.Wrap(
 				err,
-				logging.Compose("Unexpected encode error creating entity into etcd store",
+				logging.Compose("unexpected encode error creating entity into etcd store",
 					logging.String("Entity", entity.ToString())))
 	}
 
@@ -147,7 +147,7 @@ func (txn *etcdTxn) Find(keyValue string) {
 // DoFound implements storage.interface.Txn.DoFound
 func (txn *etcdTxn) DoFound(ope opeWrap) {
 	if txn.indexF > 1 {
-		panic("The transaction cannot have more than 2 operations for found")
+		panic("the transaction cannot have more than 2 operations for found")
 	}
 	txn.opeFound[txn.indexF] = ope
 	txn.indexF++
@@ -156,7 +156,7 @@ func (txn *etcdTxn) DoFound(ope opeWrap) {
 // DoNotFound implements storage.interface.Txn.DoNotFound
 func (txn *etcdTxn) DoNotFound(ope opeWrap) {
 	if txn.indexNf > 1 {
-		panic("The transaction cannot have more than 2 operations for not found")
+		panic("the transaction cannot have more than 2 operations for not found")
 	}
 	txn.opeNoFound[txn.indexNf] = ope
 	txn.indexNf++
@@ -165,10 +165,10 @@ func (txn *etcdTxn) DoNotFound(ope opeWrap) {
 // Commit implements storage.interface.Txn.Commit
 func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	if txn.indexF == 0 && txn.indexNf == 0 {
-		panic("There aren't operations")
+		panic("there aren't operations")
 	}
 	if len(txn.keyValue) == 0 {
-		panic("There isn't condition")
+		panic("there isn't condition")
 	}
 
 	tx := txn.client.KV.Txn(ctx)

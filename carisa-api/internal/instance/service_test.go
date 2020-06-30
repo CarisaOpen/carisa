@@ -14,28 +14,37 @@
  *
  */
 
-package server
+package instance
 
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/entity"
+	"github.com/carisa/api/internal/mock"
+	"github.com/carisa/pkg/storage"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/carisa/api/internal/http/handler"
-
-	"github.com/labstack/echo/v4"
 )
 
-func TestMiddleware(t *testing.T) {
-	e := echo.New()
-	Middleware(e)
+// Verify the store integration. For all test look at http.handler.instance_test
+func TestInstanceService_Create(t *testing.T) {
+	i := Instance{
+		Descriptor: entity.Descriptor{
+			Name: "name",
+			Desc: "desc",
+		},
+	}
+	s, mng := NewServiceFaked(t)
+	defer mng.Close()
+
+	ok, err := s.Create(&i)
+
+	if assert.NoError(t, err) {
+		assert.True(t, ok, "Created")
+	}
 }
 
-func TestRouter(t *testing.T) {
-	e := echo.New()
-	h := handler.Handlers{}
-
-	Router(e, h)
-
-	assert.Equal(t, 1, len(e.Routes()))
+func NewServiceFaked(t *testing.T) (Service, storage.Integration) {
+	mng := mock.NewStorageFake(t)
+	cnt := mock.NewContainerFake()
+	return NewService(cnt, mng.Store()), mng
 }

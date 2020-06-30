@@ -14,37 +14,29 @@
  *
  */
 
-package http
+package runtime
 
 import (
-	nethttp "net/http"
+	"testing"
 
 	"github.com/carisa/pkg/logging"
-	"github.com/labstack/echo/v4"
+	"github.com/carisa/pkg/storage"
+	"github.com/stretchr/testify/assert"
 )
 
-// NewHTTPErrorLog creates http error and sending a log error
-func NewHTTPErrorLog(
-	status int,
-	msg string, err error,
-	logger logging.Logger,
-	loc string, fields ...logging.Field) *echo.HTTPError {
-	_ = logger.ErrWrap(err, msg, loc, fields...)
-	return echo.NewHTTPError(status, logging.Compose(msg, fields...))
-}
-
-// status return status for create handler
-func CreateStatus(created bool) int {
-	status := nethttp.StatusFound
-	if created {
-		status = nethttp.StatusCreated
+func TestNewContainer(t *testing.T) {
+	cnf := Config{
+		Server:     Server{Port: 8080},
+		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 	}
-	return status
-}
 
-// Close close echo connection
-func Close(e *echo.Echo) {
-	if err := e.Close(); err != nil {
-		panic(err)
-	}
+	log := logging.NewZapLogger(cnf.ZapConfig)
+	sMock := storage.NewEctdIntegra(t)
+	defer sMock.Close()
+
+	ctn := NewContainer(cnf, log)
+
+	assert.Equal(t, cnf, ctn.Config, "Config")
+	assert.NotNil(t, ctn.Log, "Log")
+	assert.NotNil(t, ctn.NewTxn(sMock.Store()), "Transaction")
 }

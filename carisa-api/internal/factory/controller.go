@@ -50,10 +50,7 @@ func build(mng storage.Integration /*for test*/) Factory {
 func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD) {
 	cnf := runtime.LoadConfig()
 	log := logging.NewZapLogger(cnf.ZapConfig)
-	cnt := runtime.Container{
-		Config: cnf,
-		Log:    log,
-	}
+	cnt := runtime.NewContainer(cnf, log)
 	var store storage.CRUD
 	if mng != nil {
 		store = mng.Store()

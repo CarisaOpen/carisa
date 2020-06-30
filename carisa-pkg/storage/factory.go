@@ -16,12 +16,12 @@
 
 package storage
 
-// NewTxn return a transaction depending of the store
+// NewTxn return a transactions manager depending of the store
 func NewTxn(store CRUD) Txn {
 	switch s := store.(type) {
 	case *etcdStore:
 		return &etcdTxn{client: s.client}
 	default:
-		panic("Store type not defined")
+		panic("store type not defined")
 	}
 }

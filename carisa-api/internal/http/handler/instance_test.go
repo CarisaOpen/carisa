@@ -17,8 +17,11 @@
 package handler
 
 import (
+	"encoding/json"
 	nethttp "net/http"
 	"testing"
+
+	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/api/internal/mock"
 
@@ -32,44 +35,81 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func TestInstance_Create(t *testing.T) {
-	tests := []struct {
-		name     string
-		error    bool
-		body     string
-		status   uint16
-		response string
-	}{
-		{
-			name:     "Body wrong. Bad request",
-			error:    true,
-			body:     "{df",
-			status:   nethttp.StatusBadRequest,
-			response: "",
-		},
-	}
-
+func TestCreate(t *testing.T) {
 	e := echo.New()
-	handler, mng := NewHandler(t)
+	handler, mng := NewHandlerFaked(t)
 	defer mng.Close()
 
-	for _, tt := range tests {
-		rec, ctx := http.MockHttp(e, "/api/instances", tt.body)
-		err := handler.Create(ctx)
-		if tt.error {
-			assert.Error(t, err, tt.name)
-		} else {
-			if assert.NoError(t, err, tt.name) {
-				assert.Equal(t, tt.status, rec.Code, tt.name)
-				assert.Equal(t, tt.response, rec.Body.String(), tt.name)
-			}
+	instJson := `"name":"name","description":"desc"`
+	rec, ctx := http.MockHttp(e, "/api/instances", strings.Concat("{", instJson, "}"))
+	err := handler.Create(ctx)
+	if assert.NoError(t, err) {
+		assert.Contains(t, rec.Body.String(), instJson, "Instance created")
+		var inst instance.Instance
+		errJ := json.NewDecoder(rec.Body).Decode(&inst)
+		if assert.NoError(t, errJ) {
+			assert.NotEmpty(t, inst.ID.String(), "Instance created. ID no empty")
 		}
 	}
 }
 
-func NewHandler(t *testing.T) (Instance, storage.Integration) {
+func TestCreateError(t *testing.T) {
+	const body = `{"name":"name","description":"desc"}`
+
+	tests := []struct {
+		name   string
+		body   string
+		mockS  func(*storage.ErrMockCRUD)
+		mockT  func(txn *storage.ErrMockTxn)
+		status int
+	}{
+		{
+			name:   "Body wrong. Bad request",
+			body:   "{df",
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:   "Creating Entity. Error creating",
+			body:   body,
+			mockS:  func(s *storage.ErrMockCRUD) { s.Activate("Create") },
+			status: nethttp.StatusInternalServerError,
+		},
+		{
+			name:   "Creating Entity. Error commits transactions",
+			body:   body,
+			mockS:  func(s *storage.ErrMockCRUD) { s.Clear() },
+			mockT:  func(s *storage.ErrMockTxn) { s.Activate("Commit") },
+			status: nethttp.StatusInternalServerError,
+		},
+	}
+
+	e := echo.New()
+	defer http.Close(e)
+	handler, store, txn := NewHandlerMocked(t)
+
+	for _, tt := range tests {
+		if tt.mockS != nil {
+			tt.mockS(store)
+		}
+		if tt.mockT != nil {
+			tt.mockT(txn)
+		}
+		_, ctx := http.MockHttp(e, "/api/instances", tt.body)
+		err := handler.Create(ctx)
+		assert.Error(t, err, tt.name)
+	}
+}
+
+func NewHandlerFaked(t *testing.T) (Instance, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	srv := instance.NewService(cnt, mng.Store())
 	return NewInstanceHandl(srv, cnt), mng
+}
+
+func NewHandlerMocked(t *testing.T) (Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
+	cnt, txn := mock.NewContainerMock()
+	store := &storage.ErrMockCRUD{}
+	srv := instance.NewService(cnt, store)
+	return NewInstanceHandl(srv, cnt), store, txn
 }

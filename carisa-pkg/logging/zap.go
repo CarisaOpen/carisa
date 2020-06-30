@@ -158,7 +158,7 @@ func (z *zapWrap) convertToZap(loc string, fields ...Field) [fieldsSize]zap.Fiel
 	var fZap [fieldsSize]zap.Field
 	actualFSize := len(fields) + 1 // loc is added
 	if actualFSize > fieldsSize {
-		panic(strings.Concat("Log fields and location size cannot be more than ", string(fieldsSize)))
+		panic(strings.Concat("log fields and location size cannot be more than ", string(fieldsSize)))
 	}
 
 	fZap[0] = zap.String(z.locName, loc)
@@ -192,5 +192,5 @@ func ConvertZapLevel(level Level) zapcore.Level {
 	case PanicLevel:
 		return zap.PanicLevel
 	}
-	panic("Logging level is wrong")
+	panic("logging level is wrong")
 }

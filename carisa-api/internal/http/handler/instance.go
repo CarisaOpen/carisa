@@ -48,16 +48,16 @@ func (i *Instance) Create(c echo.Context) error {
 	if err := c.Bind(&inst); err != nil {
 		return http.NewHTTPErrorLog(
 			nethttp.StatusBadRequest,
-			"Cannot recover the instance for creating",
+			"cannot recover the instance for creating",
 			err,
 			i.cnt.Log,
 			loc)
 	}
 
-	found, err := i.srv.Create(inst)
+	created, err := i.srv.Create(&inst)
 	if err != nil {
-		return echo.NewHTTPError(nethttp.StatusInternalServerError, "It was impossible to create the instance")
+		return echo.NewHTTPError(nethttp.StatusInternalServerError, "it was impossible to create the instance")
 	}
 
-	return c.JSON(http.CreateStatus(found), inst)
+	return c.JSON(http.CreateStatus(created), inst)
 }

@@ -149,22 +149,10 @@ func TestEtcdCreate(t *testing.T) {
 	}
 }
 
-func TestEtcdClose(t *testing.T) {
-	_, _, store := newStore(t)
-	err := store.Close()
-	assert.Nil(t, err)
-}
-
 func TestEtcdIntegraStore(t *testing.T) {
 	i := NewEctdIntegra(t)
-	assert.NotNil(t, i.Store())
-	i.Close()
-}
-
-func TestEtcdIntegraClose(t *testing.T) {
-	i := NewEctdIntegra(t)
 	defer i.Close()
-	i.Close()
+	assert.NotNil(t, i.Store())
 }
 
 func newStore(t *testing.T) (*integration.ClusterV3, context.Context, CRUD) {
