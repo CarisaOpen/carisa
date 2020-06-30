@@ -54,9 +54,19 @@ type Logger interface {
 	// Error logs a message at ErrorLevel. The message includes any fields passed and location
 	Error(msg string, loc string, fields ...Field)
 
+	// ErrWrap generates a trace in logging and return a wrap error
+	ErrWrap(err error, msg string, loc string, fields ...Field) error
+
+	// ErrorE logs a message at ErrorLevel. The message includes any fields passed and location
+	ErrorE(err error, loc string, fields ...Field)
+
 	// Panic logs a message at PanicLevel. The message includes any fields passed and location
 	// The logger then panics, even if logging at PanicLevel is disabled.
 	Panic(msg string, loc string, fields ...Field)
+
+	// Panic logs a message at PanicLevel. The message includes the location
+	// The logger then panics, even if logging at PanicLevel is disabled.
+	PanicE(err error, loc string)
 
 	// Check checks if logging a message at the specified level
 	// is enabled.
@@ -65,12 +75,6 @@ type Logger interface {
 
 	// Writes log. See Check
 	Write(wrap *CheckWrap, loc string, fields ...Field)
-
-	// ErrWrap generates a trace in logging and return a wrap error
-	ErrWrap(err error, msg string, loc string, fields ...Field) error
-
-	// ErrorE logs a message at ErrorLevel. The message includes any fields passed and location
-	ErrorE(err error, loc string, fields ...Field)
 }
 
 // Looger composition
@@ -88,4 +92,9 @@ func (l *loggerComp) ErrWrap(err error, msg string, loc string, fields ...Field)
 	errW := errors.Wrap(err, Compose(msg, fields...))
 	l.log.Error(errW.Error(), loc)
 	return errW
+}
+
+// PanicE implements logging.Logger.PanicE
+func (l *loggerComp) PanicE(err error, loc string) {
+	l.log.Panic(err.Error(), loc)
 }

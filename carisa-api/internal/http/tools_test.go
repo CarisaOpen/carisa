@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/mock"
+
 	"github.com/labstack/echo/v4"
 
 	"github.com/carisa/pkg/logging"
@@ -67,6 +69,7 @@ func TestNewHTTPErrorLog(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
+	cnt := mock.NewContainerFake()
 	e := echo.New()
-	Close(e)
+	Close(cnt.Log, e)
 }

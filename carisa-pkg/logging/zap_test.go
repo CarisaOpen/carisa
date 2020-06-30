@@ -106,6 +106,12 @@ func TestZapWrapPanic(t *testing.T) {
 	}
 }
 
+func TestZapWrapPanicE(t *testing.T) {
+	_, l := newLogger(zapcore.PanicLevel)
+
+	assert.Panics(t, func() { l.PanicE(errors.New("panic"), "loc") })
+}
+
 func TestZapWrapCheck(t *testing.T) {
 	tests := testdd()
 

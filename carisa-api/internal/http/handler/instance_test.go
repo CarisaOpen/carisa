@@ -21,6 +21,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/runtime"
+
 	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/api/internal/mock"
@@ -37,8 +39,9 @@ import (
 
 func TestCreate(t *testing.T) {
 	e := echo.New()
-	handler, mng := NewHandlerFaked(t)
+	cnt, handler, mng := NewHandlerFaked(t)
 	defer mng.Close()
+	defer http.Close(cnt.Log, e)
 
 	instJson := `"name":"name","description":"desc"`
 	rec, ctx := http.MockHttp(e, "/api/instances", strings.Concat("{", instJson, "}"))
@@ -84,8 +87,8 @@ func TestCreateError(t *testing.T) {
 	}
 
 	e := echo.New()
-	defer http.Close(e)
-	handler, store, txn := NewHandlerMocked(t)
+	cnt, handler, store, txn := NewHandlerMocked(t)
+	defer http.Close(cnt.Log, e)
 
 	for _, tt := range tests {
 		if tt.mockS != nil {
@@ -100,16 +103,16 @@ func TestCreateError(t *testing.T) {
 	}
 }
 
-func NewHandlerFaked(t *testing.T) (Instance, storage.Integration) {
+func NewHandlerFaked(t *testing.T) (runtime.Container, Instance, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	srv := instance.NewService(cnt, mng.Store())
-	return NewInstanceHandl(srv, cnt), mng
+	return cnt, NewInstanceHandl(srv, cnt), mng
 }
 
-func NewHandlerMocked(t *testing.T) (Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
+func NewHandlerMocked(t *testing.T) (runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
 	cnt, txn := mock.NewContainerMock()
 	store := &storage.ErrMockCRUD{}
 	srv := instance.NewService(cnt, store)
-	return NewInstanceHandl(srv, cnt), store, txn
+	return cnt, NewInstanceHandl(srv, cnt), store, txn
 }
