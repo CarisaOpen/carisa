@@ -23,27 +23,31 @@ import (
 	"github.com/carisa/pkg/storage"
 )
 
-// Factory builds the application flow
-type Factory struct {
+// Controller builds the application flow
+type Controller struct {
 	Config   runtime.Config
 	Handlers handler.Handlers
+	store    storage.CRUD
+	cnt      runtime.Container
 }
 
 // Build builds the services, store, log, etc..
-func Build() Factory {
+func Build() Controller {
 	return build(nil)
 }
 
-func build(mng storage.Integration /*for test*/) Factory {
+func build(mng storage.Integration /*for test*/) Controller {
 	cnf, cnt, store := servers(mng)
 	srv := services(cnt, store)
 	instHandler := handlers(srv, cnt)
 
-	return Factory{
+	return Controller{
 		Config: cnf,
 		Handlers: handler.Handlers{
 			InstHandler: instHandler,
 		},
+		store: store,
+		cnt:   cnt,
 	}
 }
 
@@ -68,4 +72,11 @@ func services(cnt runtime.Container, store storage.CRUD) service {
 func handlers(srv service, cnt runtime.Container) handler.Instance {
 	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
 	return instHandler
+}
+
+// Close closes all connections
+func (c *Controller) Close() {
+	if err := c.store.Close(); err != nil {
+		_ = c.cnt.Log.ErrWrap(err, "closing storage", "Factory.Close")
+	}
 }

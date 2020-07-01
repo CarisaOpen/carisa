@@ -27,4 +27,5 @@ func main() {
 	server.Router(e, f.Handlers)
 	server.Middleware(e)
 	e.Logger.Fatal(e.Start(":" + string(f.Config.Port)))
+	f.Close()
 }

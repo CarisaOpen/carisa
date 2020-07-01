@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFactory_Build(t *testing.T) {
+func TestController_Build(t *testing.T) {
 	cnf := runtime.Config{
 		Server:     runtime.Server{Port: 8080},
 		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},

@@ -62,7 +62,6 @@ func NewZapLogger(config ZapConfig) Logger {
 	if err != nil {
 		panic("Error creating zap logger")
 	}
-
 	return NewZapWrap(l, "")
 }
 
