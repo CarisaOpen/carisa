@@ -72,6 +72,11 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 			status: nethttp.StatusBadRequest,
 		},
 		{
+			name:   "Descriptor validation. Bad request",
+			body:   `{"name":"","description":"desc"}`,
+			status: nethttp.StatusBadRequest,
+		},
+		{
 			name:   "Creating Entity. Error creating",
 			body:   body,
 			mockS:  func(s *storage.ErrMockCRUD) { s.Activate("Create") },

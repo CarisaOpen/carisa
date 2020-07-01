@@ -19,6 +19,8 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/carisa/api/internal/http/valid"
+
 	"github.com/carisa/api/internal/http"
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
@@ -52,6 +54,10 @@ func (i *Instance) Create(c echo.Context) error {
 			err,
 			i.cnt.Log,
 			loc)
+	}
+
+	if httpErr := valid.Descriptor(inst.Descriptor); httpErr != nil {
+		return httpErr
 	}
 
 	created, err := i.srv.Create(&inst)
