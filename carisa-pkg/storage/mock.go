@@ -19,11 +19,11 @@ func (_m *ErrMockCRUD) Close() error {
 	return nil
 }
 
-func (_m *ErrMockCRUD) Create(entity Entity) (opeWrap, error) {
+func (_m *ErrMockCRUD) Create(entity Entity) (OpeWrap, error) {
 	if _m.create {
-		return opeWrap{}, errors.New("create")
+		return OpeWrap{}, errors.New("create")
 	}
-	return opeWrap{}, nil
+	return OpeWrap{}, nil
 }
 
 // Activate activates the methods to throw a error
@@ -80,10 +80,10 @@ func (_m *ErrMockTxn) Clear() {
 	_m.commit = false
 }
 
-func (_m *ErrMockTxn) DoFound(ope opeWrap) {
+func (_m *ErrMockTxn) DoFound(ope OpeWrap) {
 }
 
-func (_m *ErrMockTxn) DoNotFound(ope opeWrap) {
+func (_m *ErrMockTxn) DoNotFound(ope OpeWrap) {
 }
 
 func (_m *ErrMockTxn) Find(keyValue string) {

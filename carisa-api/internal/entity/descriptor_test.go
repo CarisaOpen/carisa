@@ -22,13 +22,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAutoID(t *testing.T) {
+func TestDescriptor_AutoID(t *testing.T) {
 	d := Descriptor{}
 	d.AutoID()
 	assert.NotEmpty(t, d.ID)
 }
 
-func TestNewDescriptor(t *testing.T) {
+func TestDescriptor_New(t *testing.T) {
 	d := NewDescriptor()
 	assert.NotEmpty(t, d.ID)
 }

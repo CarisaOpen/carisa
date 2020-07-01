@@ -26,12 +26,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func TestMiddleware(t *testing.T) {
+func TestServer_Middleware(t *testing.T) {
 	e := echo.New()
 	Middleware(e)
 }
 
-func TestRouter(t *testing.T) {
+func TestServer_Router(t *testing.T) {
 	e := echo.New()
 	h := handler.Handlers{}
 

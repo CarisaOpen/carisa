@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestString(t *testing.T) {
+func TestField_String(t *testing.T) {
 	const key = "key"
 	value := "value"
 
@@ -33,7 +33,7 @@ func TestString(t *testing.T) {
 	assert.Equal(t, f.stringV, value)
 }
 
-func TestBool(t *testing.T) {
+func TestField_Bool(t *testing.T) {
 	const key = "key"
 
 	f := Bool(key, true)
@@ -43,7 +43,7 @@ func TestBool(t *testing.T) {
 	assert.True(t, f.boolV)
 }
 
-func TestCompose(t *testing.T) {
+func TestField_Compose(t *testing.T) {
 	tests := []struct {
 		msg string
 		fs  []Field

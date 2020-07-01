@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateStatus(t *testing.T) {
+func TestHttpTools_CreateStatus(t *testing.T) {
 	tests := []struct {
 		found  bool
 		status int
@@ -50,7 +50,7 @@ func TestCreateStatus(t *testing.T) {
 	}
 }
 
-func TestNewHTTPErrorLog(t *testing.T) {
+func TestHttpTools_NewHTTPErrorLog(t *testing.T) {
 	log, err := logging.NewZapWrapDev()
 	if err != nil {
 		t.Error(err)
@@ -68,7 +68,7 @@ func TestNewHTTPErrorLog(t *testing.T) {
 	assert.Equal(t, "error. key: value", errLog.Message, "Message")
 }
 
-func TestClose(t *testing.T) {
+func TestHttpTools_Close(t *testing.T) {
 	cnt := mock.NewContainerFake()
 	e := echo.New()
 	Close(cnt.Log, e)

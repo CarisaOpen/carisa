@@ -111,17 +111,17 @@ func config(cnf EtcdConfig) clientv3.Config {
 }
 
 // Create implements storage.interface.CRUD.Create
-func (s *etcdStore) Create(entity Entity) (opeWrap, error) {
+func (s *etcdStore) Create(entity Entity) (OpeWrap, error) {
 	encode, err := encoding.Encode(entity)
 	if err != nil {
-		return opeWrap{},
+		return OpeWrap{},
 			errors.Wrap(
 				err,
 				logging.Compose("unexpected encode error creating entity into etcd store",
 					logging.String("Entity", entity.ToString())))
 	}
 
-	return opeWrap{clientv3.OpPut(entity.GetKey(), encode)}, err
+	return OpeWrap{clientv3.OpPut(entity.GetKey(), encode)}, err
 }
 
 // Create implements storage.interface.CRUD.Close
@@ -132,8 +132,8 @@ func (s *etcdStore) Close() error {
 // etcdStore defines the operations of a transaction
 type etcdTxn struct {
 	client     *clientv3.Client
-	opeFound   [2]opeWrap // Could use make but this avoids escape to heap and the number of operations at most is 2
-	opeNoFound [2]opeWrap
+	opeFound   [2]OpeWrap // Could use make but this avoids escape to heap and the number of operations at most is 2
+	opeNoFound [2]OpeWrap
 	indexF     uint8
 	indexNf    uint8
 	keyValue   string
@@ -145,7 +145,7 @@ func (txn *etcdTxn) Find(keyValue string) {
 }
 
 // DoFound implements storage.interface.Txn.DoFound
-func (txn *etcdTxn) DoFound(ope opeWrap) {
+func (txn *etcdTxn) DoFound(ope OpeWrap) {
 	if txn.indexF > 1 {
 		panic("the transaction cannot have more than 2 operations for found")
 	}
@@ -154,7 +154,7 @@ func (txn *etcdTxn) DoFound(ope opeWrap) {
 }
 
 // DoNotFound implements storage.interface.Txn.DoNotFound
-func (txn *etcdTxn) DoNotFound(ope opeWrap) {
+func (txn *etcdTxn) DoNotFound(ope OpeWrap) {
 	if txn.indexNf > 1 {
 		panic("the transaction cannot have more than 2 operations for not found")
 	}
@@ -199,7 +199,7 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	return result.Succeeded, nil
 }
 
-func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]opeWrap, index uint8) clientv3.Txn {
+func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]OpeWrap, index uint8) clientv3.Txn {
 	tx = tx.If(clientv3.Compare(clientv3.ModRevision(txn.keyValue), compare, 0))
 	if index == 1 {
 		return tx.Then(opes[0].opeEtcd)

@@ -24,7 +24,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func MockHttp(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
+func MockHTTP(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
 	req := httptest.NewRequest(http.MethodPost, url, strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()

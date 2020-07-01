@@ -40,7 +40,7 @@ func (e *EntityTest) GetKey() string {
 	return e.Prop1
 }
 
-func TestConfig(t *testing.T) {
+func TestEtcd_Config(t *testing.T) {
 	tests := []struct {
 		s EtcdConfig
 		t clientv3.Config
@@ -97,7 +97,7 @@ func TestConfig(t *testing.T) {
 	}
 }
 
-func TestEtcdCreate(t *testing.T) {
+func TestEtcd_Create(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
 	client := cluster.RandClient()
@@ -149,7 +149,7 @@ func TestEtcdCreate(t *testing.T) {
 	}
 }
 
-func TestEtcdIntegraStore(t *testing.T) {
+func TestEtcd_IntegraStore(t *testing.T) {
 	i := NewEctdIntegra(t)
 	defer i.Close()
 	assert.NotNil(t, i.Store())

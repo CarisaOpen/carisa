@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewContainer(t *testing.T) {
+func TestRuntime_NewContainer(t *testing.T) {
 	cnf := Config{
 		Server:     Server{Port: 8080},
 		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},

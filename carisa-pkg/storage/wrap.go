@@ -17,8 +17,8 @@ package storage
 
 import "go.etcd.io/etcd/clientv3"
 
-// opeWrap uncouples the store from its use. Exchanges operations with transactions
+// OpeWrap uncouples the store from its use. Exchanges operations with transactions
 // This avoids the use of an interface that is slower
-type opeWrap struct {
+type OpeWrap struct {
 	opeEtcd clientv3.Op
 }

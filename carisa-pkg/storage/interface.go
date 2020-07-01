@@ -35,7 +35,7 @@ type (
 	CRUD interface {
 		// Create creates the context to create the entity. This context is added to the transaction.
 		// See Txn interface
-		Create(entity Entity) (opeWrap, error)
+		Create(entity Entity) (OpeWrap, error)
 
 		// Close close resources
 		Close() error
@@ -47,10 +47,10 @@ type (
 		Find(keyValue string)
 
 		// DoFound saves the operations to transaction if it is found into commit
-		DoFound(ope opeWrap)
+		DoFound(ope OpeWrap)
 
 		// DoNotFound saves the operations to transaction if it is not found into commit
-		DoNotFound(ope opeWrap)
+		DoNotFound(ope OpeWrap)
 
 		// Commit commits the transaction. If it is returned true the transaction is successfully
 		Commit(ctx context.Context) (bool, error)

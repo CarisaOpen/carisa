@@ -40,7 +40,7 @@ type tests struct {
 	items []Item
 }
 
-func TestZapWrapInfo(t *testing.T) {
+func TestZapWrap_Info(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -51,7 +51,7 @@ func TestZapWrapInfo(t *testing.T) {
 	}
 }
 
-func TestZapWrapWarn(t *testing.T) {
+func TestZapWrap_Warn(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -62,7 +62,7 @@ func TestZapWrapWarn(t *testing.T) {
 	}
 }
 
-func TestZapWrapDebug(t *testing.T) {
+func TestZapWrap_Debug(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -73,7 +73,7 @@ func TestZapWrapDebug(t *testing.T) {
 	}
 }
 
-func TestZapWrapError(t *testing.T) {
+func TestZapWrap_Error(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -84,7 +84,7 @@ func TestZapWrapError(t *testing.T) {
 	}
 }
 
-func TestZapWrapErrorE(t *testing.T) {
+func TestZapWrap_ErrorE(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -95,7 +95,7 @@ func TestZapWrapErrorE(t *testing.T) {
 	}
 }
 
-func TestZapWrapPanic(t *testing.T) {
+func TestZapWrap_Panic(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -106,13 +106,13 @@ func TestZapWrapPanic(t *testing.T) {
 	}
 }
 
-func TestZapWrapPanicE(t *testing.T) {
+func TestZapWrap_PanicE(t *testing.T) {
 	_, l := newLogger(zapcore.PanicLevel)
 
 	assert.Panics(t, func() { l.PanicE(errors.New("panic"), "loc") })
 }
 
-func TestZapWrapCheck(t *testing.T) {
+func TestZapWrap_Check(t *testing.T) {
 	tests := testdd()
 
 	for _, tt := range tests {
@@ -125,13 +125,13 @@ func TestZapWrapCheck(t *testing.T) {
 	}
 }
 
-func TestZapWrapCheckNoMatchLevel(t *testing.T) {
+func TestZapWrap_CheckNoMatchLevel(t *testing.T) {
 	_, l := newLogger(zapcore.PanicLevel)
 	ce := l.Check(InfoLevel, "message")
 	assert.Nil(t, ce)
 }
 
-func TestZapWrapOutOfRangeFields(t *testing.T) {
+func TestZapWrap_OutOfRangeFields(t *testing.T) {
 	_, l := newLogger(zapcore.InfoLevel)
 
 	assert.Panics(t,
@@ -144,7 +144,7 @@ func TestZapWrapOutOfRangeFields(t *testing.T) {
 		})
 }
 
-func TestErrWrap(t *testing.T) {
+func TestZapWrap_ErrWrap(t *testing.T) {
 	_, l := newLogger(zapcore.InfoLevel)
 
 	if err := l.ErrWrap(errors.New("error"), "message", "test", String("key", "value")); err != nil {
@@ -154,7 +154,7 @@ func TestErrWrap(t *testing.T) {
 	t.Error("err cannot be nil")
 }
 
-func TestConvertZapLevel(t *testing.T) {
+func TestZapWrap_ConvertZapLevel(t *testing.T) {
 	tests := []struct {
 		l  Level
 		zL zapcore.Level
@@ -186,10 +186,9 @@ func TestConvertZapLevel(t *testing.T) {
 	}
 }
 
-func TestNewZapLogger(t *testing.T) {
+func TestZapWrap_NewZapLogger(t *testing.T) {
 	tests := []struct {
 		l      ZapConfig
-		panic  bool
 		levelR zapcore.Level
 	}{
 		{
@@ -198,7 +197,6 @@ func TestNewZapLogger(t *testing.T) {
 				Level:       0,
 				Encoding:    "",
 			},
-			panic:  false,
 			levelR: zap.InfoLevel,
 		},
 		{
@@ -207,7 +205,6 @@ func TestNewZapLogger(t *testing.T) {
 				Level:       InfoLevel,
 				Encoding:    "json",
 			},
-			panic:  false,
 			levelR: zap.InfoLevel,
 		},
 		{
@@ -216,7 +213,6 @@ func TestNewZapLogger(t *testing.T) {
 				Level:       0,
 				Encoding:    "console",
 			},
-			panic:  false,
 			levelR: zap.InfoLevel,
 		},
 		{
@@ -225,21 +221,16 @@ func TestNewZapLogger(t *testing.T) {
 				Level:       PanicLevel,
 				Encoding:    "json",
 			},
-			panic:  true,
 			levelR: zap.PanicLevel,
 		},
 	}
 	for _, tt := range tests {
-		if tt.panic {
-			assert.Panics(t, func() { NewZapLogger(tt.l) })
-		} else {
-			zL := NewZapLogger(tt.l).(*zapWrap)
-			assert.True(t, zL.log.Core().Enabled(tt.levelR), "Level")
-		}
+		zL := NewZapLogger(tt.l).(*zapWrap)
+		assert.True(t, zL.log.Core().Enabled(tt.levelR), "Level")
 	}
 }
 
-func TestNewZapWrapDev(t *testing.T) {
+func TestZapWrap_NewDev(t *testing.T) {
 	log, err := NewZapWrapDev()
 	if err != nil {
 		t.Error(err)

@@ -33,7 +33,7 @@ func TestInstanceService_Create(t *testing.T) {
 			Desc: "desc",
 		},
 	}
-	s, mng := NewServiceFaked(t)
+	s, mng := newServiceFaked(t)
 	defer mng.Close()
 
 	ok, err := s.Create(&i)
@@ -43,7 +43,7 @@ func TestInstanceService_Create(t *testing.T) {
 	}
 }
 
-func NewServiceFaked(t *testing.T) (Service, storage.Integration) {
+func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	return NewService(cnt, mng.Store()), mng

@@ -35,6 +35,6 @@ func NewContainer(cnf Config, log logging.Logger) Container {
 	return Container{
 		Config: cnf,
 		Log:    log,
-		NewTxn: func(s storage.CRUD) storage.Txn { return storage.NewTxn(s) },
+		NewTxn: storage.NewTxn,
 	}
 }

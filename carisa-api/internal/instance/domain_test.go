@@ -24,12 +24,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestToString(t *testing.T) {
+func TestInstance_ToString(t *testing.T) {
 	i := NewInstance()
 	assert.Equal(t, strings.Concat("Instance: ", i.ID.String()), i.ToString())
 }
 
-func TestGetKey(t *testing.T) {
+func TestInstance_GetKey(t *testing.T) {
 	i := NewInstance()
 	assert.Equal(t, i.ID.String(), i.GetKey())
 }

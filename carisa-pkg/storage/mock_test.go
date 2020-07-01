@@ -17,6 +17,7 @@
 package storage
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +47,7 @@ func TestErrMockCRUD_Clear(t *testing.T) {
 func TestErrMockTxn_Activate(t *testing.T) {
 	m := ErrMockTxn{}
 	m.Activate("Commit")
-	_, err := m.Commit(nil)
+	_, err := m.Commit(context.TODO())
 	assert.Error(t, err, "Create")
 }
 

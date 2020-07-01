@@ -27,7 +27,7 @@ type T struct {
 	B bool
 }
 
-func TestEncodeDecode(t *testing.T) {
+func TestEncoding_EncodeDecode(t *testing.T) {
 	data := T{
 		S: "String",
 		I: 1,

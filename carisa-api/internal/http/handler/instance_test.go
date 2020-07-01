@@ -37,17 +37,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func TestCreate(t *testing.T) {
+func TestInstanceHandler_Create(t *testing.T) {
 	e := echo.New()
-	cnt, handler, mng := NewHandlerFaked(t)
+	cnt, handler, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer http.Close(cnt.Log, e)
 
-	instJson := `"name":"name","description":"desc"`
-	rec, ctx := http.MockHttp(e, "/api/instances", strings.Concat("{", instJson, "}"))
+	instJSON := `"name":"name","description":"desc"`
+	rec, ctx := http.MockHTTP(e, "/api/instances", strings.Concat("{", instJSON, "}"))
 	err := handler.Create(ctx)
 	if assert.NoError(t, err) {
-		assert.Contains(t, rec.Body.String(), instJson, "Instance created")
+		assert.Contains(t, rec.Body.String(), instJSON, "Instance created")
 		var inst instance.Instance
 		errJ := json.NewDecoder(rec.Body).Decode(&inst)
 		if assert.NoError(t, errJ) {
@@ -56,7 +56,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestCreateError(t *testing.T) {
+func TestInstanceHandler_CreateWithError(t *testing.T) {
 	const body = `{"name":"name","description":"desc"}`
 
 	tests := []struct {
@@ -87,7 +87,7 @@ func TestCreateError(t *testing.T) {
 	}
 
 	e := echo.New()
-	cnt, handler, store, txn := NewHandlerMocked(t)
+	cnt, handler, store, txn := newHandlerMocked()
 	defer http.Close(cnt.Log, e)
 
 	for _, tt := range tests {
@@ -97,20 +97,20 @@ func TestCreateError(t *testing.T) {
 		if tt.mockT != nil {
 			tt.mockT(txn)
 		}
-		_, ctx := http.MockHttp(e, "/api/instances", tt.body)
+		_, ctx := http.MockHTTP(e, "/api/instances", tt.body)
 		err := handler.Create(ctx)
 		assert.Error(t, err, tt.name)
 	}
 }
 
-func NewHandlerFaked(t *testing.T) (runtime.Container, Instance, storage.Integration) {
+func newHandlerFaked(t *testing.T) (runtime.Container, Instance, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	srv := instance.NewService(cnt, mng.Store())
 	return cnt, NewInstanceHandl(srv, cnt), mng
 }
 
-func NewHandlerMocked(t *testing.T) (runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
+func newHandlerMocked() (runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
 	cnt, txn := mock.NewContainerMock()
 	store := &storage.ErrMockCRUD{}
 	srv := instance.NewService(cnt, store)

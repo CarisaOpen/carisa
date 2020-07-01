@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoadConfig(t *testing.T) {
+func TestRuntime_LoadConfig(t *testing.T) {
 	tests := []struct {
 		envC string
 		cnf  Config
@@ -103,14 +103,14 @@ etcd:
 	}
 }
 
-func TestLoadConfigPanic(t *testing.T) {
+func TestRuntime_LoadConfigPanic(t *testing.T) {
 	err := os.Setenv(envConfig, "Panic")
 	if assert.NoError(t, err) {
 		assert.Panics(t, func() { LoadConfig() })
 	}
 }
 
-func TestStoreWithTimeout(t *testing.T) {
+func TestRuntime_StoreWithTimeout(t *testing.T) {
 	c := Config{}
 	ctx, _ := c.StoreWithTimeout()
 	assert.NotNil(t, ctx, "Request timeout context")
