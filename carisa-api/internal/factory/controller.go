@@ -23,6 +23,8 @@ import (
 	"github.com/carisa/pkg/storage"
 )
 
+const locBuild = "factory.build"
+
 // Controller builds the application flow
 type Controller struct {
 	Config   runtime.Config
@@ -54,7 +56,9 @@ func build(mng storage.Integration /*for test*/) Controller {
 func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD) {
 	cnf := runtime.LoadConfig()
 	log := logging.NewZapLogger(cnf.ZapConfig)
+	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
 	cnt := runtime.NewContainer(cnf, log)
+	log.Info("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
 	var store storage.CRUD
 	if mng != nil {
 		store = mng.Store()
@@ -65,17 +69,20 @@ func servers(mng storage.Integration) (runtime.Config, runtime.Container, storag
 }
 
 func services(cnt runtime.Container, store storage.CRUD) service {
+	cnt.Log.Info("configuring services", locBuild)
 	srv := configService(cnt, store)
 	return srv
 }
 
 func handlers(srv service, cnt runtime.Container) handler.Instance {
+	cnt.Log.Info("configuring http handlers", locBuild)
 	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
 	return instHandler
 }
 
 // Close closes all connections
 func (c *Controller) Close() {
+	c.cnt.Log.Info("closing connections. bye", locBuild)
 	if err := c.store.Close(); err != nil {
 		_ = c.cnt.Log.ErrWrap(err, "closing storage", "Factory.Close")
 	}

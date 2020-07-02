@@ -18,6 +18,7 @@ package storage
 
 import (
 	"context"
+	strs "strings"
 	"testing"
 	"time"
 
@@ -48,6 +49,17 @@ type EtcdConfig struct {
 	RequestTimeout uint8 `yaml:"requestTimeout,omitempty"`
 	// Endpoints is a list of URLs.
 	Endpoints []string `yaml:"endpoints,omitempty"`
+}
+
+// String converts endpoint list to string
+func (c *EtcdConfig) EPSString() string {
+	var b strs.Builder
+	b.Grow(len(c.Endpoints) * 10)
+	for _, str := range c.Endpoints {
+		b.WriteString(str)
+		b.WriteString(",")
+	}
+	return b.String()
 }
 
 // etcdStore defines the CRUD operations for etcd

@@ -45,6 +45,6 @@ func CreateStatus(created bool) int {
 // Close close echo connection
 func Close(log logging.Logger, e *echo.Echo) {
 	if err := e.Close(); err != nil {
-		log.PanicE(err, "http.Close")
+		log.PanicE(err, "http.close")
 	}
 }

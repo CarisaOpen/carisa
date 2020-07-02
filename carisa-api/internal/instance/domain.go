@@ -34,7 +34,7 @@ func NewInstance() Instance {
 }
 
 func (i *Instance) ToString() string {
-	return strings.Concat("Instance: ", i.ID.String())
+	return strings.Concat("instance: ", i.ID.String())
 }
 
 func (i *Instance) GetKey() string {

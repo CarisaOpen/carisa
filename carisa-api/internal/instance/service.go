@@ -22,7 +22,7 @@ import (
 	"github.com/carisa/pkg/storage"
 )
 
-const loc = "Instance.Service"
+const locService = "instance.service"
 
 // Service implements CRUD operations for the instance domain service
 type Service struct {
@@ -48,7 +48,7 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 
 	create, err := s.store.Create(inst)
 	if err != nil {
-		s.cnt.Log.ErrorE(err, loc)
+		s.cnt.Log.ErrorE(err, locService)
 		return false, err
 	}
 
@@ -58,7 +58,7 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 	ok, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
-		return false, s.cnt.Log.ErrWrap(err, "commit creating", loc, logging.String("Instance", inst.ToString()))
+		return false, s.cnt.Log.ErrWrap(err, "commit creating", locService, logging.String("instance", inst.ToString()))
 	}
 
 	return ok, nil

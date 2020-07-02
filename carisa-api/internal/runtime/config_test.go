@@ -115,3 +115,14 @@ func TestRuntime_StoreWithTimeout(t *testing.T) {
 	ctx, _ := c.StoreWithTimeout()
 	assert.NotNil(t, ctx, "Request timeout context")
 }
+
+func TestRuntime_ConfigToString(t *testing.T) {
+	cnf := Config{
+		Server: Server{
+			Port: 8080,
+		},
+		ZapConfig:  logging.ZapConfig{},
+		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
+	}
+	assert.NotEmpty(t, cnf.String())
+}

@@ -97,6 +97,13 @@ func TestEtcd_Config(t *testing.T) {
 	}
 }
 
+func TestEtcdConfig_EPSString(t *testing.T) {
+	c := EtcdConfig{
+		Endpoints: []string{"localhost:2378", "localhost:2379"},
+	}
+	assert.Equal(t, "localhost:2378,localhost:2379,", c.EPSString())
+}
+
 func TestEtcd_Create(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)

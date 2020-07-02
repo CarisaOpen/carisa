@@ -57,7 +57,7 @@ func LoadConfig() Config {
 
 	if len(env) != 0 {
 		if err := yaml.Unmarshal([]byte(env), &cnf); err != nil {
-			panic(strings.Concat("Configuration environment variable cannot be loaded: ", err.Error()))
+			panic(strings.Concat("configuration environment variable cannot be loaded: ", err.Error()))
 		}
 	}
 	// Default values not treated in the factories
@@ -69,6 +69,14 @@ func LoadConfig() Config {
 }
 
 // StoreWithTimeout creates the timeout context with the value Store.RequestTimeout
-func (s *Config) StoreWithTimeout() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), time.Duration(s.RequestTimeout)*time.Second)
+func (c *Config) StoreWithTimeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), time.Duration(c.RequestTimeout)*time.Second)
+}
+
+func (c *Config) String() string {
+	r, err := yaml.Marshal(c)
+	if err != nil {
+		return ""
+	}
+	return string(r)
 }

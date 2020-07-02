@@ -28,7 +28,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const loc = "Instance.Http"
+const locInstance = "instance.http"
 
 // Instance hands the http request of the instance
 type Instance struct {
@@ -53,7 +53,7 @@ func (i *Instance) Create(c echo.Context) error {
 			"cannot recover the instance for creating",
 			err,
 			i.cnt.Log,
-			loc)
+			locInstance)
 	}
 
 	if httpErr := valid.Descriptor(inst.Descriptor); httpErr != nil {

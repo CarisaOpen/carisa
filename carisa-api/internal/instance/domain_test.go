@@ -26,7 +26,7 @@ import (
 
 func TestInstance_ToString(t *testing.T) {
 	i := NewInstance()
-	assert.Equal(t, strings.Concat("Instance: ", i.ID.String()), i.ToString())
+	assert.Equal(t, strings.Concat("instance: ", i.ID.String()), i.ToString())
 }
 
 func TestInstance_GetKey(t *testing.T) {
