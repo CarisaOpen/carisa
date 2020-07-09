@@ -27,32 +27,37 @@ const fieldsSize = 4
 // ZapConfig defines the configuration for log framework
 type ZapConfig struct {
 	// Development mode. Default value: false
-	Development bool `yaml:"development,omitempty"`
+	Development bool `json:"development,omitempty"`
 	// Level. See logging.Level. Default value: Depending of Development flag
-	Level Level `yaml:"level,omitempty"`
+	Level Level `json:"level,omitempty"`
 	// Encoding type. Default value: Depending of Development flag
 	// The values can be: j -> json format, c -> console format
-	Encoding string `yaml:"encoding,omitempty"`
+	Encoding string `json:"encoding,omitempty"`
 }
 
 // zapWrap is a zap wrapper.
 // Remark: it is defined a fields size fixed to not escape to heap
 type zapWrap struct {
-	log *zap.Logger
+	log   *zap.Logger
+	level Level
 	loggerComp
 	locName string
 }
 
 // NewZapLogger builds a zap logger from config
-func NewZapLogger(config ZapConfig) Logger {
+func NewZapLogger(config ZapConfig) (Logger, *zap.Logger) {
 	var log zap.Config
+	var level Level
 	if config.Development {
 		log = zap.NewDevelopmentConfig()
+		level = DebugLevel
 	} else {
 		log = zap.NewProductionConfig()
+		level = InfoLevel
 	}
 	if config.Level > 0 {
 		log.Level = zap.NewAtomicLevelAt(ConvertZapLevel(config.Level))
+		level = config.Level
 	}
 	if len(config.Encoding) > 0 {
 		log.Encoding = config.Encoding
@@ -62,26 +67,32 @@ func NewZapLogger(config ZapConfig) Logger {
 	if err != nil {
 		panic("Error creating zap logger")
 	}
-	return NewZapWrap(l, "")
+	return NewZapWrap(l, level, ""), l
 }
 
 // NewZapWrapDev creates ZapWrap for development
 func NewZapWrapDev() (Logger, error) {
 	log, err := zap.NewDevelopment()
-	return NewZapWrap(log, ""), err
+	return NewZapWrap(log, DebugLevel, ""), err
 }
 
 // NewZapWrap creates zapWrap. If loc parameter is empty, loc is configured to "location"
-func NewZapWrap(log *zap.Logger, loc string) Logger {
+func NewZapWrap(log *zap.Logger, level Level, loc string) Logger {
 	if len(loc) == 0 {
 		loc = "location"
 	}
 	zq := &zapWrap{
 		log:     log,
+		level:   level,
 		locName: loc,
 	}
 	zq.loggerComp.log = zq
 	return zq
+}
+
+// Level implements logging.Logger.Level
+func (z *zapWrap) Level() Level {
+	return z.level
 }
 
 // Info implements logging.Logger.Info

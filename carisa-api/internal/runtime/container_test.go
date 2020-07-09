@@ -30,7 +30,7 @@ func TestRuntime_NewContainer(t *testing.T) {
 		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 	}
 
-	log := logging.NewZapLogger(cnf.ZapConfig)
+	log, _ := logging.NewZapLogger(cnf.ZapConfig)
 	sMock := storage.NewEctdIntegra(t)
 	defer sMock.Close()
 

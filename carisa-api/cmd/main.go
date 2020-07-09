@@ -18,14 +18,12 @@ package main
 import (
 	"github.com/carisa/api/internal/factory"
 	"github.com/carisa/api/internal/http/server"
-	"github.com/labstack/echo/v4"
 )
 
 func main() {
-	e := echo.New()
 	f := factory.Build()
-	server.Router(e, f.Handlers)
-	server.Middleware(e)
-	e.Logger.Fatal(e.Start(":" + string(f.Config.Port)))
+	server.Middleware(f.Echo)
+	server.Router(f.Echo, f.Handlers)
+	f.Echo.Logger.Error(f.Echo.Start(f.Config.Server.Address()))
 	f.Close()
 }

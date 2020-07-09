@@ -26,6 +26,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestServer_Address(t *testing.T) {
+	s := Server{
+		Port: 1212,
+	}
+	assert.Equal(t, ":1212", s.Address())
+}
+
 func TestRuntime_LoadConfig(t *testing.T) {
 	tests := []struct {
 		envC string
@@ -42,20 +49,26 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			},
 		},
 		{
-			envC: `server:
- port: 1212
-log:
- development: true
- level: 2  
- encoding: json
-etcd:
- dialTimeout: 1
- dialKeepAliveTime: 2
- dialKeepAliveTimeout: 3
- requestTimeout: 4
- endpoints:
-   - server1
-   - server2`,
+			envC: `{
+  "log": {
+    "development": true, 
+    "level": 2, 
+    "encoding": "json"
+  }, 
+  "etcd": {
+    "dialKeepAliveTime": 2, 
+    "endpoints": [
+      "server1", 
+      "server2"
+    ], 
+    "dialTimeout": 1, 
+    "dialKeepAliveTimeout": 3, 
+    "requestTimeout": 4
+  }, 
+  "server": {
+    "port": 1212
+  }
+}`,
 			cnf: Config{
 				Server: Server{
 					Port: 1212,
@@ -75,11 +88,13 @@ etcd:
 			},
 		},
 		{
-			envC: `log:
-etcd:
- dialTimeout: 1
- dialKeepAliveTimeout: 3
- requestTimeout: 4`,
+			envC: `{
+  "etcd": {
+    "requestTimeout": 4, 
+    "dialTimeout": 1, 
+    "dialKeepAliveTimeout": 3
+  }
+}`,
 			cnf: Config{
 				Server: Server{
 					Port: 8080,

@@ -42,6 +42,9 @@ const (
 
 // Looger implements operations for several logging platforms
 type Logger interface {
+	// Level gets the configured level
+	Level() Level
+
 	// Info logs a message at InfoLevel. The message includes any fields passed and location
 	Info(msg string, loc string, fields ...Field)
 

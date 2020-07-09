@@ -40,6 +40,65 @@ type tests struct {
 	items []Item
 }
 
+func TestZapWrap_NewZapLogger(t *testing.T) {
+	tests := []struct {
+		l      ZapConfig
+		levelR zapcore.Level
+		levelC Level
+	}{
+		{
+			l: ZapConfig{
+				Development: false,
+				Level:       0,
+				Encoding:    "",
+			},
+			levelC: InfoLevel,
+			levelR: zap.InfoLevel,
+		},
+		{
+			l: ZapConfig{
+				Development: false,
+				Level:       InfoLevel,
+				Encoding:    "json",
+			},
+			levelC: InfoLevel,
+			levelR: zap.InfoLevel,
+		},
+		{
+			l: ZapConfig{
+				Development: true,
+				Level:       0,
+				Encoding:    "console",
+			},
+			levelC: DebugLevel,
+			levelR: zap.InfoLevel,
+		},
+		{
+			l: ZapConfig{
+				Development: true,
+				Level:       PanicLevel,
+				Encoding:    "json",
+			},
+			levelC: PanicLevel,
+			levelR: zap.PanicLevel,
+		},
+	}
+	for _, tt := range tests {
+		l, zL := NewZapLogger(tt.l)
+		assert.Equal(t, tt.levelC, l.Level())
+		assert.True(t, zL.Core().Enabled(tt.levelR), "Level")
+	}
+}
+
+func TestZapWrap_NewDev(t *testing.T) {
+	log, err := NewZapWrapDev()
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, DebugLevel, log.Level(), "Level")
+	assert.NotNil(t, log.(*zapWrap).log, "Zap object")
+}
+
 func TestZapWrap_Info(t *testing.T) {
 	tests := testdd()
 
@@ -186,58 +245,6 @@ func TestZapWrap_ConvertZapLevel(t *testing.T) {
 	}
 }
 
-func TestZapWrap_NewZapLogger(t *testing.T) {
-	tests := []struct {
-		l      ZapConfig
-		levelR zapcore.Level
-	}{
-		{
-			l: ZapConfig{
-				Development: false,
-				Level:       0,
-				Encoding:    "",
-			},
-			levelR: zap.InfoLevel,
-		},
-		{
-			l: ZapConfig{
-				Development: false,
-				Level:       InfoLevel,
-				Encoding:    "json",
-			},
-			levelR: zap.InfoLevel,
-		},
-		{
-			l: ZapConfig{
-				Development: true,
-				Level:       0,
-				Encoding:    "console",
-			},
-			levelR: zap.InfoLevel,
-		},
-		{
-			l: ZapConfig{
-				Development: true,
-				Level:       PanicLevel,
-				Encoding:    "json",
-			},
-			levelR: zap.PanicLevel,
-		},
-	}
-	for _, tt := range tests {
-		zL := NewZapLogger(tt.l).(*zapWrap)
-		assert.True(t, zL.log.Core().Enabled(tt.levelR), "Level")
-	}
-}
-
-func TestZapWrap_NewDev(t *testing.T) {
-	log, err := NewZapWrapDev()
-	if err != nil {
-		t.Error(err)
-	}
-	assert.NotNil(t, log.(*zapWrap).log)
-}
-
 func check(t *testing.T, recorded *observer.ObservedLogs, tt tests) {
 	for _, logs := range recorded.All() {
 		assert.Equal(t, message, logs.Message, "Message")
@@ -260,7 +267,7 @@ func check(t *testing.T, recorded *observer.ObservedLogs, tt tests) {
 
 func newLogger(level zapcore.Level) (*observer.ObservedLogs, Logger) {
 	core, obs := observer.New(level)
-	return obs, NewZapWrap(zap.New(core), "")
+	return obs, NewZapWrap(zap.New(core), DebugLevel, "")
 }
 
 func convertTo(items []Item) []Field {

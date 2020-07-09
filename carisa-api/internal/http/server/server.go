@@ -25,7 +25,6 @@ import (
 
 // Middleware configure security and behaviour of http
 func Middleware(e *echo.Echo) {
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 }
 

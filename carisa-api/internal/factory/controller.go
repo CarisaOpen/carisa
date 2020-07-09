@@ -19,8 +19,10 @@ package factory
 import (
 	"github.com/carisa/api/internal/http/handler"
 	"github.com/carisa/api/internal/runtime"
+	loge "github.com/carisa/pkg/http/echo"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
+	"github.com/labstack/echo/v4"
 )
 
 const locBuild = "factory.build"
@@ -29,8 +31,10 @@ const locBuild = "factory.build"
 type Controller struct {
 	Config   runtime.Config
 	Handlers handler.Handlers
-	store    storage.CRUD
-	cnt      runtime.Container
+	Echo     *echo.Echo
+
+	store storage.CRUD
+	cnt   runtime.Container
 }
 
 // Build builds the services, store, log, etc..
@@ -39,33 +43,42 @@ func Build() Controller {
 }
 
 func build(mng storage.Integration /*for test*/) Controller {
-	cnf, cnt, store := servers(mng)
+	cnf, cnt, store, e := servers(mng)
 	srv := services(cnt, store)
 	instHandler := handlers(srv, cnt)
+
+	cnt.Log.Info("http server started", locBuild, logging.String("address", cnf.Server.Address()))
 
 	return Controller{
 		Config: cnf,
 		Handlers: handler.Handlers{
 			InstHandler: instHandler,
 		},
+		Echo:  e,
 		store: store,
 		cnt:   cnt,
 	}
 }
 
-func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD) {
+func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD, *echo.Echo) {
 	cnf := runtime.LoadConfig()
-	log := logging.NewZapLogger(cnf.ZapConfig)
+	log, zLog := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
+
+	e := echo.New()
+	e.Logger = loge.NewLogging("echo", loge.ConvertLevel(log.Level()), zLog)
+	log.Info("Initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
+
 	cnt := runtime.NewContainer(cnf, log)
 	log.Info("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
+
 	var store storage.CRUD
 	if mng != nil {
 		store = mng.Store()
 	} else {
 		store = storage.NewEtcdConfig(cnf.EtcdConfig)
 	}
-	return cnf, cnt, store
+	return cnf, cnt, store, e
 }
 
 func services(cnt runtime.Container, store storage.CRUD) service {
@@ -82,8 +95,14 @@ func handlers(srv service, cnt runtime.Container) handler.Instance {
 
 // Close closes all connections
 func (c *Controller) Close() {
+	const loc = "Factory.Close"
+
+	if err := c.Echo.Close(); err != nil {
+		_ = c.cnt.Log.ErrWrap(err, "closing http channel", loc)
+	}
+
 	c.cnt.Log.Info("closing connections. bye", locBuild)
 	if err := c.store.Close(); err != nil {
-		_ = c.cnt.Log.ErrWrap(err, "closing storage", "Factory.Close")
+		_ = c.cnt.Log.ErrWrap(err, "closing storage", loc)
 	}
 }

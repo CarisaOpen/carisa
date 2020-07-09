@@ -18,7 +18,9 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/carisa/pkg/storage"
@@ -26,21 +28,25 @@ import (
 	"github.com/carisa/pkg/logging"
 
 	"github.com/carisa/pkg/strings"
-
-	"gopkg.in/yaml.v2"
 )
 
-const envConfig = "carisa_api"
+const envConfig = "CARISA_API"
 
+// Server describes the http configuration
 type Server struct {
-	Port uint16 `yaml:"port"`
+	Port int `json:"port"`
+}
+
+// Address return address to connection server
+func (s *Server) Address() string {
+	return strings.Concat(":", strconv.Itoa(s.Port))
 }
 
 // Config defines the global information
 type Config struct {
-	Server             `yaml:"server,omitempty"`
-	logging.ZapConfig  `yaml:"log,omitempty"`
-	storage.EtcdConfig `yaml:"etcd,omitempty"`
+	Server             `json:"server,omitempty"`
+	logging.ZapConfig  `json:"log,omitempty"`
+	storage.EtcdConfig `json:"etcd,omitempty"`
 }
 
 // LoadConfig loads the configuration from environment variable
@@ -56,7 +62,7 @@ func LoadConfig() Config {
 	}
 
 	if len(env) != 0 {
-		if err := yaml.Unmarshal([]byte(env), &cnf); err != nil {
+		if err := json.Unmarshal([]byte(env), &cnf); err != nil {
 			panic(strings.Concat("configuration environment variable cannot be loaded: ", err.Error()))
 		}
 	}
@@ -74,7 +80,7 @@ func (c *Config) StoreWithTimeout() (context.Context, context.CancelFunc) {
 }
 
 func (c *Config) String() string {
-	r, err := yaml.Marshal(c)
+	r, err := json.Marshal(c)
 	if err != nil {
 		return ""
 	}

@@ -38,17 +38,17 @@ import (
 // EtcdConfig defines the configuration for store framework
 type EtcdConfig struct {
 	// DialTimeout is the timeout for failing to establish a connection in seconds. Default value: 2 seconds.
-	DialTimeout uint8 `yaml:"dialTimeout,omitempty"`
+	DialTimeout uint8 `json:"dialTimeout,omitempty"`
 	// DialKeepAliveTime is the time after which client pings the server to see if
 	// transport is alive in seconds. Default value: 10 seconds.
-	DialKeepAliveTime uint8 `yaml:"dialKeepAliveTime,omitempty"`
+	DialKeepAliveTime uint8 `json:"dialKeepAliveTime,omitempty"`
 	// DialKeepAliveTimeout is the time that the client waits for a response for the
 	// keep-alive probe. If the response is not received in this time, the connection is closed.
-	DialKeepAliveTimeout uint8 `yaml:"dialKeepAliveTimeout,omitempty"`
+	DialKeepAliveTimeout uint8 `json:"dialKeepAliveTimeout,omitempty"`
 	// RequestTimeout in seconds. Default value: 10 seconds.
-	RequestTimeout uint8 `yaml:"requestTimeout,omitempty"`
+	RequestTimeout uint8 `json:"requestTimeout,omitempty"`
 	// Endpoints is a list of URLs.
-	Endpoints []string `yaml:"endpoints,omitempty"`
+	Endpoints []string `json:"endpoints,omitempty"`
 }
 
 // String converts endpoint list to string
