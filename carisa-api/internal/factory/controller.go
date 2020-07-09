@@ -92,17 +92,3 @@ func handlers(srv service, cnt runtime.Container) handler.Instance {
 	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
 	return instHandler
 }
-
-// Close closes all connections
-func (c *Controller) Close() {
-	const loc = "Factory.Close"
-
-	if err := c.Echo.Close(); err != nil {
-		_ = c.cnt.Log.ErrWrap(err, "closing http channel", loc)
-	}
-
-	c.cnt.Log.Info("closing connections. bye", locBuild)
-	if err := c.store.Close(); err != nil {
-		_ = c.cnt.Log.ErrWrap(err, "closing storage", loc)
-	}
-}
