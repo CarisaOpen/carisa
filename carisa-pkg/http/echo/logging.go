@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	"go.uber.org/zap"
 
@@ -28,15 +29,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
-
-// WriteHole is dummy struct to sink write
-type WriteHole struct {
-}
-
-// Everything that is written in output, such as logo, etc. is discarded. The important thing is the traces
-func (w *WriteHole) Write(p []byte) (n int, err error) {
-	return len(p), nil
-}
 
 // zapLogger defines a zap wrapper for echo http
 type zapLogger struct {
@@ -51,7 +43,7 @@ func NewLogging(prefix string, level log.Lvl, log *zap.Logger) echo.Logger {
 		level:  level,
 		logB:   log,
 		prefix: prefix,
-		output: &WriteHole{},
+		output: ioutil.Discard,
 	}
 }
 
