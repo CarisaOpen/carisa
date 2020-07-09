@@ -65,13 +65,13 @@ func servers(mng storage.Integration) (runtime.Config, runtime.Container, storag
 	log, zLog := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
 
+	log.Info("Initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
 	e := echo.New()
 	e.Logger = loge.NewLogging("echo", loge.ConvertLevel(log.Level()), zLog)
-	log.Info("Initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
 
 	cnt := runtime.NewContainer(cnf, log)
-	log.Info("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
 
+	log.Info("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
 	var store storage.CRUD
 	if mng != nil {
 		store = mng.Store()
