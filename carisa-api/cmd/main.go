@@ -24,5 +24,6 @@ func main() {
 	f := factory.Build()
 	server.Middleware(f.Echo)
 	server.Router(f.Echo, f.Handlers)
-	f.Echo.Logger.Fatal(f.Echo.Start(f.Config.Server.Address()))
+	server.Start(f.Echo, f.Config)
+	f.Close()
 }

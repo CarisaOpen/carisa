@@ -37,6 +37,16 @@ type Controller struct {
 	cnt   runtime.Container
 }
 
+func (c *Controller) Close() {
+	const loc = "factory.close"
+	c.cnt.Log.Info("closing connections", loc)
+	if err := c.store.Close(); err != nil {
+		c.cnt.Log.ErrorE(err, loc)
+	} else {
+		c.cnt.Log.Info("closed connections", loc)
+	}
+}
+
 // Build builds the services, store, log, etc..
 func Build() Controller {
 	return build(nil)
@@ -65,7 +75,7 @@ func servers(mng storage.Integration) (runtime.Config, runtime.Container, storag
 	log, zLog := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
 
-	log.Info("Initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
+	log.Info("initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
 	e := echo.New()
 	e.Logger = loge.NewLogging("echo", loge.ConvertLevel(log.Level()), zLog)
 

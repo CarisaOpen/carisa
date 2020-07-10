@@ -17,7 +17,13 @@
 package server
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/carisa/api/internal/http/handler"
+	"github.com/carisa/api/internal/runtime"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -32,4 +38,26 @@ func Middleware(e *echo.Echo) {
 func Router(e *echo.Echo, hands handler.Handlers) {
 	// Instance
 	e.POST("/api/instances", hands.InstHandler.Create)
+}
+
+// Start starts the graceful http server
+func Start(e *echo.Echo, cnf runtime.Config) {
+	// Start server
+	go func() {
+		if err := e.Start(cnf.Server.Address()); err != nil {
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Error(err.Error())
+	}
 }
