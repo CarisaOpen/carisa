@@ -26,12 +26,12 @@ const locService = "instance.service"
 
 // Service implements CRUD operations for the instance domain service
 type Service struct {
-	cnt   runtime.Container
+	cnt   *runtime.Container
 	store storage.CRUD
 }
 
 // NewService builds a instance service
-func NewService(cnt runtime.Container, store storage.CRUD) Service {
+func NewService(cnt *runtime.Container, store storage.CRUD) Service {
 	return Service{
 		cnt:   cnt,
 		store: store,
@@ -44,7 +44,7 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 	inst.AutoID()
 
 	txn := s.cnt.NewTxn(s.store)
-	txn.Find(inst.GetKey())
+	txn.Find(inst.ID.String())
 
 	create, err := s.store.Create(inst)
 	if err != nil {

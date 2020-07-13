@@ -108,14 +108,14 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 	}
 }
 
-func newHandlerFaked(t *testing.T) (runtime.Container, Instance, storage.Integration) {
+func newHandlerFaked(t *testing.T) (*runtime.Container, Instance, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	srv := instance.NewService(cnt, mng.Store())
 	return cnt, NewInstanceHandl(srv, cnt), mng
 }
 
-func newHandlerMocked() (runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
+func newHandlerMocked() (*runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
 	cnt, txn := mock.NewContainerMock()
 	store := &storage.ErrMockCRUD{}
 	srv := instance.NewService(cnt, store)

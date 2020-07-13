@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// If the len is modified, change info, error, etc.
 const fieldsSize = 4
 
 // ZapConfig defines the configuration for log framework
@@ -97,52 +98,32 @@ func (z *zapWrap) Level() Level {
 
 // Info implements logging.Logger.Info
 func (z *zapWrap) Info(msg string, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	z.log.Info(msg, fTarget...)
+	f := z.convertToZap(loc, fields...)
+	z.log.Info(msg, f[0], f[1], f[2], f[3])
 }
 
 // Warn implements logging.Logger.Warn
 func (z *zapWrap) Warn(msg string, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	z.log.Debug(msg, fTarget...)
+	f := z.convertToZap(loc, fields...)
+	z.log.Debug(msg, f[0], f[1], f[2], f[3])
 }
 
 // Debug implements logging.Logger.Debug
 func (z *zapWrap) Debug(msg string, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	z.log.Debug(msg, fTarget...)
+	f := z.convertToZap(loc, fields...)
+	z.log.Debug(msg, f[0], f[1], f[2], f[3])
 }
 
 // Error implements logging.Logger.Error
 func (z *zapWrap) Error(msg string, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	z.log.Error(msg, fTarget...)
+	f := z.convertToZap(loc, fields...)
+	z.log.Error(msg, f[0], f[1], f[2], f[3])
 }
 
 // Panic implements logging.Logger.Panic
 func (z *zapWrap) Panic(msg string, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	z.log.Panic(msg, fTarget...)
+	f := z.convertToZap(loc, fields...)
+	z.log.Panic(msg, f[0], f[1], f[2], f[3])
 }
 
 // Check implements logging.Logger.Check
@@ -155,12 +136,8 @@ func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
 
 // Write implements logging.Logger.Write
 func (z *zapWrap) Write(wrap *CheckWrap, loc string, fields ...Field) {
-	fSource := z.convertToZap(loc, fields...)
-	fTarget := make([]zap.Field, fieldsSize)
-	for i := 0; i < fieldsSize; i++ {
-		fTarget[i] = fSource[i]
-	}
-	wrap.zapCheck.Write(fTarget...)
+	f := z.convertToZap(loc, fields...)
+	wrap.zapCheck.Write(f[0], f[1], f[2], f[3])
 }
 
 // The size of the array is fixed so that it does not escape to heap

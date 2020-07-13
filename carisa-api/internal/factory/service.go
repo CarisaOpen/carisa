@@ -28,7 +28,7 @@ type service struct {
 }
 
 // configService builds the services
-func configService(cnt runtime.Container, store storage.CRUD) service {
+func configService(cnt *runtime.Container, store storage.CRUD) service {
 	return service{
 		instanceSrv: instance.NewService(cnt, store),
 	}

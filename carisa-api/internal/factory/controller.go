@@ -34,7 +34,7 @@ type Controller struct {
 	Echo     *echo.Echo
 
 	store storage.CRUD
-	cnt   runtime.Container
+	cnt   *runtime.Container
 }
 
 func (c *Controller) Close() {
@@ -55,22 +55,20 @@ func Build() Controller {
 func build(mng storage.Integration /*for test*/) Controller {
 	cnf, cnt, store, e := servers(mng)
 	srv := services(cnt, store)
-	instHandler := handlers(srv, cnt)
+	handlers := handlers(srv, cnt)
 
 	cnt.Log.Info("http server started", locBuild, logging.String("address", cnf.Server.Address()))
 
 	return Controller{
-		Config: cnf,
-		Handlers: handler.Handlers{
-			InstHandler: instHandler,
-		},
-		Echo:  e,
-		store: store,
-		cnt:   cnt,
+		Config:   cnf,
+		Handlers: handlers,
+		Echo:     e,
+		store:    store,
+		cnt:      cnt,
 	}
 }
 
-func servers(mng storage.Integration) (runtime.Config, runtime.Container, storage.CRUD, *echo.Echo) {
+func servers(mng storage.Integration) (runtime.Config, *runtime.Container, storage.CRUD, *echo.Echo) {
 	cnf := runtime.LoadConfig()
 	log, zLog := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
@@ -91,14 +89,15 @@ func servers(mng storage.Integration) (runtime.Config, runtime.Container, storag
 	return cnf, cnt, store, e
 }
 
-func services(cnt runtime.Container, store storage.CRUD) service {
+func services(cnt *runtime.Container, store storage.CRUD) service {
 	cnt.Log.Info("configuring services", locBuild)
 	srv := configService(cnt, store)
 	return srv
 }
 
-func handlers(srv service, cnt runtime.Container) handler.Instance {
+func handlers(srv service, cnt *runtime.Container) handler.Handlers {
 	cnt.Log.Info("configuring http handlers", locBuild)
-	instHandler := handler.NewInstanceHandl(srv.instanceSrv, cnt)
-	return instHandler
+	return handler.Handlers{
+		InstHandler: handler.NewInstanceHandl(srv.instanceSrv, cnt),
+	}
 }

@@ -31,8 +31,8 @@ type Container struct {
 	NewTxn
 }
 
-func NewContainer(cnf Config, log logging.Logger) Container {
-	return Container{
+func NewContainer(cnf Config, log logging.Logger) *Container {
+	return &Container{
 		Config: cnf,
 		Log:    log,
 		NewTxn: storage.NewTxn,

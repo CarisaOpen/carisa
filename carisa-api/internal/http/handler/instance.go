@@ -33,11 +33,11 @@ const locInstance = "instance.http"
 // Instance hands the http request of the instance
 type Instance struct {
 	srv instance.Service
-	cnt runtime.Container
+	cnt *runtime.Container
 }
 
 // NewInstanceHandl creates handler
-func NewInstanceHandl(srv instance.Service, cnt runtime.Container) Instance {
+func NewInstanceHandl(srv instance.Service, cnt *runtime.Container) Instance {
 	return Instance{
 		srv: srv,
 		cnt: cnt,

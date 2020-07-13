@@ -24,7 +24,7 @@ import (
 	"github.com/carisa/pkg/storage"
 )
 
-func NewContainerFake() runtime.Container {
+func NewContainerFake() *runtime.Container {
 	log, err := logging.NewZapWrapDev()
 	if err != nil {
 		panic(err)
@@ -32,13 +32,13 @@ func NewContainerFake() runtime.Container {
 	return runtime.NewContainer(runtime.LoadConfig(), log)
 }
 
-func NewContainerMock() (runtime.Container, *storage.ErrMockTxn) {
+func NewContainerMock() (*runtime.Container, *storage.ErrMockTxn) {
 	txn := &storage.ErrMockTxn{}
 	log, err := logging.NewZapWrapDev()
 	if err != nil {
 		panic(err)
 	}
-	return runtime.Container{
+	return &runtime.Container{
 		Config: runtime.LoadConfig(),
 		Log:    log,
 		NewTxn: func(s storage.CRUD) storage.Txn { return txn },
