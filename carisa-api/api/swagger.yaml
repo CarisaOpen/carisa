@@ -1,0 +1,66 @@
+swagger: "2.0"
+info:
+  description: "It allows you to create a model for CARISA software. CARISA is a platform for the development of real-time information environments. Very suitable for IOT systems. With this API you will be able to control the whole CARISA platform."
+  version: "1.0.0"
+  title: "CARISA API"
+  contact:
+    email: "dav.sua.pas@gmail.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "petstore.swagger.io"
+basePath: "/api"
+tags:
+- name: "instance"
+  description: "Instance represents a set of spaces independently of another instance in all system"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /instances:
+    post:
+      tags:
+      - "instance"
+      summary: "Add a new instance to the platform"
+      description: ""
+      operationId: "addPet"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Instance object that needs to be added to the platform"
+        required: true
+        schema:
+          $ref: "#/definitions/InstanceAdd"
+      responses:
+        "201":
+          description: "Instance created"
+          schema:
+            $ref: "#/definitions/Instance"          
+        "302":  
+          description: "Instance found"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"          
+definitions:
+  Instance:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Instance identifier"    
+      name:
+        type: "string"
+        description: "Instance name"    
+  InstanceAdd:
+    type: "object"
+    required:
+    - "name"
+    properties:
+      name:
+        type: "string"
+        description: "Instance name"
