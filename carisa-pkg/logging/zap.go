@@ -17,13 +17,9 @@
 package logging
 
 import (
-	"github.com/carisa/pkg/strings"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-// If the len is modified, change info, error, etc.
-const fieldsSize = 4
 
 // ZapConfig defines the configuration for log framework
 type ZapConfig struct {
@@ -37,7 +33,7 @@ type ZapConfig struct {
 }
 
 // zapWrap is a zap wrapper.
-// Remark: it is defined a fields size fixed to not escape to heap
+// Remark: Variadic params escape to heap, therefore the log methods is overloaded
 type zapWrap struct {
 	log   *zap.Logger
 	level Level
@@ -97,33 +93,103 @@ func (z *zapWrap) Level() Level {
 }
 
 // Info implements logging.Logger.Info
-func (z *zapWrap) Info(msg string, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	z.log.Info(msg, f[0], f[1], f[2], f[3])
+func (z *zapWrap) Info(msg string, loc string) {
+	z.log.Info(msg, z.locZap(loc))
+}
+
+// Info1 implements logging.Logger.Info1
+func (z *zapWrap) Info1(msg string, loc string, f Field) {
+	z.log.Info(msg, z.locZap(loc), convertToZap(f))
+}
+
+// Info2 implements logging.Logger.Info2
+func (z *zapWrap) Info2(msg string, loc string, f Field, f1 Field) {
+	z.log.Info(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Info3 implements logging.Logger.Info3
+func (z *zapWrap) Info3(msg string, loc string, f Field, f1 Field, f2 Field) {
+	z.log.Info(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
 // Warn implements logging.Logger.Warn
-func (z *zapWrap) Warn(msg string, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	z.log.Debug(msg, f[0], f[1], f[2], f[3])
+func (z *zapWrap) Warn(msg string, loc string) {
+	z.log.Warn(msg, z.locZap(loc))
+}
+
+// Warn1 implements logging.Logger.Warn1
+func (z *zapWrap) Warn1(msg string, loc string, f Field) {
+	z.log.Warn(msg, z.locZap(loc), convertToZap(f))
+}
+
+// Warn2 implements logging.Logger.Warn2
+func (z *zapWrap) Warn2(msg string, loc string, f Field, f1 Field) {
+	z.log.Warn(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Warn3 implements logging.Logger.Warn3
+func (z *zapWrap) Warn3(msg string, loc string, f Field, f1 Field, f2 Field) {
+	z.log.Warn(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
 // Debug implements logging.Logger.Debug
-func (z *zapWrap) Debug(msg string, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	z.log.Debug(msg, f[0], f[1], f[2], f[3])
+func (z *zapWrap) Debug(msg string, loc string) {
+	z.log.Debug(msg, z.locZap(loc))
+}
+
+// Debug1 implements logging.Logger.Debug1
+func (z *zapWrap) Debug1(msg string, loc string, f Field) {
+	z.log.Debug(msg, z.locZap(loc), convertToZap(f))
+}
+
+// Debug2 implements logging.Logger.Debug2
+func (z *zapWrap) Debug2(msg string, loc string, f Field, f1 Field) {
+	z.log.Debug(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Debug3 implements logging.Logger.Debug3
+func (z *zapWrap) Debug3(msg string, loc string, f Field, f1 Field, f2 Field) {
+	z.log.Debug(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
 // Error implements logging.Logger.Error
-func (z *zapWrap) Error(msg string, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	z.log.Error(msg, f[0], f[1], f[2], f[3])
+func (z *zapWrap) Error(msg string, loc string) {
+	z.log.Error(msg, z.locZap(loc))
+}
+
+// Error1 implements logging.Logger.Error1
+func (z *zapWrap) Error1(msg string, loc string, f Field) {
+	z.log.Error(msg, z.locZap(loc), convertToZap(f))
+}
+
+// Error2 implements logging.Logger.Error2
+func (z *zapWrap) Error2(msg string, loc string, f Field, f1 Field) {
+	z.log.Error(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Error3 implements logging.Logger.Error3
+func (z *zapWrap) Error3(msg string, loc string, f Field, f1 Field, f2 Field) {
+	z.log.Error(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
 // Panic implements logging.Logger.Panic
-func (z *zapWrap) Panic(msg string, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	z.log.Panic(msg, f[0], f[1], f[2], f[3])
+func (z *zapWrap) Panic(msg string, loc string) {
+	z.log.Panic(msg, z.locZap(loc))
+}
+
+// Panic1 implements logging.Logger.Panic1
+func (z *zapWrap) Panic1(msg string, loc string, f Field) {
+	z.log.Panic(msg, z.locZap(loc), convertToZap(f))
+}
+
+// Panic2 implements logging.Logger.Panic2
+func (z *zapWrap) Panic2(msg string, loc string, f Field, f1 Field) {
+	z.log.Panic(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Panic3 implements logging.Logger.Panic3
+func (z *zapWrap) Panic3(msg string, loc string, f Field, f1 Field, f2 Field) {
+	z.log.Panic(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
 // Check implements logging.Logger.Check
@@ -135,34 +201,38 @@ func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
 }
 
 // Write implements logging.Logger.Write
-func (z *zapWrap) Write(wrap *CheckWrap, loc string, fields ...Field) {
-	f := z.convertToZap(loc, fields...)
-	wrap.zapCheck.Write(f[0], f[1], f[2], f[3])
+func (z *zapWrap) Write(wrap *CheckWrap, loc string) {
+	wrap.zapCheck.Write(z.locZap(loc))
 }
 
-// The size of the array is fixed so that it does not escape to heap
-func (z *zapWrap) convertToZap(loc string, fields ...Field) [fieldsSize]zap.Field {
-	var fZap [fieldsSize]zap.Field
-	actualFSize := len(fields) + 1 // loc is added
-	if actualFSize > fieldsSize {
-		panic(strings.Concat("log fields and location size cannot be more than ", string(fieldsSize)))
-	}
+// Write1 implements logging.Logger.Write1
+func (z *zapWrap) Write1(wrap *CheckWrap, loc string, f Field) {
+	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f))
+}
 
-	fZap[0] = zap.String(z.locName, loc)
-	for i := 1; i < fieldsSize; i++ {
-		if i >= actualFSize { // The rest are skip until fill buffer
-			fZap[i] = zap.Skip()
-			continue
-		}
-		f := fields[i-1]
-		switch f.tpy {
-		case stringType:
-			fZap[i] = zap.String(f.key, f.stringV)
-		case boolType:
-			fZap[i] = zap.Bool(f.key, f.boolV)
-		}
+// Write2 implements logging.Logger.Write2
+func (z *zapWrap) Write2(wrap *CheckWrap, loc string, f Field, f1 Field) {
+	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f), convertToZap(f1))
+}
+
+// Write3 implements logging.Logger.Write3
+func (z *zapWrap) Write3(wrap *CheckWrap, loc string, f Field, f1 Field, f2 Field) {
+	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
+}
+
+func (z *zapWrap) locZap(loc string) zap.Field {
+	return zap.String(z.locName, loc)
+}
+
+func convertToZap(f Field) zap.Field {
+	switch f.tpy {
+	case stringType:
+		return zap.String(f.key, f.stringV)
+	case boolType:
+		return zap.Bool(f.key, f.boolV)
+	default:
+		panic("can not convert to zap")
 	}
-	return fZap
 }
 
 // ConvertZapLevel convert level to zap level

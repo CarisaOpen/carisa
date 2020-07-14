@@ -58,7 +58,7 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 	ok, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
-		return false, s.cnt.Log.ErrWrap(err, "commit creating", locService, logging.String("instance", inst.ToString()))
+		return false, s.cnt.Log.ErrWrap1(err, "commit creating", locService, logging.String("instance", inst.ToString()))
 	}
 
 	return ok, nil

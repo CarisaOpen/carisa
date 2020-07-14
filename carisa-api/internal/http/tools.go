@@ -29,7 +29,16 @@ func NewHTTPErrorLog(
 	msg string, err error,
 	logger logging.Logger,
 	loc string, fields ...logging.Field) *echo.HTTPError {
-	_ = logger.ErrWrap(err, msg, loc, fields...)
+	switch len(fields) {
+	case 0:
+		_ = logger.ErrWrap(err, msg, loc)
+	case 1:
+		_ = logger.ErrWrap1(err, msg, loc, fields[0])
+	case 2:
+		_ = logger.ErrWrap2(err, msg, loc, fields[0], fields[1])
+	case 3:
+		_ = logger.ErrWrap3(err, msg, loc, fields[0], fields[1], fields[2])
+	}
 	return echo.NewHTTPError(status, logging.Compose(msg, fields...))
 }
 

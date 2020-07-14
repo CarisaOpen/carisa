@@ -56,8 +56,7 @@ func build(mng storage.Integration /*for test*/) Controller {
 	cnf, cnt, store, e := servers(mng)
 	srv := services(cnt, store)
 	handlers := handlers(srv, cnt)
-
-	cnt.Log.Info("http server started", locBuild, logging.String("address", cnf.Server.Address()))
+	cnt.Log.Info1("http server started", locBuild, logging.String("address", cnf.Server.Address()))
 
 	return Controller{
 		Config:   cnf,
@@ -71,15 +70,15 @@ func build(mng storage.Integration /*for test*/) Controller {
 func servers(mng storage.Integration) (runtime.Config, *runtime.Container, storage.CRUD, *echo.Echo) {
 	cnf := runtime.LoadConfig()
 	log, zLog := logging.NewZapLogger(cnf.ZapConfig)
-	log.Info("loaded configuration", locBuild, logging.String("config", cnf.String()))
+	log.Info1("loaded configuration", locBuild, logging.String("config", cnf.String()))
 
-	log.Info("initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
+	log.Info1("initializing http server", locBuild, logging.String("address", cnf.Server.Address()))
 	e := echo.New()
 	e.Logger = loge.NewLogging("echo", loge.ConvertLevel(log.Level()), zLog)
 
 	cnt := runtime.NewContainer(cnf, log)
 
-	log.Info("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
+	log.Info1("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
 	var store storage.CRUD
 	if mng != nil {
 		store = mng.Store()
