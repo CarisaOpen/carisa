@@ -14,29 +14,27 @@
  *
  */
 
-package instance
+package http
 
 import (
-	"github.com/carisa/api/internal/entity"
-	"github.com/carisa/pkg/strings"
+	"net/http"
+
+	"github.com/carisa/pkg/logging"
+	"github.com/labstack/echo/v4"
 )
 
-// InstCreate represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	entity.Descriptor
-}
-
-func NewInstance() Instance {
-	return Instance{
-		Descriptor: entity.NewDescriptor(),
+// status return status for create handler
+func CreateStatus(created bool) int {
+	status := http.StatusFound
+	if created {
+		status = http.StatusCreated
 	}
+	return status
 }
 
-func (i *Instance) ToString() string {
-	return strings.Concat("instance: ", i.ID.String())
-}
-
-func (i *Instance) GetKey() string {
-	return i.ID.String()
+// Close close echo connection
+func Close(log logging.Logger, e *echo.Echo) {
+	if err := e.Close(); err != nil {
+		log.PanicE(err, "http.close")
+	}
 }

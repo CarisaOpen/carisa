@@ -14,21 +14,42 @@
  *
  */
 
-package http
+package echo
 
 import (
-	nethttp "net/http"
-
+	"github.com/carisa/pkg/http"
 	"github.com/carisa/pkg/logging"
 	"github.com/labstack/echo/v4"
 )
 
-// NewHTTPErrorLog creates http error and sending a log error
-func NewHTTPErrorLog(
+// NewContext creates the echo context adapter
+func NewContext(ctx echo.Context) http.Context {
+	return &context{
+		ctx: ctx,
+	}
+}
+
+// Context is a adapter for echo
+type context struct {
+	ctx echo.Context
+}
+
+// Bind implements http.interface.Context.Bind
+func (c *context) Bind(i interface{}) error {
+	return c.ctx.Bind(i)
+}
+
+// JSON implements http.interface.Context.JSON
+func (c *context) JSON(code int, i interface{}) error {
+	return c.ctx.JSON(code, i)
+}
+
+// HTTPErrorLog implements http.interface.Context.HTTPErrorLog
+func (c *context) HTTPErrorLog(
 	status int,
 	msg string, err error,
 	logger logging.Logger,
-	loc string, fields ...logging.Field) *echo.HTTPError {
+	loc string, fields ...logging.Field) error {
 	switch len(fields) {
 	case 0:
 		_ = logger.ErrWrap(err, msg, loc)
@@ -42,18 +63,7 @@ func NewHTTPErrorLog(
 	return echo.NewHTTPError(status, logging.Compose(msg, fields...))
 }
 
-// status return status for create handler
-func CreateStatus(created bool) int {
-	status := nethttp.StatusFound
-	if created {
-		status = nethttp.StatusCreated
-	}
-	return status
-}
-
-// Close close echo connection
-func Close(log logging.Logger, e *echo.Echo) {
-	if err := e.Close(); err != nil {
-		log.PanicE(err, "http.close")
-	}
+// HTTPError implements http.interface.Context.HTTPError
+func (c *context) HTTPError(code int, message ...interface{}) error {
+	return echo.NewHTTPError(code, message)
 }

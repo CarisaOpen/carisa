@@ -19,18 +19,18 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/carisa/pkg/http"
+
 	"github.com/carisa/api/internal/http/valid"
 
-	"github.com/carisa/api/internal/http"
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
-
-	"github.com/labstack/echo/v4"
+	httpc "github.com/carisa/pkg/http"
 )
 
 const locInstance = "instance.http"
 
-// Instance hands the http request of the instance
+// InstCreate hands the http request of the instance
 type Instance struct {
 	srv instance.Service
 	cnt *runtime.Container
@@ -45,10 +45,10 @@ func NewInstanceHandl(srv instance.Service, cnt *runtime.Container) Instance {
 }
 
 // Create creates the instance domain
-func (i *Instance) Create(c echo.Context) error {
+func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
 	if err := c.Bind(&inst); err != nil {
-		return http.NewHTTPErrorLog(
+		return c.HTTPErrorLog(
 			nethttp.StatusBadRequest,
 			"cannot recover the instance for creating",
 			err,
@@ -62,7 +62,7 @@ func (i *Instance) Create(c echo.Context) error {
 
 	created, err := i.srv.Create(&inst)
 	if err != nil {
-		return echo.NewHTTPError(nethttp.StatusInternalServerError, "it was impossible to create the instance")
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create the instance")
 	}
 
 	return c.JSON(http.CreateStatus(created), inst)

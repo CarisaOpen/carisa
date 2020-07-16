@@ -16,18 +16,21 @@
 
 package http
 
-import (
-	"net/http"
-	"net/http/httptest"
-	"strings"
+import "github.com/carisa/pkg/logging"
 
-	"github.com/labstack/echo/v4"
-)
+// Context is a adapter for http
+type Context interface {
 
-func MockHTTP(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
-	req := httptest.NewRequest(http.MethodPost, url, strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-	return
+	// Bind binds the request body into provided type `i`. The default binder
+	// does it based on Content-Type header.
+	Bind(i interface{}) error
+
+	// JSON sends a JSON response with status code.
+	JSON(code int, i interface{}) error
+
+	// HTTPErrorLog creates http error and sending a log error
+	HTTPErrorLog(status int, msg string, err error, logger logging.Logger, loc string, fields ...logging.Field) error
+
+	// HTTPError return http error
+	HTTPError(code int, message ...interface{}) error
 }

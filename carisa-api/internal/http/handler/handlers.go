@@ -16,7 +16,16 @@
 
 package handler
 
+import (
+	echoc "github.com/carisa/pkg/http/echo"
+	"github.com/labstack/echo/v4"
+)
+
 // Handlers is a handler container
 type Handlers struct {
 	InstHandler Instance
+}
+
+func (h *Handlers) InstCreate(ctx echo.Context) error {
+	return h.InstHandler.Create(echoc.NewContext(ctx))
 }

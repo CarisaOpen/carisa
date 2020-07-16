@@ -21,6 +21,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	echoc "github.com/carisa/pkg/http/echo"
+
 	"github.com/carisa/api/internal/runtime"
 
 	"github.com/carisa/pkg/strings"
@@ -31,7 +33,7 @@ import (
 
 	"github.com/carisa/api/internal/instance"
 
-	"github.com/carisa/api/internal/http"
+	"github.com/carisa/pkg/http"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/labstack/echo/v4"
@@ -39,19 +41,19 @@ import (
 
 func TestInstanceHandler_Create(t *testing.T) {
 	e := echo.New()
-	cnt, handler, mng := newHandlerFaked(t)
+	cnt, handlers, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer http.Close(cnt.Log, e)
 
 	instJSON := `"name":"name","description":"desc"`
-	rec, ctx := http.MockHTTP(e, "/api/instances", strings.Concat("{", instJSON, "}"))
-	err := handler.Create(ctx)
+	rec, ctx := echoc.MockHTTPPost(e, "/api/instances", strings.Concat("{", instJSON, "}"))
+	err := handlers.InstCreate(ctx)
 	if assert.NoError(t, err) {
-		assert.Contains(t, rec.Body.String(), instJSON, "Instance created")
+		assert.Contains(t, rec.Body.String(), instJSON, "InstCreate created")
 		var inst instance.Instance
 		errJ := json.NewDecoder(rec.Body).Decode(&inst)
 		if assert.NoError(t, errJ) {
-			assert.NotEmpty(t, inst.ID.String(), "Instance created. ID no empty")
+			assert.NotEmpty(t, inst.ID.String(), "InstCreate created. ID no empty")
 		}
 	}
 }
@@ -92,7 +94,7 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 	}
 
 	e := echo.New()
-	cnt, handler, store, txn := newHandlerMocked()
+	cnt, handlers, store, txn := newHandlerMocked()
 	defer http.Close(cnt.Log, e)
 
 	for _, tt := range tests {
@@ -102,22 +104,24 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		if tt.mockT != nil {
 			tt.mockT(txn)
 		}
-		_, ctx := http.MockHTTP(e, "/api/instances", tt.body)
-		err := handler.Create(ctx)
+		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
+		err := handlers.InstCreate(ctx)
 		assert.Error(t, err, tt.name)
 	}
 }
 
-func newHandlerFaked(t *testing.T) (*runtime.Container, Instance, storage.Integration) {
+func newHandlerFaked(t *testing.T) (*runtime.Container, Handlers, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	srv := instance.NewService(cnt, mng.Store())
-	return cnt, NewInstanceHandl(srv, cnt), mng
+	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
+	return cnt, hands, mng
 }
 
-func newHandlerMocked() (*runtime.Container, Instance, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
+func newHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
 	cnt, txn := mock.NewContainerMock()
 	store := &storage.ErrMockCRUD{}
 	srv := instance.NewService(cnt, store)
-	return cnt, NewInstanceHandl(srv, cnt), store, txn
+	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
+	return cnt, hands, store, txn
 }

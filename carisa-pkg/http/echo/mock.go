@@ -14,29 +14,20 @@
  *
  */
 
-package instance
+package echo
 
 import (
-	"github.com/carisa/api/internal/entity"
-	"github.com/carisa/pkg/strings"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+
+	"github.com/labstack/echo/v4"
 )
 
-// InstCreate represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
-	entity.Descriptor
-}
-
-func NewInstance() Instance {
-	return Instance{
-		Descriptor: entity.NewDescriptor(),
-	}
-}
-
-func (i *Instance) ToString() string {
-	return strings.Concat("instance: ", i.ID.String())
-}
-
-func (i *Instance) GetKey() string {
-	return i.ID.String()
+func MockHTTPPost(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
+	req := httptest.NewRequest(http.MethodPost, url, strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	return
 }

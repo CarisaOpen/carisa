@@ -17,15 +17,15 @@
 package http
 
 import (
-	"errors"
-	"net/http"
+	httpc "net/http"
 	"testing"
 
-	"github.com/carisa/api/internal/mock"
+	"github.com/carisa/pkg/logging"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/labstack/echo/v4"
-
-	"github.com/carisa/pkg/logging"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -37,11 +37,11 @@ func TestHttpTools_CreateStatus(t *testing.T) {
 	}{
 		{
 			found:  true,
-			status: http.StatusCreated,
+			status: httpc.StatusCreated,
 		},
 		{
 			found:  false,
-			status: http.StatusFound,
+			status: httpc.StatusFound,
 		},
 	}
 
@@ -50,26 +50,12 @@ func TestHttpTools_CreateStatus(t *testing.T) {
 	}
 }
 
-func TestHttpTools_NewHTTPErrorLog(t *testing.T) {
-	log, err := logging.NewZapWrapDev()
-	if err != nil {
-		t.Error(err)
-	}
-
-	errLog := NewHTTPErrorLog(
-		http.StatusBadRequest,
-		"error",
-		errors.New("error parent"),
-		log,
-		"loc",
-		logging.String("key", "value"))
-
-	assert.Equal(t, http.StatusBadRequest, errLog.Code, "Error status")
-	assert.Equal(t, "error. key: value", errLog.Message, "Message")
+func TestHttpTools_Close(t *testing.T) {
+	e := echo.New()
+	Close(newLogger(zap.DebugLevel), e)
 }
 
-func TestHttpTools_Close(t *testing.T) {
-	cnt := mock.NewContainerFake()
-	e := echo.New()
-	Close(cnt.Log, e)
+func newLogger(level zapcore.Level) logging.Logger {
+	core, _ := observer.New(level)
+	return logging.NewZapWrap(zap.New(core), logging.DebugLevel, "")
 }
