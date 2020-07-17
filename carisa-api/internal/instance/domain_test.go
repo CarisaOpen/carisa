@@ -28,8 +28,3 @@ func TestInstance_ToString(t *testing.T) {
 	i := NewInstance()
 	assert.Equal(t, strings.Concat("instance: ", i.ID.String()), i.ToString())
 }
-
-func TestInstance_GetKey(t *testing.T) {
-	i := NewInstance()
-	assert.Equal(t, i.ID.String(), i.GetKey())
-}

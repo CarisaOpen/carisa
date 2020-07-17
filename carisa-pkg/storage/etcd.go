@@ -123,7 +123,7 @@ func config(cnf EtcdConfig) clientv3.Config {
 }
 
 // Create implements storage.interface.CRUD.Create
-func (s *etcdStore) Create(entity Entity) (OpeWrap, error) {
+func (s *etcdStore) Create(key string, entity Entity) (OpeWrap, error) {
 	encode, err := encoding.Encode(entity)
 	if err != nil {
 		return OpeWrap{},
@@ -133,7 +133,7 @@ func (s *etcdStore) Create(entity Entity) (OpeWrap, error) {
 					logging.String("Entity", entity.ToString())))
 	}
 
-	return OpeWrap{clientv3.OpPut(entity.GetKey(), encode)}, err
+	return OpeWrap{clientv3.OpPut(key, encode)}, err
 }
 
 // Create implements storage.interface.CRUD.Close

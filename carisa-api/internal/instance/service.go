@@ -46,7 +46,7 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 	txn := s.cnt.NewTxn(s.store)
 	txn.Find(inst.ID.String())
 
-	create, err := s.store.Create(inst)
+	create, err := s.store.Create(inst.ID.String(), inst)
 	if err != nil {
 		s.cnt.Log.ErrorE(err, locService)
 		return false, err

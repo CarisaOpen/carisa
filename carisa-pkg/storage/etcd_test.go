@@ -36,10 +36,6 @@ func (e *EntityTest) ToString() string {
 	return e.Prop1
 }
 
-func (e *EntityTest) GetKey() string {
-	return e.Prop1
-}
-
 func TestEtcd_Config(t *testing.T) {
 	tests := []struct {
 		s EtcdConfig
@@ -136,11 +132,11 @@ func TestEtcd_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		txn := NewTxn(store)
-		txn.Find(tt.e[0].GetKey())
+		txn.Find(tt.e[0].Prop1)
 
-		for _, e := range tt.e {
-			create, err := store.Create(e)
-			assert.NoErrorf(t, err, "Create failed: %v. Entity: %s", err, e.GetKey())
+		for i, e := range tt.e {
+			create, err := store.Create(tt.e[i].Prop1, e)
+			assert.NoErrorf(t, err, "Create failed: %v. Entity: %s", err, e.Prop1)
 			txn.DoNotFound(create)
 		}
 
@@ -149,9 +145,9 @@ func TestEtcd_Create(t *testing.T) {
 		assert.True(t, ok, "Entity found")
 
 		for _, e := range tt.e {
-			r, errG := client.KV.Get(ctx, e.GetKey())
-			assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.GetKey())
-			assert.Equalf(t, string(r.Kvs[0].Key), e.GetKey(), "Entity '%s' not saved", e.GetKey())
+			r, errG := client.KV.Get(ctx, e.Prop1)
+			assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1)
+			assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%s' not saved", e.Prop1)
 		}
 	}
 }
