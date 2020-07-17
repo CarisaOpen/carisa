@@ -372,14 +372,6 @@ func newLogger(level zapcore.Level) (*observer.ObservedLogs, Logger) {
 	return obs, NewZapWrap(zap.New(core), DebugLevel, "")
 }
 
-func convertTo(items []Item) []Field {
-	fields := make([]Field, len(items))
-	for i, item := range items {
-		fields[i] = item.f
-	}
-	return fields
-}
-
 func testdd() []tests {
 	return []tests{
 		{

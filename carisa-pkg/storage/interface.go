@@ -24,6 +24,7 @@ type (
 	Entity interface {
 		// ToString convert entity to string
 		ToString() string
+		Key() string
 	}
 )
 
@@ -32,7 +33,7 @@ type (
 	CRUD interface {
 		// Create creates the context to create the entity. This context is added to the transaction.
 		// See Txn interface
-		Create(key string, entity Entity) (OpeWrap, error)
+		Create(entity Entity) (OpeWrap, error)
 
 		// Close close resources
 		Close() error

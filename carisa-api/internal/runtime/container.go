@@ -18,23 +18,17 @@ package runtime
 
 import (
 	"github.com/carisa/pkg/logging"
-	"github.com/carisa/pkg/storage"
 )
-
-// NewTxn allows injection for test
-type NewTxn func(s storage.CRUD) storage.Txn
 
 // Container defines the info and tools for application
 type Container struct {
 	Config
 	Log logging.Logger
-	NewTxn
 }
 
 func NewContainer(cnf Config, log logging.Logger) *Container {
 	return &Container{
 		Config: cnf,
 		Log:    log,
-		NewTxn: storage.NewTxn,
 	}
 }

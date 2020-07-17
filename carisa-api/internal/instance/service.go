@@ -18,7 +18,6 @@ package instance
 
 import (
 	"github.com/carisa/api/internal/runtime"
-	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
 )
 
@@ -26,15 +25,15 @@ const locService = "instance.service"
 
 // Service implements CRUD operations for the instance domain service
 type Service struct {
-	cnt   *runtime.Container
-	store storage.CRUD
+	cnt  *runtime.Container
+	crud storage.CrudOperation
 }
 
 // NewService builds a instance service
-func NewService(cnt *runtime.Container, store storage.CRUD) Service {
+func NewService(cnt *runtime.Container, crud storage.CrudOperation) Service {
 	return Service{
-		cnt:   cnt,
-		store: store,
+		cnt:  cnt,
+		crud: crud,
 	}
 }
 
@@ -42,24 +41,5 @@ func NewService(cnt *runtime.Container, store storage.CRUD) Service {
 // If the instance exists returns false
 func (s *Service) Create(inst *Instance) (bool, error) {
 	inst.AutoID()
-
-	txn := s.cnt.NewTxn(s.store)
-	txn.Find(inst.ID.String())
-
-	create, err := s.store.Create(inst.ID.String(), inst)
-	if err != nil {
-		s.cnt.Log.ErrorE(err, locService)
-		return false, err
-	}
-
-	txn.DoNotFound(create)
-
-	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := txn.Commit(ctx)
-	cancel()
-	if err != nil {
-		return false, s.cnt.Log.ErrWrap1(err, "commit creating", locService, logging.String("instance", inst.ToString()))
-	}
-
-	return ok, nil
+	return s.crud.Create(locService, s.cnt.StoreWithTimeout, inst)
 }

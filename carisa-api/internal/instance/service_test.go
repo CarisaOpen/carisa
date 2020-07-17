@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Verify the store integration. For all test look at http.handler.instance_test
+// Verify the crud integration. For all test look at http.handler.instance_test
 func TestInstanceService_Create(t *testing.T) {
 	i := Instance{
 		Descriptor: entity.Descriptor{
@@ -46,5 +46,6 @@ func TestInstanceService_Create(t *testing.T) {
 func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
-	return NewService(cnt, mng.Store()), mng
+	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
+	return NewService(cnt, crud), mng
 }

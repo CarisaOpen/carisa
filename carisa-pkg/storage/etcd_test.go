@@ -36,6 +36,10 @@ func (e *EntityTest) ToString() string {
 	return e.Prop1
 }
 
+func (e *EntityTest) Key() string {
+	return e.Prop1
+}
+
 func TestEtcd_Config(t *testing.T) {
 	tests := []struct {
 		s EtcdConfig
@@ -134,8 +138,8 @@ func TestEtcd_Create(t *testing.T) {
 		txn := NewTxn(store)
 		txn.Find(tt.e[0].Prop1)
 
-		for i, e := range tt.e {
-			create, err := store.Create(tt.e[i].Prop1, e)
+		for _, e := range tt.e {
+			create, err := store.Create(e)
 			assert.NoErrorf(t, err, "Create failed: %v. Entity: %s", err, e.Prop1)
 			txn.DoNotFound(create)
 		}

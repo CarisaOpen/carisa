@@ -12,30 +12,30 @@ type ErrMockCRUD struct {
 	close  bool
 }
 
-func (_m *ErrMockCRUD) Close() error {
-	if _m.close {
+func (e *ErrMockCRUD) Close() error {
+	if e.close {
 		return errors.New("close")
 	}
 	return nil
 }
 
-func (_m *ErrMockCRUD) Create(entity Entity) (OpeWrap, error) {
-	if _m.create {
+func (e *ErrMockCRUD) Create(entity Entity) (OpeWrap, error) {
+	if e.create {
 		return OpeWrap{}, errors.New("create")
 	}
 	return OpeWrap{}, nil
 }
 
 // Activate activates the methods to throw a error
-func (_m *ErrMockCRUD) Activate(methods ...string) {
-	_m.Clear()
+func (e *ErrMockCRUD) Activate(methods ...string) {
+	e.Clear()
 
 	for _, method := range methods {
 		switch method {
 		case "Create":
-			_m.create = true
+			e.create = true
 		case "Close":
-			_m.close = true
+			e.close = true
 		default:
 			panic("method not found")
 		}
@@ -43,9 +43,9 @@ func (_m *ErrMockCRUD) Activate(methods ...string) {
 }
 
 // Clear deactivates all methods
-func (_m *ErrMockCRUD) Clear() {
-	_m.create = false
-	_m.close = false
+func (e *ErrMockCRUD) Clear() {
+	e.create = false
+	e.close = false
 }
 
 // ErrMockTxn allows test the errors.
@@ -54,21 +54,21 @@ type ErrMockTxn struct {
 	commit bool
 }
 
-func (_m *ErrMockTxn) Commit(ctx context.Context) (bool, error) {
-	if _m.commit {
+func (e *ErrMockTxn) Commit(ctx context.Context) (bool, error) {
+	if e.commit {
 		return false, errors.New("commit")
 	}
 	return true, nil
 }
 
 // Activate activates the methods to throw a error
-func (_m *ErrMockTxn) Activate(methods ...string) {
-	_m.Clear()
+func (e *ErrMockTxn) Activate(methods ...string) {
+	e.Clear()
 
 	for _, method := range methods {
 		switch method {
 		case "Commit":
-			_m.commit = true
+			e.commit = true
 		default:
 			panic("method not found")
 		}
@@ -76,15 +76,46 @@ func (_m *ErrMockTxn) Activate(methods ...string) {
 }
 
 // Clear deactivates all methods
-func (_m *ErrMockTxn) Clear() {
-	_m.commit = false
+func (e *ErrMockTxn) Clear() {
+	e.commit = false
 }
 
-func (_m *ErrMockTxn) DoFound(ope OpeWrap) {
+func (e *ErrMockTxn) DoFound(ope OpeWrap) {
 }
 
-func (_m *ErrMockTxn) DoNotFound(ope OpeWrap) {
+func (e *ErrMockTxn) DoNotFound(ope OpeWrap) {
 }
 
-func (_m *ErrMockTxn) Find(keyValue string) {
+func (e *ErrMockTxn) Find(keyValue string) {
+}
+
+// ErrMockCRUDOper allows test the errors.
+type ErrMockCRUDOper struct {
+	create bool
+}
+
+// Activate activates the methods to throw a error
+func (e *ErrMockCRUDOper) Activate(methods ...string) {
+	e.Clear()
+
+	for _, method := range methods {
+		switch method {
+		case "Create":
+			e.create = true
+		default:
+			panic("method not found")
+		}
+	}
+}
+
+// Clear deactivates all methods
+func (e *ErrMockCRUDOper) Clear() {
+	e.create = false
+}
+
+func (e *ErrMockCRUDOper) Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
+	if e.create {
+		return false, errors.New("create")
+	}
+	return true, nil
 }

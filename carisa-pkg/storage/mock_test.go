@@ -61,3 +61,21 @@ func TestErrMockTxn_Clear(t *testing.T) {
 	m.Clear()
 	assert.False(t, m.commit, "Commit")
 }
+
+func TestErrMockOper_Activate(t *testing.T) {
+	m := ErrMockCRUDOper{}
+	m.Activate("Create")
+	_, err := m.Create("", nil, nil)
+	assert.Error(t, err, "Create")
+}
+
+func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
+	m := ErrMockCRUDOper{}
+	assert.Panics(t, func() { m.Activate("create") })
+}
+
+func TestErrMockOper_Clear(t *testing.T) {
+	m := ErrMockCRUDOper{}
+	m.Clear()
+	assert.False(t, m.create, "Create")
+}

@@ -38,5 +38,4 @@ func TestRuntime_NewContainer(t *testing.T) {
 
 	assert.Equal(t, cnf, ctn.Config, "Config")
 	assert.NotNil(t, ctn.Log, "Log")
-	assert.NotNil(t, ctn.NewTxn(sMock.Store()), "Transaction")
 }

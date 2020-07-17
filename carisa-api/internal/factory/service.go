@@ -29,7 +29,9 @@ type service struct {
 
 // configService builds the services
 func configService(cnt *runtime.Container, store storage.CRUD) service {
+	crud := storage.NewCrudOperation(store, cnt.Log, storage.NewTxn)
+
 	return service{
-		instanceSrv: instance.NewService(cnt, store),
+		instanceSrv: instance.NewService(cnt, crud),
 	}
 }

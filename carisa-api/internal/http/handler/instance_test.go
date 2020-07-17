@@ -62,11 +62,10 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 	const body = `{"name":"name","description":"desc"}`
 
 	tests := []struct {
-		name   string
-		body   string
-		mockS  func(*storage.ErrMockCRUD)
-		mockT  func(txn *storage.ErrMockTxn)
-		status int
+		name     string
+		body     string
+		mockOper func(txn *storage.ErrMockCRUDOper)
+		status   int
 	}{
 		{
 			name:   "Body wrong. Bad request",
@@ -79,30 +78,20 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:   "Creating Entity. Error creating",
-			body:   body,
-			mockS:  func(s *storage.ErrMockCRUD) { s.Activate("Create") },
-			status: nethttp.StatusInternalServerError,
-		},
-		{
-			name:   "Creating Entity. Error commits transactions",
-			body:   body,
-			mockS:  func(s *storage.ErrMockCRUD) { s.Clear() },
-			mockT:  func(s *storage.ErrMockTxn) { s.Activate("Commit") },
-			status: nethttp.StatusInternalServerError,
+			name:     "Creating Entity. Error creating",
+			body:     body,
+			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Create") },
+			status:   nethttp.StatusInternalServerError,
 		},
 	}
 
 	e := echo.New()
-	cnt, handlers, store, txn := newHandlerMocked()
+	cnt, handlers, crud := newHandlerMocked()
 	defer http.Close(cnt.Log, e)
 
 	for _, tt := range tests {
-		if tt.mockS != nil {
-			tt.mockS(store)
-		}
-		if tt.mockT != nil {
-			tt.mockT(txn)
+		if tt.mockOper != nil {
+			tt.mockOper(crud)
 		}
 		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
 		err := handlers.InstCreate(ctx)
@@ -113,15 +102,16 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 func newHandlerFaked(t *testing.T) (*runtime.Container, Handlers, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
-	srv := instance.NewService(cnt, mng.Store())
+	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
+	srv := instance.NewService(cnt, crud)
 	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
 	return cnt, hands, mng
 }
 
-func newHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUD, *storage.ErrMockTxn) {
-	cnt, txn := mock.NewContainerMock()
-	store := &storage.ErrMockCRUD{}
-	srv := instance.NewService(cnt, store)
+func newHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
+	cnt := mock.NewContainerFake()
+	crud := &storage.ErrMockCRUDOper{}
+	srv := instance.NewService(cnt, crud)
 	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
-	return cnt, hands, store, txn
+	return cnt, hands, crud
 }
