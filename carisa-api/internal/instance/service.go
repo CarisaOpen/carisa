@@ -43,3 +43,9 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 	inst.AutoID()
 	return s.crud.Create(locService, s.cnt.StoreWithTimeout, inst)
 }
+
+// Put creates or updates depending of if exists the instance into storage
+// If the instance is updated return true
+func (s *Service) Put(inst *Instance) (bool, error) {
+	return s.crud.Put(locService, s.cnt.StoreWithTimeout, inst)
+}

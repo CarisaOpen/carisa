@@ -122,21 +122,46 @@ func config(cnf EtcdConfig) clientv3.Config {
 	}
 }
 
-// Create implements storage.interface.CRUD.Create
-func (s *etcdStore) Create(entity Entity) (OpeWrap, error) {
+// Put implements storage.interface.CRUD.Put
+func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 	encode, err := encoding.Encode(entity)
 	if err != nil {
 		return OpeWrap{},
 			errors.Wrap(
 				err,
-				logging.Compose("unexpected encode error creating entity into etcd store",
+				logging.Compose("unexpected encode error putting entity into etcd store",
 					logging.String("Entity", entity.ToString())))
 	}
 
 	return OpeWrap{clientv3.OpPut(entity.Key(), encode)}, err
 }
 
-// Create implements storage.interface.CRUD.Close
+// Get implements storage.interface.CRUD.Get
+func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, error) {
+	res, err := s.client.Get(ctx, key)
+	if err != nil {
+		return false,
+			errors.Wrap(
+				err,
+				logging.Compose("unexpected error getting entity from etcd store", logging.String("Key", key)))
+	}
+
+	if len(res.Kvs) > 0 {
+		err = encoding.DecodeByte(res.Kvs[0].Value, entity)
+		if err != nil {
+			return false,
+				errors.Wrap(
+					err,
+					logging.Compose(
+						"unexpected decode error getting entity into etcd store",
+						logging.String("Key", key)))
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+// Put implements storage.interface.CRUD.Close
 func (s *etcdStore) Close() error {
 	return s.client.Close()
 }

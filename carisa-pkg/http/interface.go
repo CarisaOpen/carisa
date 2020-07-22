@@ -33,4 +33,7 @@ type Context interface {
 
 	// HTTPError return http error
 	HTTPError(code int, message ...interface{}) error
+
+	// NoEmpty validates that the name is not empty
+	NoEmpty(name string, value string) error
 }

@@ -49,18 +49,17 @@ func TestInstanceHandler_Create(t *testing.T) {
 	rec, ctx := echoc.MockHTTPPost(e, "/api/instances", strings.Concat("{", instJSON, "}"))
 	err := handlers.InstCreate(ctx)
 	if assert.NoError(t, err) {
-		assert.Contains(t, rec.Body.String(), instJSON, "InstCreate created")
+		assert.Contains(t, rec.Body.String(), instJSON, "Created")
+		assert.Equal(t, nethttp.StatusCreated, rec.Code, "Http status")
 		var inst instance.Instance
 		errJ := json.NewDecoder(rec.Body).Decode(&inst)
 		if assert.NoError(t, errJ) {
-			assert.NotEmpty(t, inst.ID.String(), "InstCreate created. ID no empty")
+			assert.NotEmpty(t, inst.ID.String(), "ID no empty")
 		}
 	}
 }
 
 func TestInstanceHandler_CreateWithError(t *testing.T) {
-	const body = `{"name":"name","description":"desc"}`
-
 	tests := []struct {
 		name     string
 		body     string
@@ -78,8 +77,8 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:     "Creating Entity. Error creating",
-			body:     body,
+			name:     "Creating the entity. Error creating",
+			body:     `{"name":"name","description":"desc"}`,
 			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Create") },
 			status:   nethttp.StatusInternalServerError,
 		},
@@ -95,6 +94,84 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		}
 		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
 		err := handlers.InstCreate(ctx)
+
+		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, "Http status")
+		assert.Error(t, err, tt.name)
+	}
+}
+
+func TestInstanceHandler_Put(t *testing.T) {
+	e := echo.New()
+	cnt, handlers, mng := newHandlerFaked(t)
+	defer mng.Close()
+	defer http.Close(cnt.Log, e)
+
+	tests := []struct {
+		instJSON string
+		status   int
+	}{
+		{
+			instJSON: `"id":"12345678901234567890","name":"name","description":"desc"`,
+			status:   nethttp.StatusCreated,
+		},
+		{
+			instJSON: `"id":"12345678901234567890","name":"name1","description":"desc"`,
+			status:   nethttp.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		rec, ctx := echoc.MockHTTPPost(e, "/api/instances", strings.Concat("{", tt.instJSON, "}"))
+		err := handlers.InstPut(ctx)
+		if assert.NoError(t, err) {
+			assert.Equal(t, tt.status, rec.Code, "Http status")
+			assert.Contains(t, rec.Body.String(), tt.instJSON, "Put")
+		}
+	}
+}
+
+func TestInstanceHandler_PutWithError(t *testing.T) {
+	tests := []struct {
+		name     string
+		body     string
+		mockOper func(txn *storage.ErrMockCRUDOper)
+		status   int
+	}{
+		{
+			name:   "Body wrong. Bad request",
+			body:   "{df",
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:   "ID validation. Bad request",
+			body:   `{"name":"name","description":"desc"}`,
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:   "Descriptor validation. Bad request",
+			body:   `{"id":"12345678901234567890","name":"name","description":""}`,
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:     "Putting the Entity. Error putting",
+			body:     `{"id":"12345678901234567890","name":"name","description":"desc"}`,
+			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Put") },
+			status:   nethttp.StatusInternalServerError,
+		},
+	}
+
+	e := echo.New()
+	cnt, handlers, crud := newHandlerMocked()
+	defer http.Close(cnt.Log, e)
+
+	for _, tt := range tests {
+		if tt.mockOper != nil {
+			tt.mockOper(crud)
+		}
+		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
+		err := handlers.InstPut(ctx)
+
+		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, "Http status")
 		assert.Error(t, err, tt.name)
 	}
 }

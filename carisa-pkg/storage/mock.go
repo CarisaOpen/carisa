@@ -10,6 +10,7 @@ import (
 type ErrMockCRUD struct {
 	create bool
 	close  bool
+	get    bool
 }
 
 func (e *ErrMockCRUD) Close() error {
@@ -19,11 +20,18 @@ func (e *ErrMockCRUD) Close() error {
 	return nil
 }
 
-func (e *ErrMockCRUD) Create(entity Entity) (OpeWrap, error) {
+func (e *ErrMockCRUD) Put(entity Entity) (OpeWrap, error) {
 	if e.create {
 		return OpeWrap{}, errors.New("create")
 	}
 	return OpeWrap{}, nil
+}
+
+func (e *ErrMockCRUD) Get(ctx context.Context, key string, entity Entity) (bool, error) {
+	if e.get {
+		return false, errors.New("get")
+	}
+	return true, nil
 }
 
 // Activate activates the methods to throw a error
@@ -32,10 +40,12 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 
 	for _, method := range methods {
 		switch method {
-		case "Create":
+		case "Put":
 			e.create = true
 		case "Close":
 			e.close = true
+		case "Get":
+			e.get = true
 		default:
 			panic("method not found")
 		}
@@ -46,6 +56,7 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 func (e *ErrMockCRUD) Clear() {
 	e.create = false
 	e.close = false
+	e.get = false
 }
 
 // ErrMockTxn allows test the errors.
@@ -92,6 +103,7 @@ func (e *ErrMockTxn) Find(keyValue string) {
 // ErrMockCRUDOper allows test the errors.
 type ErrMockCRUDOper struct {
 	create bool
+	put    bool
 }
 
 // Activate activates the methods to throw a error
@@ -102,6 +114,8 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 		switch method {
 		case "Create":
 			e.create = true
+		case "Put":
+			e.put = true
 		default:
 			panic("method not found")
 		}
@@ -111,11 +125,19 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 // Clear deactivates all methods
 func (e *ErrMockCRUDOper) Clear() {
 	e.create = false
+	e.put = false
 }
 
 func (e *ErrMockCRUDOper) Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
 	if e.create {
 		return false, errors.New("create")
+	}
+	return true, nil
+}
+
+func (e *ErrMockCRUDOper) Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
+	if e.put {
+		return false, errors.New("put")
 	}
 	return true, nil
 }

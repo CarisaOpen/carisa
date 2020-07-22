@@ -35,3 +35,9 @@ func Decode(encode string, data interface{}) error {
 	enc := gob.NewDecoder(bytes.NewBufferString(encode))
 	return enc.Decode(data)
 }
+
+// Decode decodes data from bytes using decoding gob
+func DecodeByte(encode []byte, data interface{}) error {
+	enc := gob.NewDecoder(bytes.NewBuffer(encode))
+	return enc.Decode(data)
+}

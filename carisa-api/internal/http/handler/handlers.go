@@ -29,3 +29,7 @@ type Handlers struct {
 func (h *Handlers) InstCreate(ctx echo.Context) error {
 	return h.InstHandler.Create(echoc.NewContext(ctx))
 }
+
+func (h *Handlers) InstPut(ctx echo.Context) error {
+	return h.InstHandler.Put(echoc.NewContext(ctx))
+}

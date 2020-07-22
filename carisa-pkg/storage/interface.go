@@ -31,9 +31,12 @@ type (
 type (
 	// CRUD defines the CRUD operations
 	CRUD interface {
-		// Create creates the context to create the entity. This context is added to the transaction.
+		// Put creates or updates the entity depending of transaction. This context is added to the transaction.
 		// See Txn interface
-		Create(entity Entity) (OpeWrap, error)
+		Put(entity Entity) (OpeWrap, error)
+
+		// Get gets the entity into entity param
+		Get(ctx context.Context, key string, entity Entity) (bool, error)
 
 		// Close close resources
 		Close() error

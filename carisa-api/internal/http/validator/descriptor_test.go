@@ -14,10 +14,14 @@
  *
  */
 
-package valid
+package validator
 
 import (
 	"testing"
+
+	"github.com/rs/xid"
+
+	"github.com/carisa/api/internal/mock"
 
 	"github.com/carisa/api/internal/entity"
 
@@ -34,14 +38,14 @@ func TestValid_ValidDescriptor(t *testing.T) {
 				Name: "",
 				Desc: "desc",
 			},
-			message: "the property: 'name' can not be empty",
+			message: "code=400, message=[the property: 'name' can not be empty]",
 		},
 		{
 			desc: entity.Descriptor{
 				Name: "name",
 				Desc: "",
 			},
-			message: "the property: 'description' can not be empty",
+			message: "code=400, message=[the property: 'description' can not be empty]",
 		},
 		{
 			desc: entity.Descriptor{
@@ -51,12 +55,41 @@ func TestValid_ValidDescriptor(t *testing.T) {
 			message: "",
 		},
 	}
+
+	ctx := mock.NewContextFake()
+
 	for _, tt := range tests {
-		r := Descriptor(tt.desc)
+		r := Descriptor(ctx, tt.desc)
 		if len(tt.message) == 0 {
 			assert.Nil(t, r)
 		} else {
-			assert.Equal(t, tt.message, r.Message)
+			assert.Equal(t, tt.message, r.Error())
+		}
+	}
+}
+
+func TestValid_ValidID(t *testing.T) {
+	tests := []struct {
+		id      xid.ID
+		message string
+	}{
+		{
+			message: "code=400, message=[the property: 'ID' can not be empty]",
+		},
+		{
+			id:      xid.New(),
+			message: "",
+		},
+	}
+
+	ctx := mock.NewContextFake()
+
+	for _, tt := range tests {
+		r := ID(ctx, tt.id)
+		if len(tt.message) == 0 {
+			assert.Nil(t, r)
+		} else {
+			assert.Equal(t, tt.message, r.Error())
 		}
 	}
 }

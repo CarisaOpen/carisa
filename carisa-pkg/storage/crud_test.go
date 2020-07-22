@@ -43,8 +43,9 @@ func (o Object) Key() string {
 func TestCRUDOperation_Create(t *testing.T) {
 	o := entity()
 
-	store, oper := NewCRUDOper(t)
-	defer store.Close()
+	storef := NewEctdIntegra(t)
+	oper := NewCRUDOper(t, storef)
+	defer storef.Close()
 
 	ok, err := oper.Create("loc", StoreTimeout, o)
 
@@ -63,8 +64,8 @@ func TestCRUDOperation_CreateError(t *testing.T) {
 		err   string
 	}{
 		{
-			name:  "Error creating",
-			mockS: func(s *ErrMockCRUD) { s.Activate("Create") },
+			name:  "Error creating or putting",
+			mockS: func(s *ErrMockCRUD) { s.Activate("Put") },
 			err:   "create",
 		},
 		{
@@ -91,6 +92,83 @@ func TestCRUDOperation_CreateError(t *testing.T) {
 	}
 }
 
+func TestCRUDOperation_Put(t *testing.T) {
+	tests := []struct {
+		e       *Object
+		updated bool
+	}{
+		{
+			e: &Object{
+				ID:    "key",
+				Value: 1,
+			},
+			updated: false,
+		},
+		{
+			e: &Object{
+				ID:    "key",
+				Value: 2,
+			},
+			updated: true,
+		},
+	}
+
+	storef := NewEctdIntegra(t)
+	defer storef.Close()
+
+	for _, tt := range tests {
+		oper := NewCRUDOper(t, storef)
+		updated, err := oper.Put("loc", StoreTimeout, tt.e)
+		if assert.NoErrorf(t, err, "Put failed") {
+			assert.Equal(t, updated, tt.updated, "Updated")
+			var entityr Object
+			found, err := storef.Store().Get(context.TODO(), tt.e.ID, &entityr)
+			assert.True(t, found, "Get entity")
+			if assert.NoErrorf(t, err, "Commit failed") {
+				assert.Equal(t, tt.e, &entityr, "Entity saved")
+			}
+		}
+	}
+}
+
+func TestCRUDOperation_PutError(t *testing.T) {
+	e := entity()
+
+	tests := []struct {
+		name  string
+		mockS func(*ErrMockCRUD)
+		mockT func(txn *ErrMockTxn)
+		err   string
+	}{
+		{
+			name:  "Error putting",
+			mockS: func(s *ErrMockCRUD) { s.Activate("Put") },
+			err:   "create",
+		},
+		{
+			name:  "Error commits transactions",
+			mockS: func(s *ErrMockCRUD) { s.Clear() },
+			mockT: func(s *ErrMockTxn) { s.Activate("Commit") },
+			err:   "commit putting. Object: key: commit",
+		},
+	}
+
+	oper, store, txn := NewCRUDOperMock(t)
+
+	for _, tt := range tests {
+		if tt.mockS != nil {
+			tt.mockS(store)
+		}
+		if tt.mockT != nil {
+			tt.mockT(txn)
+		}
+		_, err := oper.Put("loc", StoreTimeout, e)
+		if assert.Error(t, err, tt.name) {
+			assert.Equal(t, tt.err, err.Error())
+		}
+	}
+}
+
 func entity() Object {
 	return Object{
 		ID:    "key",
@@ -102,14 +180,12 @@ func StoreTimeout() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
-func NewCRUDOper(t *testing.T) (Integration, CrudOperation) {
-	intgr := NewEctdIntegra(t)
-
+func NewCRUDOper(t *testing.T, storef Integration) CrudOperation {
 	core, _ := observer.New(zap.DebugLevel)
 	log := logging.NewZapWrap(zap.New(core), logging.DebugLevel, "")
 
-	return intgr, &crudOperation{
-		store:    intgr.Store(),
+	return &crudOperation{
+		store:    storef.Store(),
 		log:      log,
 		buildTxn: NewTxn,
 	}

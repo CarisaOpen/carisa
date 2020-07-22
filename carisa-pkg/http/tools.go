@@ -23,11 +23,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// status return status for create handler
+// CreateStatus return status for create handler
 func CreateStatus(created bool) int {
 	status := http.StatusFound
 	if created {
 		status = http.StatusCreated
+	}
+	return status
+}
+
+// PutStatus return status for put handler
+func PutStatus(updated bool) int {
+	status := http.StatusCreated
+	if updated {
+		status = http.StatusOK
 	}
 	return status
 }

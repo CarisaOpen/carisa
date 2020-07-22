@@ -21,14 +21,14 @@ import (
 
 	"github.com/carisa/pkg/http"
 
-	"github.com/carisa/api/internal/http/valid"
+	"github.com/carisa/api/internal/http/validator"
 
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
 	httpc "github.com/carisa/pkg/http"
 )
 
-const locInstance = "instance.http"
+const locInstance = "http.instance"
 
 // InstCreate hands the http request of the instance
 type Instance struct {
@@ -48,15 +48,10 @@ func NewInstanceHandl(srv instance.Service, cnt *runtime.Container) Instance {
 func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
 	if err := c.Bind(&inst); err != nil {
-		return c.HTTPErrorLog(
-			nethttp.StatusBadRequest,
-			"cannot recover the instance for creating",
-			err,
-			i.cnt.Log,
-			locInstance)
+		return i.ErrorRecover(c, err)
 	}
 
-	if httpErr := valid.Descriptor(inst.Descriptor); httpErr != nil {
+	if httpErr := validator.Descriptor(c, inst.Descriptor); httpErr != nil {
 		return httpErr
 	}
 
@@ -66,4 +61,35 @@ func (i *Instance) Create(c httpc.Context) error {
 	}
 
 	return c.JSON(http.CreateStatus(created), inst)
+}
+
+// Put creates or update the instance domain
+func (i *Instance) Put(c httpc.Context) error {
+	inst := instance.Instance{}
+	if err := c.Bind(&inst); err != nil {
+		return i.ErrorRecover(c, err)
+	}
+
+	if httpErr := validator.ID(c, inst.ID); httpErr != nil {
+		return httpErr
+	}
+	if httpErr := validator.Descriptor(c, inst.Descriptor); httpErr != nil {
+		return httpErr
+	}
+
+	updated, err := i.srv.Put(&inst)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the instance")
+	}
+
+	return c.JSON(http.PutStatus(updated), inst)
+}
+
+func (i *Instance) ErrorRecover(c httpc.Context, err error) error {
+	return c.HTTPErrorLog(
+		nethttp.StatusBadRequest,
+		"cannot recover the instance",
+		err,
+		i.cnt.Log,
+		locInstance)
 }

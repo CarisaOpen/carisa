@@ -93,6 +93,36 @@ func TestContext_HTTPError(t *testing.T) {
 	assert.Equal(t, "code=500, message=[error]", err.Error(), "error")
 }
 
+func TestValid_ValidNoEmpty(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		message string
+	}{
+		{
+			name:    "property",
+			value:   "value",
+			message: "",
+		},
+		{
+			name:    "property",
+			value:   "",
+			message: "code=400, message=[the property: 'property' can not be empty]",
+		},
+	}
+
+	ctxw := NewContext(nil)
+
+	for _, tt := range tests {
+		r := ctxw.NoEmpty(tt.name, tt.value)
+		if len(tt.message) == 0 {
+			assert.Nil(t, r)
+		} else {
+			assert.Equal(t, tt.message, r.Error())
+		}
+	}
+}
+
 func newLogger(level zapcore.Level) (*observer.ObservedLogs, logging.Logger) {
 	core, obs := observer.New(level)
 	return obs, logging.NewZapWrap(zap.New(core), logging.DebugLevel, "")

@@ -19,6 +19,9 @@ package mock
 import (
 	"testing"
 
+	"github.com/carisa/pkg/http"
+	"github.com/carisa/pkg/http/echo"
+
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
@@ -34,4 +37,8 @@ func NewContainerFake() *runtime.Container {
 
 func NewStorageFake(t *testing.T) storage.Integration {
 	return storage.NewEctdIntegra(t)
+}
+
+func NewContextFake() http.Context {
+	return echo.NewContext(nil)
 }

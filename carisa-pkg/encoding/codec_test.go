@@ -35,10 +35,27 @@ func TestEncoding_EncodeDecode(t *testing.T) {
 	}
 
 	encode, err := Encode(data)
+	if assert.NoError(t, err, "unexpected encode error") {
+		var decode T
+		err = Decode(encode, &decode)
+		if assert.NoError(t, err, "unexpected decode error") {
+			assert.Equal(t, data, decode, "Encode and decode values are not equal")
+		}
+	}
+}
+
+func TestEncoding_DecodeByte(t *testing.T) {
+	data := T{
+		S: "String",
+		I: 1,
+		B: true,
+	}
+
+	encode, err := Encode(data)
 	assert.NoError(t, err, "unexpected encode error")
 
 	var decode T
-	err = Decode(encode, &decode)
+	err = DecodeByte([]byte(encode), &decode)
 	assert.NoError(t, err, "unexpected decode error")
 
 	assert.Equal(t, data, decode, "Encode and decode values are not equal")

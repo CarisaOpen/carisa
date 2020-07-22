@@ -25,35 +25,38 @@ import (
 
 func TestErrMockCRUD_Activate(t *testing.T) {
 	m := ErrMockCRUD{}
-	m.Activate("Create", "Close")
-	_, err := m.Create(nil)
-	assert.Error(t, err, "Create")
+	m.Activate("Put", "Close", "Get")
+	_, err := m.Put(nil)
+	assert.Error(t, err, "Put")
 	err = m.Close()
 	assert.Error(t, err, "Close")
+	_, err = m.Get(nil, "", nil)
+	assert.Error(t, err, "Get")
 }
 
 func TestErrMockCRUD_ActivateMethodNotFound(t *testing.T) {
 	m := ErrMockCRUD{}
-	assert.Panics(t, func() { m.Activate("create") })
+	assert.Panics(t, func() { m.Activate("op") })
 }
 
 func TestErrMockCRUD_Clear(t *testing.T) {
 	m := ErrMockCRUD{}
 	m.Clear()
-	assert.False(t, m.create, "Create")
+	assert.False(t, m.create, "Put")
 	assert.False(t, m.close, "Close")
+	assert.False(t, m.get, "Get")
 }
 
 func TestErrMockTxn_Activate(t *testing.T) {
 	m := ErrMockTxn{}
 	m.Activate("Commit")
 	_, err := m.Commit(context.TODO())
-	assert.Error(t, err, "Create")
+	assert.Error(t, err, "Commit")
 }
 
 func TestErrMockTxn_ActivateMethodNotFound(t *testing.T) {
 	m := ErrMockTxn{}
-	assert.Panics(t, func() { m.Activate("create") })
+	assert.Panics(t, func() { m.Activate("op") })
 }
 
 func TestErrMockTxn_Clear(t *testing.T) {
@@ -64,18 +67,21 @@ func TestErrMockTxn_Clear(t *testing.T) {
 
 func TestErrMockOper_Activate(t *testing.T) {
 	m := ErrMockCRUDOper{}
-	m.Activate("Create")
+	m.Activate("Create", "Put")
 	_, err := m.Create("", nil, nil)
 	assert.Error(t, err, "Create")
+	_, err = m.Put("", nil, nil)
+	assert.Error(t, err, "Put")
 }
 
 func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
 	m := ErrMockCRUDOper{}
-	assert.Panics(t, func() { m.Activate("create") })
+	assert.Panics(t, func() { m.Activate("op") })
 }
 
 func TestErrMockOper_Clear(t *testing.T) {
 	m := ErrMockCRUDOper{}
 	m.Clear()
 	assert.False(t, m.create, "Create")
+	assert.False(t, m.create, "Put")
 }

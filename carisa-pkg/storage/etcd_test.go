@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/carisa/pkg/encoding"
+
 	"go.etcd.io/etcd/clientv3"
 
 	"github.com/stretchr/testify/assert"
@@ -139,19 +141,169 @@ func TestEtcd_Create(t *testing.T) {
 		txn.Find(tt.e[0].Prop1)
 
 		for _, e := range tt.e {
-			create, err := store.Create(e)
-			assert.NoErrorf(t, err, "Create failed: %v. Entity: %s", err, e.Prop1)
-			txn.DoNotFound(create)
+			create, err := store.Put(e)
+			if assert.NoErrorf(t, err, "Put failed: %v. Entity: %s", err, e.Prop1) {
+				txn.DoNotFound(create)
+			}
 		}
 
 		ok, errC := txn.Commit(ctx)
-		assert.NoErrorf(t, errC, "Commit failed: %v", errC)
-		assert.True(t, ok, "Entity found")
+		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
+			assert.True(t, ok, "Entity found")
+			for _, e := range tt.e {
+				r, errG := client.KV.Get(ctx, e.Prop1)
+				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1) {
+					assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%s' not created", e.Prop1)
+				}
+			}
+		}
+	}
+}
+
+func TestEtcd_Update(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	tests := []struct {
+		e []*EntityTest
+	}{
+		{
+			e: []*EntityTest{
+				{
+					Prop1: "key",
+					Prop2: 1,
+				},
+			},
+		},
+		{
+			e: []*EntityTest{
+				{
+					Prop1: "key1",
+					Prop2: 1,
+				},
+				{
+					Prop1: "key2",
+					Prop2: 2,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		txn := NewTxn(store)
+		txn.Find(tt.e[0].Prop1)
 
 		for _, e := range tt.e {
-			r, errG := client.KV.Get(ctx, e.Prop1)
-			assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1)
-			assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%s' not saved", e.Prop1)
+			_, errp := client.KV.Put(ctx, e.Prop1, "1")
+			if assert.NoErrorf(t, errp, "Put KV failed: %v. Entity: %s", errp, e.Prop1) {
+				update, err := store.Put(e)
+				if assert.NoErrorf(t, err, "Put failed: %v. Entity: %s", err, e.Prop1) {
+					txn.DoFound(update)
+				}
+			}
+		}
+
+		ok, errC := txn.Commit(ctx)
+		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
+			assert.True(t, ok, "Entity not found")
+			for _, e := range tt.e {
+				r, errG := client.KV.Get(ctx, e.Prop1)
+				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $v", errG, e.Prop1) {
+					assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%v' not updated", e.Prop1)
+				}
+			}
+		}
+	}
+}
+
+func TestEtcd_Put(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	tests := []struct {
+		e     *EntityTest
+		found bool
+	}{
+		{
+			e: &EntityTest{
+				Prop1: "key",
+				Prop2: 1,
+			},
+			found: false,
+		},
+		{
+			e: &EntityTest{
+				Prop1: "key",
+				Prop2: 2,
+			},
+			found: true,
+		},
+	}
+
+	txn := NewTxn(store)
+	txn.Find(tests[0].e.Prop1)
+
+	putnf, err := store.Put(tests[0].e)
+	if assert.NoErrorf(t, err, "Put to create failed: %v. Entity: %s", err, tests[0].e.Prop1) {
+		putf, err := store.Put(tests[1].e)
+		if assert.NoErrorf(t, err, "Put to Update failed: %v. Entity: %s", err, tests[1].e.Prop1) {
+			txn.DoNotFound(putnf) // Create
+			txn.DoFound(putf)     // Update
+
+			for _, tt := range tests {
+				found, err := txn.Commit(ctx)
+				if assert.NoErrorf(t, err, "Commit failed: %v", err) {
+					assert.Equal(t, found, tt.found, "Commit result")
+					r, err := client.KV.Get(ctx, tt.e.Prop1)
+					if assert.NoErrorf(t, err, "Get failed: %v. Entity: $v", err, tt.e.Prop1) {
+						assert.Equalf(t, string(r.Kvs[0].Key), tt.e.Prop1, "Entity '%v' not saved", tt.e.Prop1)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestEtcd_Get(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	e := &EntityTest{
+		Prop1: "key",
+		Prop2: 1,
+	}
+
+	result := []struct {
+		key   string
+		found bool
+	}{
+		{
+			key:   e.Prop1,
+			found: true,
+		},
+		{
+			key:   "key2",
+			found: false,
+		},
+	}
+
+	entitye, err := encoding.Encode(e)
+	if assert.NoErrorf(t, err, "Encoding entity") {
+		_, err := client.Put(ctx, e.Prop1, entitye)
+		if assert.NoErrorf(t, err, "Put entity") {
+			for _, tt := range result {
+				var entityg EntityTest
+				found, err := store.Get(ctx, tt.key, &entityg)
+				if assert.NoErrorf(t, err, "Get entity") {
+					assert.Equal(t, tt.found, found, "Entity found")
+					if found {
+						assert.Equal(t, e, &entityg, "Get result")
+					}
+				}
+			}
 		}
 	}
 }

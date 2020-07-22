@@ -14,37 +14,31 @@
  *
  */
 
-package valid
+package validator
 
 import (
-	"testing"
+	nethttp "net/http"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/api/internal/entity"
+	"github.com/carisa/pkg/http"
+	"github.com/carisa/pkg/strings"
+	"github.com/rs/xid"
 )
 
-func TestValid_ValidNoEmpty(t *testing.T) {
-	tests := []struct {
-		name    string
-		value   string
-		message string
-	}{
-		{
-			name:    "property",
-			value:   "value",
-			message: "",
-		},
-		{
-			name:    "property",
-			value:   "",
-			message: "the property: 'property' can not be empty",
-		},
+// Descriptor validates that the name or description is not empty
+func Descriptor(ctx http.Context, d entity.Descriptor) error {
+	if err := ctx.NoEmpty("name", d.Name); err != nil {
+		return err
 	}
-	for _, tt := range tests {
-		r := NoEmpty(tt.name, tt.value)
-		if len(tt.message) == 0 {
-			assert.Nil(t, r)
-		} else {
-			assert.Equal(t, tt.message, r.Message)
-		}
+	if err := ctx.NoEmpty("description", d.Desc); err != nil {
+		return err
 	}
+	return nil
+}
+
+func ID(ctx http.Context, id xid.ID) error {
+	if id.IsNil() {
+		return ctx.HTTPError(nethttp.StatusBadRequest, strings.Concat("the property: 'ID' can not be empty"))
+	}
+	return nil
 }

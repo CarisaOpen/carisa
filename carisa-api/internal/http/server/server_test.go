@@ -37,5 +37,5 @@ func TestServer_Router(t *testing.T) {
 
 	Router(e, h)
 
-	assert.Equal(t, 1, len(e.Routes()))
+	assert.Equal(t, 2, len(e.Routes()))
 }

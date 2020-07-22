@@ -50,6 +50,26 @@ func TestHttpTools_CreateStatus(t *testing.T) {
 	}
 }
 
+func TestHttpTools_PutStatus(t *testing.T) {
+	tests := []struct {
+		updated bool
+		status  int
+	}{
+		{
+			updated: true,
+			status:  httpc.StatusOK,
+		},
+		{
+			updated: false,
+			status:  httpc.StatusCreated,
+		},
+	}
+
+	for _, tt := range tests {
+		assert.Equal(t, tt.status, PutStatus(tt.updated))
+	}
+}
+
 func TestHttpTools_Close(t *testing.T) {
 	e := echo.New()
 	Close(newLogger(zap.DebugLevel), e)

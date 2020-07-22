@@ -32,6 +32,9 @@ type BuildTxn func(s CRUD) Txn
 type CrudOperation interface {
 	// Create creates the entity into of the store
 	Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
+
+	// Put creates if exist the entity or updates if not exists the entity into storage
+	Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 }
 
 // crudOperation defines the CRUD operations
@@ -50,12 +53,12 @@ func NewCrudOperation(store CRUD, log logging.Logger, buildTxn BuildTxn) CrudOpe
 	}
 }
 
-// Create implements CrudOperation.Create
+// Put implements CrudOperation.Put
 func (c *crudOperation) Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
-	create, err := c.store.Create(entity)
+	create, err := c.store.Put(entity)
 	if err != nil {
 		c.log.ErrorE(err, loc)
 		return false, err
@@ -71,4 +74,28 @@ func (c *crudOperation) Create(loc string, storeTimeout StoreWithTimeout, entity
 	}
 
 	return ok, nil
+}
+
+// Update implements CrudOperation.Put
+func (c *crudOperation) Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
+	txn := c.buildTxn(c.store)
+	txn.Find(entity.Key())
+
+	put, err := c.store.Put(entity)
+	if err != nil {
+		c.log.ErrorE(err, loc)
+		return false, err
+	}
+
+	txn.DoFound(put)    // Update
+	txn.DoNotFound(put) // Create
+
+	ctx, cancel := storeTimeout()
+	updated, err := txn.Commit(ctx)
+	cancel()
+	if err != nil {
+		return false, c.log.ErrWrap1(err, "commit putting", loc, logging.String(reflect.TypeOf(entity).Name(), entity.ToString()))
+	}
+
+	return updated, nil
 }

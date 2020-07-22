@@ -25,7 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Verify the crud integration. For all test look at http.handler.instance_test
+// Verify the crud integration. For all rest test look at http.handler.instance_test
+
 func TestInstanceService_Create(t *testing.T) {
 	i := Instance{
 		Descriptor: entity.Descriptor{
@@ -40,6 +41,24 @@ func TestInstanceService_Create(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		assert.True(t, ok, "Created")
+	}
+}
+
+func TestInstanceService_Put(t *testing.T) {
+	i := Instance{
+		Descriptor: entity.Descriptor{
+			Name: "name",
+			Desc: "desc",
+		},
+	}
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	i.AutoID()
+	ok, err := s.Put(&i)
+
+	if assert.NoError(t, err) {
+		assert.False(t, ok, "Created")
 	}
 }
 

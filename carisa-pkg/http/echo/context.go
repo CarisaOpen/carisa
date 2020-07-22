@@ -19,7 +19,10 @@ package echo
 import (
 	"github.com/carisa/pkg/http"
 	"github.com/carisa/pkg/logging"
+	"github.com/carisa/pkg/strings"
 	"github.com/labstack/echo/v4"
+
+	nethttp "net/http"
 )
 
 // NewContext creates the echo context adapter
@@ -66,4 +69,12 @@ func (c *context) HTTPErrorLog(
 // HTTPError implements http.interface.Context.HTTPError
 func (c *context) HTTPError(code int, message ...interface{}) error {
 	return echo.NewHTTPError(code, message)
+}
+
+// NoEmpty implements http.interface.Context.NoEmpty
+func (c *context) NoEmpty(name string, value string) error {
+	if len(value) == 0 {
+		return c.HTTPError(nethttp.StatusBadRequest, strings.Concat("the property: '", name, "' can not be empty"))
+	}
+	return nil
 }
