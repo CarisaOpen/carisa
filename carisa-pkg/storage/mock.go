@@ -104,6 +104,15 @@ func (e *ErrMockTxn) Find(keyValue string) {
 type ErrMockCRUDOper struct {
 	create bool
 	put    bool
+	store  CRUD
+}
+
+func NewErrMockCRUDOper() *ErrMockCRUDOper {
+	return &ErrMockCRUDOper{
+		create: false,
+		put:    false,
+		store:  &ErrMockCRUD{},
+	}
 }
 
 // Activate activates the methods to throw a error
@@ -126,6 +135,10 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 func (e *ErrMockCRUDOper) Clear() {
 	e.create = false
 	e.put = false
+}
+
+func (e *ErrMockCRUDOper) Store() CRUD {
+	return e.store
 }
 
 func (e *ErrMockCRUDOper) Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {

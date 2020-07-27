@@ -62,6 +62,27 @@ func TestInstanceService_Put(t *testing.T) {
 	}
 }
 
+func TestInstanceService_Get(t *testing.T) {
+	i := Instance{
+		Descriptor: entity.Descriptor{
+			Name: "name",
+			Desc: "desc",
+		},
+	}
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	_, err := s.Create(&i)
+	if assert.NoError(t, err) {
+		var geti Instance
+		ok, err := s.Get(i.ID, &geti)
+		if assert.NoError(t, err) {
+			assert.True(t, ok, "Get ok")
+			assert.Equal(t, i, geti, "Instance returned")
+		}
+	}
+}
+
 func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()

@@ -14,28 +14,26 @@
  *
  */
 
-package server
+package convert
 
 import (
-	"testing"
+	nethttp "net/http"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/carisa/api/internal/http/handler"
-
-	"github.com/labstack/echo/v4"
+	"github.com/carisa/pkg/http"
+	"github.com/rs/xid"
 )
 
-func TestServer_Middleware(t *testing.T) {
-	e := echo.New()
-	Middleware(e)
-}
+// ParamID convert string param ID to xId type
+func ParamID(c http.Context) (xid.ID, error) {
+	value, err := c.Param("id")
+	if err != nil {
+		return xid.NilID(), err
+	}
 
-func TestServer_Router(t *testing.T) {
-	e := echo.New()
-	h := handler.Handlers{}
+	id, err := xid.FromString(value)
+	if err != nil {
+		return xid.NilID(), c.HTTPError(nethttp.StatusBadRequest, "the ID has a incorrect format")
+	}
 
-	Router(e, h)
-
-	assert.Equal(t, 3, len(e.Routes()))
+	return id, nil
 }

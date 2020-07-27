@@ -19,6 +19,7 @@ package instance
 import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 )
 
 const locService = "instance.service"
@@ -48,4 +49,12 @@ func (s *Service) Create(inst *Instance) (bool, error) {
 // If the instance is updated return true
 func (s *Service) Put(inst *Instance) (bool, error) {
 	return s.crud.Put(locService, s.cnt.StoreWithTimeout, inst)
+}
+
+// Get gets the instance from storage
+func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	ok, err := s.crud.Store().Get(ctx, id.String(), inst)
+	cancel()
+	return ok, err
 }

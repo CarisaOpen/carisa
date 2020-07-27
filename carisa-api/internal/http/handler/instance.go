@@ -19,6 +19,8 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/carisa/api/internal/http/convert"
+
 	"github.com/carisa/pkg/http"
 
 	"github.com/carisa/api/internal/http/validator"
@@ -65,24 +67,43 @@ func (i *Instance) Create(c httpc.Context) error {
 
 // Put creates or update the instance domain
 func (i *Instance) Put(c httpc.Context) error {
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
 	inst := instance.Instance{}
 	if err := c.Bind(&inst); err != nil {
 		return i.ErrorRecover(c, err)
 	}
 
-	if httpErr := validator.ID(c, inst.ID); httpErr != nil {
-		return httpErr
-	}
 	if httpErr := validator.Descriptor(c, inst.Descriptor); httpErr != nil {
 		return httpErr
 	}
 
+	inst.ID = id
 	updated, err := i.srv.Put(&inst)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the instance")
 	}
 
 	return c.JSON(http.PutStatus(updated), inst)
+}
+
+func (i *Instance) Get(c httpc.Context) error {
+	var inst instance.Instance
+
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	found, err := i.srv.Get(id, &inst)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the instance")
+	}
+
+	return c.JSON(http.GetStatus(found), inst)
 }
 
 func (i *Instance) ErrorRecover(c httpc.Context, err error) error {

@@ -37,6 +37,15 @@ type context struct {
 	ctx echo.Context
 }
 
+// Param implements http.interface.Context.Param
+func (c *context) Param(name string) (string, error) {
+	value := c.ctx.Param(name)
+	if len(value) == 0 {
+		return "", c.HTTPError(nethttp.StatusBadRequest, strings.Concat("the param path: '", name, "' not found"))
+	}
+	return value, nil
+}
+
 // Bind implements http.interface.Context.Bind
 func (c *context) Bind(i interface{}) error {
 	return c.ctx.Bind(i)

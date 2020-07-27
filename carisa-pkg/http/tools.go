@@ -41,6 +41,15 @@ func PutStatus(updated bool) int {
 	return status
 }
 
+// GetStatus return status for get handler
+func GetStatus(found bool) int {
+	status := http.StatusNotFound
+	if found {
+		status = http.StatusOK
+	}
+	return status
+}
+
 // Close close echo connection
 func Close(log logging.Logger, e *echo.Echo) {
 	if err := e.Close(); err != nil {

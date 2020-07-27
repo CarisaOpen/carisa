@@ -18,6 +18,7 @@ package echo
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/carisa/pkg/logging"
@@ -29,6 +30,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestContext_Param(t *testing.T) {
+	e := echo.New()
+	defer closeEcho(e)
+
+	params := map[string]string{
+		"param1": "value1",
+	}
+	_, ctx := MockHTTP(e, http.MethodGet, "/api", "", params)
+	ctxw := NewContext(ctx)
+
+	value, _ := ctxw.Param("param1")
+	assert.Equal(t, "value1", value)
+	_, err := ctxw.Param("param2")
+	assert.Error(t, err)
+}
+
 func TestContext_Bind(t *testing.T) {
 	s := struct {
 		P int `json:"p,omitempty"`
@@ -39,7 +56,7 @@ func TestContext_Bind(t *testing.T) {
 	e := echo.New()
 	defer closeEcho(e)
 
-	_, ctx := MockHTTPPost(e, "/api/instances", `{"p":1}`)
+	_, ctx := MockHTTP(e, http.MethodPost, "/api", `{"p":1}`, nil)
 	ctxw := NewContext(ctx)
 
 	if assert.NoError(t, ctxw.Bind(&s)) {
@@ -58,7 +75,7 @@ func TestContext_JSON(t *testing.T) {
 	defer closeEcho(e)
 	body := `{"p":1}`
 
-	rec, ctx := MockHTTPPost(e, "/api/instances", body)
+	rec, ctx := MockHTTP(e, http.MethodPost, "/api", body, nil)
 	ctxw := NewContext(ctx)
 
 	if assert.NoError(t, ctxw.JSON(200, s)) {
@@ -87,9 +104,7 @@ func TestContext_HTTPErrorLog(t *testing.T) {
 
 func TestContext_HTTPError(t *testing.T) {
 	ctxw := NewContext(nil)
-
 	err := ctxw.HTTPError(500, "error")
-
 	assert.Equal(t, "code=500, message=[error]", err.Error(), "error")
 }
 

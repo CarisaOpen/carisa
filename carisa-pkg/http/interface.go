@@ -20,6 +20,8 @@ import "github.com/carisa/pkg/logging"
 
 // Context is a adapter for http
 type Context interface {
+	// Param return path param
+	Param(name string) (string, error)
 
 	// Bind binds the request body into provided type `i`. The default binder
 	// does it based on Content-Type header.

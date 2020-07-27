@@ -33,3 +33,7 @@ func (h *Handlers) InstCreate(ctx echo.Context) error {
 func (h *Handlers) InstPut(ctx echo.Context) error {
 	return h.InstHandler.Put(echoc.NewContext(ctx))
 }
+
+func (h *Handlers) InstGet(ctx echo.Context) error {
+	return h.InstHandler.Get(echoc.NewContext(ctx))
+}

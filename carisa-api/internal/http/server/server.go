@@ -37,8 +37,9 @@ func Middleware(e *echo.Echo) {
 // Router defines all http route for API
 func Router(e *echo.Echo, hands handler.Handlers) {
 	// Instance
+	e.GET("/api/instances/:id", hands.InstGet)
 	e.POST("/api/instances", hands.InstCreate)
-	e.PUT("/api/instances", hands.InstPut)
+	e.PUT("/api/instances/:id", hands.InstPut)
 }
 
 // Start starts the graceful http server

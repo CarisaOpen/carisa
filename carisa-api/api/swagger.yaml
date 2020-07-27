@@ -11,8 +11,8 @@ info:
 host: "petstore.swagger.io"
 basePath: "/api"
 tags:
-- name: "instance"
-  description: "Instance represents a set of spaces independently of another instance in all system"
+  - name: "instance"
+    description: "Instance represents a set of spaces independently of another instance in all system"
 schemes:
   - "https"
   - "http"
@@ -20,47 +20,112 @@ paths:
   /instances:
     post:
       tags:
-      - "instance"
+        - "instance"
       summary: "Add a new instance to the platform"
-      description: ""
-      operationId: "addPet"
       consumes:
-      - "application/json"
+        - "application/json"
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
-      - in: "body"
-        name: "body"
-        description: "Instance object that needs to be added to the platform"
-        required: true
-        schema:
-          $ref: "#/definitions/InstanceAdd"
+        - in: "body"
+          name: "body"
+          description: "Instance object that needs to be added to the platform"
+          required: true
+          schema:
+            $ref: "#/definitions/InstanceReq"
       responses:
         "201":
           description: "Instance created"
           schema:
-            $ref: "#/definitions/Instance"          
-        "302":  
+            $ref: "#/definitions/Instance"
+        "302":
           description: "Instance found"
         "400":
           description: "Invalid input"
         "500":
-          description: "Internal server error"          
+          description: "Internal server error"
+  /instances/{id}:
+    put:
+      tags:
+        - "instance"
+      summary: "If the instance ID exists is updated otherwise is added"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Instance identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Instance object that needs to be added to the platform"
+          required: true
+          schema:
+            $ref: "#/definitions/InstanceReq"
+      responses:
+        "200":
+          description: "Instance updated"
+          schema:
+            $ref: "#/definitions/Instance"
+        "201":
+          description: "Instance created"
+          schema:
+            $ref: "#/definitions/Instance"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "instance"
+      summary: "Find instance by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Instance identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Instance found"
+          schema:
+            $ref: "#/definitions/Instance"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Instance not found"
+        "500":
+          description: "Internal server error"
 definitions:
   Instance:
     type: "object"
     properties:
       id:
         type: "string"
-        description: "Instance identifier"    
+        description: "Instance identifier"
       name:
         type: "string"
-        description: "Instance name"    
-  InstanceAdd:
+        description: "Instance name"
+      description:
+        type: "string"
+        description: "Instance description"
+  InstanceReq:
     type: "object"
     required:
-    - "name"
+      - "name"
     properties:
       name:
         type: "string"
         description: "Instance name"
+        required: true
+      description:
+        type: "string"
+        description: "Instance description"
+        required: true

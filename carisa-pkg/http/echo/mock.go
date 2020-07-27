@@ -17,17 +17,38 @@
 package echo
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 )
 
-func MockHTTPPost(e *echo.Echo, url string, body string) (rec *httptest.ResponseRecorder, c echo.Context) {
-	req := httptest.NewRequest(http.MethodPost, url, strings.NewReader(body))
+func MockHTTP(
+	e *echo.Echo, method string,
+	url string,
+	body string,
+	params map[string]string) (rec *httptest.ResponseRecorder, c echo.Context) {
+	req := httptest.NewRequest(method, url, strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
+	setParams(params, c)
 	return
+}
+
+func setParams(params map[string]string, c echo.Context) {
+	if params == nil {
+		return
+	}
+
+	l := len(params)
+	names := make([]string, 0, l)
+	values := make([]string, 0, l)
+	for k, v := range params {
+		names = append(names, k)
+		values = append(values, v)
+	}
+
+	c.SetParamNames(names...)
+	c.SetParamValues(values...)
 }

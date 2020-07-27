@@ -30,7 +30,7 @@ func TestErrMockCRUD_Activate(t *testing.T) {
 	assert.Error(t, err, "Put")
 	err = m.Close()
 	assert.Error(t, err, "Close")
-	_, err = m.Get(nil, "", nil)
+	_, err = m.Get(context.TODO(), "", nil)
 	assert.Error(t, err, "Get")
 }
 
@@ -66,7 +66,7 @@ func TestErrMockTxn_Clear(t *testing.T) {
 }
 
 func TestErrMockOper_Activate(t *testing.T) {
-	m := ErrMockCRUDOper{}
+	m := NewErrMockCRUDOper()
 	m.Activate("Create", "Put")
 	_, err := m.Create("", nil, nil)
 	assert.Error(t, err, "Create")
@@ -75,12 +75,12 @@ func TestErrMockOper_Activate(t *testing.T) {
 }
 
 func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
-	m := ErrMockCRUDOper{}
+	m := NewErrMockCRUDOper()
 	assert.Panics(t, func() { m.Activate("op") })
 }
 
 func TestErrMockOper_Clear(t *testing.T) {
-	m := ErrMockCRUDOper{}
+	m := NewErrMockCRUDOper()
 	m.Clear()
 	assert.False(t, m.create, "Create")
 	assert.False(t, m.create, "Put")

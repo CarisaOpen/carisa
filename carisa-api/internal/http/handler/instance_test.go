@@ -41,13 +41,14 @@ import (
 
 func TestInstanceHandler_Create(t *testing.T) {
 	e := echo.New()
-	cnt, handlers, mng := newHandlerFaked(t)
+	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer http.Close(cnt.Log, e)
 
 	instJSON := `"name":"name","description":"desc"`
-	rec, ctx := echoc.MockHTTPPost(e, "/api/instances", strings.Concat("{", instJSON, "}"))
+	rec, ctx := echoc.MockHTTP(e, nethttp.MethodPost, "/api/instances", strings.Concat("{", instJSON, "}"), nil)
 	err := handlers.InstCreate(ctx)
+
 	if assert.NoError(t, err) {
 		assert.Contains(t, rec.Body.String(), instJSON, "Created")
 		assert.Equal(t, nethttp.StatusCreated, rec.Code, "Http status")
@@ -77,7 +78,7 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:     "Creating the entity. Error creating",
+			name:     "Creating the instance. Error creating",
 			body:     `{"name":"name","description":"desc"}`,
 			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Create") },
 			status:   nethttp.StatusInternalServerError,
@@ -92,37 +93,46 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		if tt.mockOper != nil {
 			tt.mockOper(crud)
 		}
-		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
+		_, ctx := echoc.MockHTTP(e, nethttp.MethodPost, "/api/instances", tt.body, nil)
 		err := handlers.InstCreate(ctx)
 
-		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, "Http status")
+		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
 	}
 }
 
 func TestInstanceHandler_Put(t *testing.T) {
 	e := echo.New()
-	cnt, handlers, mng := newHandlerFaked(t)
+	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer http.Close(cnt.Log, e)
+
+	params := map[string]string{"id": "12345678901234567890"}
 
 	tests := []struct {
 		instJSON string
 		status   int
 	}{
 		{
-			instJSON: `"id":"12345678901234567890","name":"name","description":"desc"`,
+			instJSON: `"name":"name","description":"desc"`,
 			status:   nethttp.StatusCreated,
 		},
 		{
-			instJSON: `"id":"12345678901234567890","name":"name1","description":"desc"`,
+			instJSON: `"name":"name1","description":"desc"`,
 			status:   nethttp.StatusOK,
 		},
 	}
 
 	for _, tt := range tests {
-		rec, ctx := echoc.MockHTTPPost(e, "/api/instances", strings.Concat("{", tt.instJSON, "}"))
+		rec, ctx := echoc.MockHTTP(
+			e,
+			nethttp.MethodPut,
+			"/api/instances",
+			strings.Concat("{", tt.instJSON, "}"),
+			params)
+
 		err := handlers.InstPut(ctx)
+
 		if assert.NoError(t, err) {
 			assert.Equal(t, tt.status, rec.Code, "Http status")
 			assert.Contains(t, rec.Body.String(), tt.instJSON, "Put")
@@ -131,30 +141,37 @@ func TestInstanceHandler_Put(t *testing.T) {
 }
 
 func TestInstanceHandler_PutWithError(t *testing.T) {
+	params := map[string]string{"id": "12345678901234567890"}
+
 	tests := []struct {
 		name     string
+		params   map[string]string
 		body     string
 		mockOper func(txn *storage.ErrMockCRUDOper)
 		status   int
 	}{
 		{
 			name:   "Body wrong. Bad request",
+			params: params,
 			body:   "{df",
 			status: nethttp.StatusBadRequest,
 		},
 		{
 			name:   "ID validation. Bad request",
+			params: map[string]string{"i": ""},
 			body:   `{"name":"name","description":"desc"}`,
 			status: nethttp.StatusBadRequest,
 		},
 		{
 			name:   "Descriptor validation. Bad request",
-			body:   `{"id":"12345678901234567890","name":"name","description":""}`,
+			params: params,
+			body:   `{"name":"name","description":""}`,
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:     "Putting the Entity. Error putting",
-			body:     `{"id":"12345678901234567890","name":"name","description":"desc"}`,
+			name:     "Putting the Instance. Error putting",
+			params:   params,
+			body:     `{"name":"name","description":"desc"}`,
 			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Put") },
 			status:   nethttp.StatusInternalServerError,
 		},
@@ -168,26 +185,104 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 		if tt.mockOper != nil {
 			tt.mockOper(crud)
 		}
-		_, ctx := echoc.MockHTTPPost(e, "/api/instances", tt.body)
+		_, ctx := echoc.MockHTTP(e, nethttp.MethodPut, "/api/instances", tt.body, tt.params)
 		err := handlers.InstPut(ctx)
 
-		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, "Http status")
+		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
 	}
 }
 
-func newHandlerFaked(t *testing.T) (*runtime.Container, Handlers, storage.Integration) {
+func TestInstanceHandler_Get(t *testing.T) {
+	e := echo.New()
+	cnt, handlers, srv, mng := newHandlerFaked(t)
+	defer mng.Close()
+	defer http.Close(cnt.Log, e)
+
+	inst := instance.NewInstance()
+	inst.Name = "name"
+	inst.Desc = "desc"
+
+	created, err := srv.Create(&inst)
+	if assert.NoError(t, err) {
+		assert.True(t, created, "Instance created")
+
+		tests := []struct {
+			params map[string]string
+			status int
+		}{
+			{
+				params: map[string]string{"id": inst.ID.String()},
+				status: nethttp.StatusOK,
+			},
+			{
+				params: map[string]string{"id": "12345678901234567890"},
+				status: nethttp.StatusNotFound,
+			},
+		}
+
+		for _, tt := range tests {
+			rec, ctx := echoc.MockHTTP(e, nethttp.MethodGet, "/api/instances/:id", "", tt.params)
+			err := handlers.InstGet(ctx)
+
+			if assert.NoError(t, err) {
+				if tt.status == nethttp.StatusOK {
+					assert.Contains(t, rec.Body.String(), `"name":"name","description":"desc"`, "Get instance")
+				}
+				assert.Equal(t, tt.status, rec.Code, "Http status")
+			}
+		}
+	}
+}
+
+func TestInstanceHandler_GetWithError(t *testing.T) {
+	tests := []struct {
+		name     string
+		param    map[string]string
+		mockOper func(txn *storage.ErrMockCRUDOper)
+		status   int
+	}{
+		{
+			name:   "Param not found. Bad request",
+			param:  map[string]string{"i": ""},
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:     "Get error. Internal server error",
+			param:    map[string]string{"id": "12345678901234567890"},
+			mockOper: func(s *storage.ErrMockCRUDOper) { s.Store().(*storage.ErrMockCRUD).Activate("Get") },
+			status:   nethttp.StatusInternalServerError,
+		},
+	}
+
+	e := echo.New()
+	cnt, handlers, crud := newHandlerMocked()
+	defer http.Close(cnt.Log, e)
+
+	for _, tt := range tests {
+		if tt.mockOper != nil {
+			tt.mockOper(crud)
+		}
+		_, ctx := echoc.MockHTTP(e, nethttp.MethodGet, "/api/instances/:id", "", tt.param)
+		err := handlers.InstGet(ctx)
+
+		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
+		assert.Error(t, err, tt.name)
+	}
+}
+
+func newHandlerFaked(t *testing.T) (*runtime.Container, Handlers, instance.Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
 	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
 	srv := instance.NewService(cnt, crud)
 	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
-	return cnt, hands, mng
+	return cnt, hands, srv, mng
 }
 
 func newHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
 	cnt := mock.NewContainerFake()
-	crud := &storage.ErrMockCRUDOper{}
+	crud := storage.NewErrMockCRUDOper()
 	srv := instance.NewService(cnt, crud)
 	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
 	return cnt, hands, crud

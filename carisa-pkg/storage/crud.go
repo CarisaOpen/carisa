@@ -30,6 +30,9 @@ type BuildTxn func(s CRUD) Txn
 
 // CrudOperation defines the CRUD operations
 type CrudOperation interface {
+	// Store gets store
+	Store() CRUD
+
 	// Create creates the entity into of the store
 	Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
@@ -51,6 +54,11 @@ func NewCrudOperation(store CRUD, log logging.Logger, buildTxn BuildTxn) CrudOpe
 		log:      log,
 		buildTxn: buildTxn,
 	}
+}
+
+// Store implements CrudOperation.Store
+func (c *crudOperation) Store() CRUD {
+	return c.store
 }
 
 // Put implements CrudOperation.Put
