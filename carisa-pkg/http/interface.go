@@ -16,7 +16,11 @@
 
 package http
 
-import "github.com/carisa/pkg/logging"
+import (
+	"net/http/httptest"
+
+	"github.com/carisa/pkg/logging"
+)
 
 // Context is a adapter for http
 type Context interface {
@@ -38,4 +42,16 @@ type Context interface {
 
 	// NoEmpty validates that the name is not empty
 	NoEmpty(name string, value string) error
+}
+
+// HTTPMock mocks http operations
+type HTTPMock interface {
+	// NewHTTP builds http context and response recorder
+	NewHTTP(method string,
+		url string,
+		body string,
+		params map[string]string) (rec *httptest.ResponseRecorder, c Context)
+
+	// Close closes http connection
+	Close(l logging.Logger)
 }

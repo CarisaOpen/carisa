@@ -21,7 +21,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Handlers is a handler container
+// Handlers is a handlers container
 type Handlers struct {
 	InstHandler Instance
 }

@@ -24,23 +24,9 @@ import (
 
 	"github.com/carisa/api/internal/http/handler"
 	"github.com/carisa/api/internal/runtime"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
-
-// Middleware configure security and behaviour of http
-func Middleware(e *echo.Echo) {
-	e.Use(middleware.Recover())
-}
-
-// Router defines all http route for API
-func Router(e *echo.Echo, hands handler.Handlers) {
-	// Instance
-	e.GET("/api/instances/:id", hands.InstGet)
-	e.POST("/api/instances", hands.InstCreate)
-	e.PUT("/api/instances/:id", hands.InstPut)
-}
 
 // Start starts the graceful http server
 func Start(e *echo.Echo, cnf runtime.Config) {
@@ -62,4 +48,17 @@ func Start(e *echo.Echo, cnf runtime.Config) {
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Error(err.Error())
 	}
+}
+
+// Middleware configure security and behaviour of http
+func Middleware(e *echo.Echo) {
+	e.Use(middleware.Recover())
+}
+
+// Router defines all http route for API
+func Router(e *echo.Echo, h handler.Handlers) {
+	// Instance
+	e.GET("/api/instances/:id", h.InstGet)
+	e.POST("/api/instances", h.InstCreate)
+	e.PUT("/api/instances/:id", h.InstPut)
 }

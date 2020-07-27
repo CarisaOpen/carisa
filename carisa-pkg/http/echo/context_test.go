@@ -26,23 +26,21 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestContext_Param(t *testing.T) {
-	e := echo.New()
-	defer closeEcho(e)
+	h := HTTPMock()
+	defer h.Close(nil)
 
 	params := map[string]string{
 		"param1": "value1",
 	}
-	_, ctx := MockHTTP(e, http.MethodGet, "/api", "", params)
-	ctxw := NewContext(ctx)
+	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", params)
 
-	value, _ := ctxw.Param("param1")
+	value, _ := ctx.Param("param1")
 	assert.Equal(t, "value1", value)
-	_, err := ctxw.Param("param2")
+	_, err := ctx.Param("param2")
 	assert.Error(t, err)
 }
 
@@ -53,13 +51,12 @@ func TestContext_Bind(t *testing.T) {
 		P: 1,
 	}
 
-	e := echo.New()
-	defer closeEcho(e)
+	h := HTTPMock()
+	defer h.Close(nil)
 
-	_, ctx := MockHTTP(e, http.MethodPost, "/api", `{"p":1}`, nil)
-	ctxw := NewContext(ctx)
+	_, ctx := h.NewHTTP(http.MethodPost, "/api", `{"p":1}`, nil)
 
-	if assert.NoError(t, ctxw.Bind(&s)) {
+	if assert.NoError(t, ctx.Bind(&s)) {
 		assert.Equal(t, s.P, 1)
 	}
 }
@@ -71,14 +68,13 @@ func TestContext_JSON(t *testing.T) {
 		P: 1,
 	}
 
-	e := echo.New()
-	defer closeEcho(e)
+	h := HTTPMock()
+	defer h.Close(nil)
 	body := `{"p":1}`
 
-	rec, ctx := MockHTTP(e, http.MethodPost, "/api", body, nil)
-	ctxw := NewContext(ctx)
+	rec, ctx := h.NewHTTP(http.MethodPost, "/api", body, nil)
 
-	if assert.NoError(t, ctxw.JSON(200, s)) {
+	if assert.NoError(t, ctx.JSON(200, s)) {
 		assert.Contains(t, rec.Body.String(), body)
 	}
 }
@@ -141,8 +137,4 @@ func TestValid_ValidNoEmpty(t *testing.T) {
 func newLogger(level zapcore.Level) (*observer.ObservedLogs, logging.Logger) {
 	core, obs := observer.New(level)
 	return obs, logging.NewZapWrap(zap.New(core), logging.DebugLevel, "")
-}
-
-func closeEcho(e *echo.Echo) {
-	_ = e.Close()
 }

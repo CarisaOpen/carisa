@@ -42,3 +42,7 @@ func NewStorageFake(t *testing.T) storage.Integration {
 func NewContextFake() http.Context {
 	return echo.NewContext(nil)
 }
+
+func HTTPMock() http.HTTPMock {
+	return echo.HTTPMock()
+}

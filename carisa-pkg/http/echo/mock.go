@@ -20,20 +20,36 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/carisa/pkg/http"
+	"github.com/carisa/pkg/logging"
+
 	"github.com/labstack/echo/v4"
 )
 
-func MockHTTP(
-	e *echo.Echo, method string,
+type echoHTTPMock struct {
+	e *echo.Echo
+}
+
+func HTTPMock() http.HTTPMock {
+	return &echoHTTPMock{
+		e: echo.New(),
+	}
+}
+
+func (h *echoHTTPMock) NewHTTP(method string,
 	url string,
 	body string,
-	params map[string]string) (rec *httptest.ResponseRecorder, c echo.Context) {
+	params map[string]string) (*httptest.ResponseRecorder, http.Context) {
 	req := httptest.NewRequest(method, url, strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
+	rec := httptest.NewRecorder()
+	c := h.e.NewContext(req, rec)
 	setParams(params, c)
-	return
+	return rec, NewContext(c)
+}
+
+func (h *echoHTTPMock) Close(l logging.Logger) {
+	http.Close(l, h.e)
 }
 
 func setParams(params map[string]string, c echo.Context) {

@@ -53,6 +53,8 @@ func GetStatus(found bool) int {
 // Close close echo connection
 func Close(log logging.Logger, e *echo.Echo) {
 	if err := e.Close(); err != nil {
-		log.PanicE(err, "http.close")
+		if log != nil {
+			log.PanicE(err, "http.close")
+		}
 	}
 }

@@ -21,8 +21,6 @@ import (
 	nethttp "net/http"
 	"testing"
 
-	echoc "github.com/carisa/pkg/http/echo"
-
 	"github.com/carisa/api/internal/runtime"
 
 	"github.com/carisa/pkg/strings"
@@ -33,21 +31,20 @@ import (
 
 	"github.com/carisa/api/internal/instance"
 
-	"github.com/carisa/pkg/http"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/labstack/echo/v4"
 )
 
 func TestInstanceHandler_Create(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	instJSON := `"name":"name","description":"desc"`
-	rec, ctx := echoc.MockHTTP(e, nethttp.MethodPost, "/api/instances", strings.Concat("{", instJSON, "}"), nil)
-	err := handlers.InstCreate(ctx)
+	rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", strings.Concat("{", instJSON, "}"), nil)
+	err := handlers.InstHandler.Create(ctx)
 
 	if assert.NoError(t, err) {
 		assert.Contains(t, rec.Body.String(), instJSON, "Created")
@@ -85,16 +82,16 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		},
 	}
 
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, crud := newHandlerMocked()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
 		if tt.mockOper != nil {
 			tt.mockOper(crud)
 		}
-		_, ctx := echoc.MockHTTP(e, nethttp.MethodPost, "/api/instances", tt.body, nil)
-		err := handlers.InstCreate(ctx)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", tt.body, nil)
+		err := handlers.InstHandler.Create(ctx)
 
 		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
@@ -102,10 +99,10 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 }
 
 func TestInstanceHandler_Put(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	params := map[string]string{"id": "12345678901234567890"}
 
@@ -124,14 +121,13 @@ func TestInstanceHandler_Put(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rec, ctx := echoc.MockHTTP(
-			e,
+		rec, ctx := h.NewHTTP(
 			nethttp.MethodPut,
 			"/api/instances",
 			strings.Concat("{", tt.instJSON, "}"),
 			params)
 
-		err := handlers.InstPut(ctx)
+		err := handlers.InstHandler.Put(ctx)
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, tt.status, rec.Code, "Http status")
@@ -177,16 +173,16 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 		},
 	}
 
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, crud := newHandlerMocked()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
 		if tt.mockOper != nil {
 			tt.mockOper(crud)
 		}
-		_, ctx := echoc.MockHTTP(e, nethttp.MethodPut, "/api/instances", tt.body, tt.params)
-		err := handlers.InstPut(ctx)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/instances", tt.body, tt.params)
+		err := handlers.InstHandler.Put(ctx)
 
 		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
@@ -194,10 +190,10 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 }
 
 func TestInstanceHandler_Get(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, srv, mng := newHandlerFaked(t)
 	defer mng.Close()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	inst := instance.NewInstance()
 	inst.Name = "name"
@@ -222,8 +218,8 @@ func TestInstanceHandler_Get(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := echoc.MockHTTP(e, nethttp.MethodGet, "/api/instances/:id", "", tt.params)
-			err := handlers.InstGet(ctx)
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.params)
+			err := handlers.InstHandler.Get(ctx)
 
 			if assert.NoError(t, err) {
 				if tt.status == nethttp.StatusOK {
@@ -255,16 +251,16 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 		},
 	}
 
-	e := echo.New()
+	h := mock.HTTPMock()
 	cnt, handlers, crud := newHandlerMocked()
-	defer http.Close(cnt.Log, e)
+	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
 		if tt.mockOper != nil {
 			tt.mockOper(crud)
 		}
-		_, ctx := echoc.MockHTTP(e, nethttp.MethodGet, "/api/instances/:id", "", tt.param)
-		err := handlers.InstGet(ctx)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.param)
+		err := handlers.InstHandler.Get(ctx)
 
 		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)

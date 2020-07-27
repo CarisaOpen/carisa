@@ -20,22 +20,24 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/mock"
+
 	"github.com/stretchr/testify/assert"
 
-	echoc "github.com/carisa/pkg/http/echo"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/xid"
 )
 
 func TestConverter_ParamID(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
 	id := xid.New()
+	defer h.Close(nil)
+
 	params := map[string]string{
 		"id": id.String(),
 	}
 
-	_, ctx := echoc.MockHTTP(e, http.MethodGet, "/api/:id", "", params)
-	idr, err := ParamID(echoc.NewContext(ctx))
+	_, ctx := h.NewHTTP(http.MethodGet, "/api/:id", "", params)
+	idr, err := ParamID(ctx)
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, idr, id)
@@ -43,22 +45,24 @@ func TestConverter_ParamID(t *testing.T) {
 }
 
 func TestConverter_ParamID_MissingParamError(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
+	defer h.Close(nil)
 
-	_, ctx := echoc.MockHTTP(e, http.MethodGet, "/api", "", map[string]string{})
-	_, err := ParamID(echoc.NewContext(ctx))
+	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", map[string]string{})
+	_, err := ParamID(ctx)
 
 	assert.Error(t, err)
 }
 
 func TestConverter_ParamID_ConvertParamError(t *testing.T) {
-	e := echo.New()
+	h := mock.HTTPMock()
+	defer h.Close(nil)
 	params := map[string]string{
 		"id": "123)",
 	}
 
-	_, ctx := echoc.MockHTTP(e, http.MethodGet, "/api/id", "", params)
-	_, err := ParamID(echoc.NewContext(ctx))
+	_, ctx := h.NewHTTP(http.MethodGet, "/api/id", "", params)
+	_, err := ParamID(ctx)
 
 	assert.Error(t, err)
 }
