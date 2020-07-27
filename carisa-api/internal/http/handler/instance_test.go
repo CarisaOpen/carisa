@@ -37,7 +37,7 @@ import (
 )
 
 func TestInstanceHandler_Create(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
@@ -82,7 +82,7 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		},
 	}
 
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, crud := newHandlerMocked()
 	defer h.Close(cnt.Log)
 
@@ -99,7 +99,7 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 }
 
 func TestInstanceHandler_Put(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, _, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
@@ -173,7 +173,7 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 		},
 	}
 
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, crud := newHandlerMocked()
 	defer h.Close(cnt.Log)
 
@@ -190,7 +190,7 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 }
 
 func TestInstanceHandler_Get(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, srv, mng := newHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
@@ -251,7 +251,7 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 		},
 	}
 
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	cnt, handlers, crud := newHandlerMocked()
 	defer h.Close(cnt.Log)
 

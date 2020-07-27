@@ -44,8 +44,8 @@ type Context interface {
 	NoEmpty(name string, value string) error
 }
 
-// HTTPMock mocks http operations
-type HTTPMock interface {
+// Mock mocks http operations
+type Mock interface {
 	// NewHTTP builds http context and response recorder
 	NewHTTP(method string,
 		url string,

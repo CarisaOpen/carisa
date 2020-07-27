@@ -30,7 +30,7 @@ type echoHTTPMock struct {
 	e *echo.Echo
 }
 
-func HTTPMock() http.HTTPMock {
+func HTTPMock() http.Mock {
 	return &echoHTTPMock{
 		e: echo.New(),
 	}

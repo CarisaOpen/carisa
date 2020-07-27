@@ -28,7 +28,7 @@ import (
 )
 
 func TestConverter_ParamID(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	id := xid.New()
 	defer h.Close(nil)
 
@@ -45,7 +45,7 @@ func TestConverter_ParamID(t *testing.T) {
 }
 
 func TestConverter_ParamID_MissingParamError(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	defer h.Close(nil)
 
 	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", map[string]string{})
@@ -55,7 +55,7 @@ func TestConverter_ParamID_MissingParamError(t *testing.T) {
 }
 
 func TestConverter_ParamID_ConvertParamError(t *testing.T) {
-	h := mock.HTTPMock()
+	h := mock.HTTP()
 	defer h.Close(nil)
 	params := map[string]string{
 		"id": "123)",

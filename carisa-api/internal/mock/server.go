@@ -43,6 +43,6 @@ func NewContextFake() http.Context {
 	return echo.NewContext(nil)
 }
 
-func HTTPMock() http.HTTPMock {
+func HTTP() http.Mock {
 	return echo.HTTPMock()
 }
