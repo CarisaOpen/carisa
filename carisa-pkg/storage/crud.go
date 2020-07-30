@@ -36,6 +36,12 @@ type CrudOperation interface {
 	// Create creates the entity into of the store
 	Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
+	// CreateWithRel creates the entity and the relation entity that joins the parent and child
+	// The child is entity param. The parent info is into of the entity param
+	// The first return value returns if the entity was created
+	// The second return value returns if the parent exists into store
+	CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
+
 	// Put creates if exist the entity or updates if not exists the entity into storage
 	Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 }
@@ -61,18 +67,45 @@ func (c *crudOperation) Store() CRUD {
 	return c.store
 }
 
-// Put implements CrudOperation.Put
+// Create implements CrudOperation.Put
 func (c *crudOperation) Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
+	return c.create(loc, storeTimeout, entity, nil)
+}
+
+// CreateWithRel implements CrudOperation.CreateWithRel
+func (c *crudOperation) CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error) {
+	found, err := c.existsParent(loc, storeTimeout, entity)
+	if err != nil {
+		return false, false, err
+	}
+	if !found {
+		return false, false, nil
+	}
+	created, err := c.create(loc, storeTimeout, entity, entity)
+	return created, true, err
+}
+
+// create creates the entity and if the relation exists entity also is created
+func (c *crudOperation) create(loc string, storeTimeout StoreWithTimeout, entity Entity, rel Relation) (bool, error) {
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
 	create, err := c.store.Put(entity)
 	if err != nil {
-		c.log.ErrorE(err, loc)
-		return false, err
+		return false, c.log.ErrWrap(err, "creating", loc)
 	}
 
 	txn.DoNotFound(create)
+
+	// If the relation exists is inserted in the same transaction
+	if rel != nil {
+		relEntity := rel.Rel()
+		create, err := c.store.Put(relEntity)
+		if err != nil {
+			return false, c.log.ErrWrap(err, "creating relation", loc)
+		}
+		txn.DoNotFound(create)
+	}
 
 	ctx, cancel := storeTimeout()
 	ok, err := txn.Commit(ctx)
@@ -84,7 +117,7 @@ func (c *crudOperation) Create(loc string, storeTimeout StoreWithTimeout, entity
 	return ok, nil
 }
 
-// Update implements CrudOperation.Put
+// Put implements CrudOperation.Put
 func (c *crudOperation) Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
@@ -106,4 +139,14 @@ func (c *crudOperation) Put(loc string, storeTimeout StoreWithTimeout, entity En
 	}
 
 	return updated, nil
+}
+
+func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, error) {
+	ctx, cancel := storeTimeout()
+	found, err := c.store.Exists(ctx, entity.ParentKey())
+	cancel()
+	if err != nil {
+		return false, c.log.ErrWrap1(err, "Finding parent", loc, logging.String("Parent key", entity.ParentKey()))
+	}
+	return found, nil
 }

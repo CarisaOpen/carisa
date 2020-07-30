@@ -27,9 +27,23 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-type Object struct {
+type Rel struct {
 	ID    string `json:"id,omitempty"`
 	Value int    `json:"value,omitempty"`
+}
+
+func (r Rel) ToString() string {
+	return r.ID
+}
+
+func (r Rel) Key() string {
+	return r.ID
+}
+
+type Object struct {
+	ID     string `json:"id,omitempty"`
+	Value  int    `json:"value,omitempty"`
+	Parent string `json:"parent,omitempty"`
 }
 
 func (o Object) ToString() string {
@@ -38,6 +52,17 @@ func (o Object) ToString() string {
 
 func (o Object) Key() string {
 	return o.ID
+}
+
+func (o Object) ParentKey() string {
+	return o.Parent
+}
+
+func (o Object) Rel() Entity {
+	return Rel{
+		ID:    "RelKey",
+		Value: 2,
+	}
 }
 
 func TestCRUDOperation_Store(t *testing.T) {
@@ -49,13 +74,13 @@ func TestCRUDOperation_Store(t *testing.T) {
 }
 
 func TestCRUDOperation_Create(t *testing.T) {
-	o := entity()
+	e := entity()
 
 	storef := NewEctdIntegra(t)
 	oper := newCRUDOper(storef)
 	defer storef.Close()
 
-	ok, err := oper.Create("loc", storeTimeout, o)
+	ok, err := oper.Create("loc", storeTimeout, e)
 
 	if assert.NoError(t, err) {
 		assert.True(t, ok, "Created")
@@ -74,7 +99,7 @@ func TestCRUDOperation_CreateError(t *testing.T) {
 		{
 			name:  "Error creating or putting",
 			mockS: func(s *ErrMockCRUD) { s.Activate("Put") },
-			err:   "create",
+			err:   "creating: create",
 		},
 		{
 			name:  "Error commits transactions",
@@ -94,6 +119,75 @@ func TestCRUDOperation_CreateError(t *testing.T) {
 			tt.mockT(txn)
 		}
 		_, err := oper.Create("loc", storeTimeout, e)
+		if assert.Error(t, err, tt.name) {
+			assert.Equal(t, tt.err, err.Error())
+		}
+	}
+}
+
+func TestCRUDOperation_CreateWithRel(t *testing.T) {
+	tests := []struct {
+		parent  bool
+		created bool
+	}{
+		{
+			parent:  false,
+			created: false,
+		},
+		{
+			parent:  true,
+			created: true,
+		},
+	}
+
+	o := entity()
+
+	storef := NewEctdIntegra(t)
+	oper := newCRUDOper(storef)
+	defer storef.Close()
+
+	for _, tt := range tests {
+		if tt.parent {
+			_, err := oper.Create("loc", storeTimeout, &Object{
+				ID:     o.ParentKey(),
+				Value:  1,
+				Parent: "",
+			})
+			if err != nil {
+				assert.Error(t, err)
+				continue
+			}
+		}
+		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, o)
+		if assert.NoError(t, err) {
+			assert.Equal(t, tt.parent, foundParent, "Finding parent")
+			assert.Equal(t, tt.created, ok, "Created")
+		}
+	}
+}
+
+func TestCRUDOperation_CreateWithRelError(t *testing.T) {
+	e := entity()
+
+	tests := []struct {
+		name  string
+		mockS func(*ErrMockCRUD)
+		err   string
+	}{
+		{
+			name:  "Error finding parent",
+			mockS: func(s *ErrMockCRUD) { s.Activate("Exists") },
+			err:   "Finding parent. Parent key: parentKey: exists",
+		},
+	}
+
+	oper, store, _ := newCRUDOperMock()
+
+	for _, tt := range tests {
+		if tt.mockS != nil {
+			tt.mockS(store)
+		}
+		_, _, err := oper.CreateWithRel("loc", storeTimeout, e)
 		if assert.Error(t, err, tt.name) {
 			assert.Equal(t, tt.err, err.Error())
 		}
@@ -127,12 +221,12 @@ func TestCRUDOperation_Put(t *testing.T) {
 	for _, tt := range tests {
 		oper := newCRUDOper(storef)
 		updated, err := oper.Put("loc", storeTimeout, tt.e)
-		if assert.NoErrorf(t, err, "Put failed") {
+		if assert.NoError(t, err, "Put failed") {
 			assert.Equal(t, updated, tt.updated, "Updated")
 			var entityr Object
 			found, err := storef.Store().Get(context.TODO(), tt.e.ID, &entityr)
 			assert.True(t, found, "Get entity")
-			if assert.NoErrorf(t, err, "Commit failed") {
+			if assert.NoError(t, err, "Commit failed") {
 				assert.Equal(t, tt.e, &entityr, "Entity saved")
 			}
 		}
@@ -179,8 +273,9 @@ func TestCRUDOperation_PutError(t *testing.T) {
 
 func entity() Object {
 	return Object{
-		ID:    "key",
-		Value: 1,
+		ID:     "key",
+		Value:  1,
+		Parent: "parentKey",
 	}
 }
 

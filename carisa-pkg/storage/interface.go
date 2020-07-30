@@ -19,12 +19,29 @@ import (
 	"context"
 )
 
-// Entity defines entity context
 type (
+	// Entity defines entity context
 	Entity interface {
 		// ToString convert entity to string
 		ToString() string
+
+		// Key gets the key of the entity
 		Key() string
+	}
+
+	// Relation defines relation context
+	Relation interface {
+		// ParentKey gets the key of the parent entity that contains this child entity
+		ParentKey() string
+
+		// Rel gets the relation entity that joins the parent and child
+		Rel() Entity
+	}
+
+	// EntityRelation groups Entity and Relation
+	EntityRelation interface {
+		Entity
+		Relation
 	}
 )
 
@@ -37,6 +54,9 @@ type (
 
 		// Get gets the entity into entity param
 		Get(ctx context.Context, key string, entity Entity) (bool, error)
+
+		// Exists return if the key exists
+		Exists(ctx context.Context, key string) (bool, error)
 
 		// Close close resources
 		Close() error

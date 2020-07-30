@@ -25,13 +25,15 @@ import (
 
 func TestErrMockCRUD_Activate(t *testing.T) {
 	m := ErrMockCRUD{}
-	m.Activate("Put", "Close", "Get")
+	m.Activate("Put", "Close", "Get", "Exists")
 	_, err := m.Put(nil)
 	assert.Error(t, err, "Put")
 	err = m.Close()
 	assert.Error(t, err, "Close")
 	_, err = m.Get(context.TODO(), "", nil)
 	assert.Error(t, err, "Get")
+	_, err = m.Exists(context.TODO(), "")
+	assert.Error(t, err, "Exists")
 }
 
 func TestErrMockCRUD_ActivateMethodNotFound(t *testing.T) {
@@ -45,6 +47,7 @@ func TestErrMockCRUD_Clear(t *testing.T) {
 	assert.False(t, m.create, "Put")
 	assert.False(t, m.close, "Close")
 	assert.False(t, m.get, "Get")
+	assert.False(t, m.exists, "Exists")
 }
 
 func TestErrMockTxn_Activate(t *testing.T) {
@@ -67,11 +70,13 @@ func TestErrMockTxn_Clear(t *testing.T) {
 
 func TestErrMockOper_Activate(t *testing.T) {
 	m := NewErrMockCRUDOper()
-	m.Activate("Create", "Put")
+	m.Activate("Create", "Put", "CreateWithRel")
 	_, err := m.Create("", nil, nil)
 	assert.Error(t, err, "Create")
 	_, err = m.Put("", nil, nil)
 	assert.Error(t, err, "Put")
+	_, _, err = m.CreateWithRel("", nil, nil)
+	assert.Error(t, err, "CreateWithError")
 }
 
 func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
@@ -84,4 +89,5 @@ func TestErrMockOper_Clear(t *testing.T) {
 	m.Clear()
 	assert.False(t, m.create, "Create")
 	assert.False(t, m.create, "Put")
+	assert.False(t, m.create, "CreateWithError")
 }

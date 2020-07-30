@@ -308,6 +308,36 @@ func TestEtcd_Get(t *testing.T) {
 	}
 }
 
+func TestEtcd_Exists(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	result := []struct {
+		key   string
+		found bool
+	}{
+		{
+			key:   "key",
+			found: true,
+		},
+		{
+			key:   "key1",
+			found: false,
+		},
+	}
+
+	_, err := client.Put(ctx, "key", "value")
+	if assert.NoErrorf(t, err, "Put entity") {
+		for _, tt := range result {
+			found, err := store.Exists(ctx, tt.key)
+			if assert.NoErrorf(t, err, "Exists entity") {
+				assert.Equal(t, tt.found, found, "Entity found")
+			}
+		}
+	}
+}
+
 func TestEtcd_IntegraStore(t *testing.T) {
 	i := NewEctdIntegra(t)
 	defer i.Close()

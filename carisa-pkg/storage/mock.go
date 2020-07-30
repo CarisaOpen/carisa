@@ -11,6 +11,7 @@ type ErrMockCRUD struct {
 	create bool
 	close  bool
 	get    bool
+	exists bool
 }
 
 func (e *ErrMockCRUD) Close() error {
@@ -34,6 +35,13 @@ func (e *ErrMockCRUD) Get(ctx context.Context, key string, entity Entity) (bool,
 	return true, nil
 }
 
+func (e *ErrMockCRUD) Exists(ctx context.Context, key string) (bool, error) {
+	if e.exists {
+		return false, errors.New("exists")
+	}
+	return true, nil
+}
+
 // Activate activates the methods to throw a error
 func (e *ErrMockCRUD) Activate(methods ...string) {
 	e.Clear()
@@ -46,6 +54,8 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 			e.close = true
 		case "Get":
 			e.get = true
+		case "Exists":
+			e.exists = true
 		default:
 			panic("method not found")
 		}
@@ -57,6 +67,7 @@ func (e *ErrMockCRUD) Clear() {
 	e.create = false
 	e.close = false
 	e.get = false
+	e.exists = false
 }
 
 // ErrMockTxn allows test the errors.
@@ -102,16 +113,15 @@ func (e *ErrMockTxn) Find(keyValue string) {
 
 // ErrMockCRUDOper allows test the errors.
 type ErrMockCRUDOper struct {
-	create bool
-	put    bool
-	store  CRUD
+	create        bool
+	put           bool
+	createWithRel bool
+	store         CRUD
 }
 
 func NewErrMockCRUDOper() *ErrMockCRUDOper {
 	return &ErrMockCRUDOper{
-		create: false,
-		put:    false,
-		store:  &ErrMockCRUD{},
+		store: &ErrMockCRUD{},
 	}
 }
 
@@ -125,6 +135,8 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 			e.create = true
 		case "Put":
 			e.put = true
+		case "CreateWithRel":
+			e.createWithRel = true
 		default:
 			panic("method not found")
 		}
@@ -135,6 +147,7 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 func (e *ErrMockCRUDOper) Clear() {
 	e.create = false
 	e.put = false
+	e.createWithRel = false
 }
 
 func (e *ErrMockCRUDOper) Store() CRUD {
@@ -146,6 +159,13 @@ func (e *ErrMockCRUDOper) Create(loc string, storeTimeout StoreWithTimeout, enti
 		return false, errors.New("create")
 	}
 	return true, nil
+}
+
+func (e *ErrMockCRUDOper) CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error) {
+	if e.createWithRel {
+		return false, false, errors.New("createWithRel")
+	}
+	return true, true, nil
 }
 
 func (e *ErrMockCRUDOper) Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {

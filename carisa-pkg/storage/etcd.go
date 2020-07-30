@@ -140,25 +140,35 @@ func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, error) {
 	res, err := s.client.Get(ctx, key)
 	if err != nil {
-		return false,
-			errors.Wrap(
-				err,
-				logging.Compose("unexpected error getting entity from etcd store", logging.String("Key", key)))
+		return false, errWithKey(err, key, "unexpected error getting entity from etcd store")
 	}
 
-	if len(res.Kvs) > 0 {
+	if res.Count > 0 {
 		err = encoding.DecodeByte(res.Kvs[0].Value, entity)
 		if err != nil {
-			return false,
-				errors.Wrap(
-					err,
-					logging.Compose(
-						"unexpected decode error getting entity into etcd store",
-						logging.String("Key", key)))
+			return false, errWithKey(err, key, "unexpected decode error getting entity into etcd store")
 		}
 		return true, nil
 	}
 	return false, nil
+}
+
+// Exists implements storage.interface.CRUD.Exists
+func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
+	res, err := s.client.Get(ctx, key, clientv3.WithKeysOnly())
+	if err != nil {
+		return false, errWithKey(err, key, "unexpected getting key into etcd store")
+	}
+	if res.Count > 0 {
+		return string(res.Kvs[0].Key) == key, nil
+	}
+	return false, nil
+}
+
+func errWithKey(err error, key string, msg string) error {
+	return errors.Wrap(
+		err,
+		logging.Compose(msg, logging.String("Key", key)))
 }
 
 // Put implements storage.interface.CRUD.Close
