@@ -14,23 +14,20 @@
  *
  */
 
-package instance
+package storage
 
-import (
-	"testing"
+import "github.com/carisa/pkg/strings"
 
-	"github.com/carisa/pkg/strings"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestInstance_ToString(t *testing.T) {
-	i := NewInstance()
-	i.Name = "name"
-	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
+type Link struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Rel  string `json:"rel"`
 }
 
-func TestInstance_Key(t *testing.T) {
-	i := NewInstance()
-	assert.Equal(t, i.ID.String(), i.Key())
+func (l *Link) ToString() string {
+	return strings.Concat("link: ID:", l.Key(), ", Name:", l.Name)
+}
+
+func (l *Link) Key() string {
+	return l.ID
 }

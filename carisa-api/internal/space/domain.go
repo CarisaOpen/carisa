@@ -14,29 +14,46 @@
  *
  */
 
-package instance
+package space
 
 import (
 	"github.com/carisa/api/internal/entity"
+	"github.com/carisa/pkg/storage"
 	"github.com/carisa/pkg/strings"
+	"github.com/rs/xid"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
-type Instance struct {
+// The space splits the instance in logic categories.
+// Each space can have several entes, dashboard, etc...
+type Space struct {
 	entity.Descriptor
+	InstID xid.ID `json:"instanceId"` // Instance container
 }
 
-func NewInstance() Instance {
-	return Instance{
+func NewSpace() Space {
+	return Space{
 		Descriptor: entity.NewDescriptor(),
 	}
 }
 
-func (i *Instance) ToString() string {
-	return strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name)
+func (s *Space) ToString() string {
+	return strings.Concat("space: ID:", s.Key(), ", Name:", s.Name)
 }
 
-func (i *Instance) Key() string {
-	return i.ID.String()
+func (s *Space) Key() string {
+	return s.ID.String()
+}
+
+// ParentKey gets the instance ID
+func (s *Space) ParentKey() string {
+	return s.InstID.String()
+}
+
+// Link gets the link between instance and space
+func (s *Space) Link() *storage.Link {
+	return &storage.Link{
+		ID:   strings.Concat(s.InstID.String(), s.Name, s.Key()),
+		Name: s.Name,
+		Rel:  s.ID.String(),
+	}
 }

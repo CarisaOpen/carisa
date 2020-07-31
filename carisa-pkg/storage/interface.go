@@ -34,8 +34,8 @@ type (
 		// ParentKey gets the key of the parent entity that contains this child entity
 		ParentKey() string
 
-		// Rel gets the relation entity that joins the parent and child
-		Rel() Entity
+		// Link gets the relation entity that joins the parent and child
+		Link() *Link
 	}
 
 	// EntityRelation groups Entity and Relation

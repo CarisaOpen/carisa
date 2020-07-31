@@ -14,23 +14,20 @@
  *
  */
 
-package instance
+package samples
 
 import (
-	"testing"
-
-	"github.com/carisa/pkg/strings"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/api/internal/instance"
+	"github.com/carisa/api/internal/mock"
+	"github.com/carisa/pkg/storage"
 )
 
-func TestInstance_ToString(t *testing.T) {
-	i := NewInstance()
-	i.Name = "name"
-	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
-}
-
-func TestInstance_Key(t *testing.T) {
-	i := NewInstance()
-	assert.Equal(t, i.ID.String(), i.Key())
+func CreateInstance(mng storage.Integration) (instance.Instance, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	srv := instance.NewService(cnt, crudOper)
+	inst := instance.NewInstance()
+	inst.Name = "name"
+	inst.Desc = "desc"
+	_, err := srv.Create(&inst)
+	return inst, err
 }

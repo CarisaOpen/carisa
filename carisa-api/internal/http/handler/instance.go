@@ -32,14 +32,14 @@ import (
 
 const locInstance = "http.instance"
 
-// InstCreate hands the http request of the instance
+// Instance hands the http request of the instance
 type Instance struct {
 	srv instance.Service
 	cnt *runtime.Container
 }
 
-// NewInstanceHandl creates handler
-func NewInstanceHandl(srv instance.Service, cnt *runtime.Container) Instance {
+// NewInstanceHandle creates handler
+func NewInstanceHandle(srv instance.Service, cnt *runtime.Container) Instance {
 	return Instance{
 		srv: srv,
 		cnt: cnt,

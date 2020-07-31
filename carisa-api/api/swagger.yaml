@@ -13,6 +13,8 @@ basePath: "/api"
 tags:
   - name: "instance"
     description: "Instance represents a set of spaces independently of another instance in all system"
+  - name: "space"
+    description: "The space splits the instance in logic categories"
 schemes:
   - "https"
   - "http"
@@ -103,6 +105,35 @@ paths:
           description: "Instance not found"
         "500":
           description: "Internal server error"
+  /spaces:
+    post:
+      tags:
+        - "space"
+      summary: "Add a new space to the instance"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Space object that needs to be added to the instance"
+          required: true
+          schema:
+            $ref: "#/definitions/SpaceReq"
+      responses:
+        "201":
+          description: "Space created"
+          schema:
+            $ref: "#/definitions/Space"
+        "302":
+          description: "Space found"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Instance not found"
+        "500":
+          description: "Internal server error"
 definitions:
   Instance:
     type: "object"
@@ -120,12 +151,41 @@ definitions:
     type: "object"
     required:
       - "name"
+      - "description"
     properties:
       name:
         type: "string"
         description: "Instance name"
-        required: true
       description:
         type: "string"
         description: "Instance description"
-        required: true
+  Space:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Space identifier"
+      name:
+        type: "string"
+        description: "Space name"
+      description:
+        type: "string"
+        description: "Space description"
+      instanceId:
+        type: "string"
+        description: "Instance identifier where the space has been added"
+  SpaceReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        description: "Space name"
+      description:
+        type: "string"
+        description: "Space description"
+      instanceId:
+        type: "string"
+        description: "Instance identifier where the space is added"

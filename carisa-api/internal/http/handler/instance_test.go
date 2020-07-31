@@ -21,6 +21,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/samples"
+
 	"github.com/carisa/api/internal/runtime"
 
 	"github.com/carisa/pkg/strings"
@@ -38,7 +40,7 @@ import (
 
 func TestInstanceHandler_Create(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newHandlerFaked(t)
+	cnt, handlers, _, mng := newInstHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -58,49 +60,27 @@ func TestInstanceHandler_Create(t *testing.T) {
 }
 
 func TestInstanceHandler_CreateWithError(t *testing.T) {
-	tests := []struct {
-		name     string
-		body     string
-		mockOper func(txn *storage.ErrMockCRUDOper)
-		status   int
-	}{
-		{
-			name:   "Body wrong. Bad request",
-			body:   "{df",
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:   "Descriptor validation. Bad request",
-			body:   `{"name":"","description":"desc"}`,
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:     "Creating the instance. Error creating",
-			body:     `{"name":"name","description":"desc"}`,
-			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Create") },
-			status:   nethttp.StatusInternalServerError,
-		},
-	}
+	tests := samples.TestCreateWithError("Create")
 
 	h := mock.HTTP()
-	cnt, handlers, crud := newHandlerMocked()
+	cnt, handlers, crud := newInstHandlerMocked()
 	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
-		if tt.mockOper != nil {
-			tt.mockOper(crud)
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", tt.body, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", tt.Body, nil)
 		err := handlers.InstHandler.Create(ctx)
 
-		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
-		assert.Error(t, err, tt.name)
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
 	}
 }
 
 func TestInstanceHandler_Put(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newHandlerFaked(t)
+	cnt, handlers, _, mng := newInstHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -174,7 +154,7 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 	}
 
 	h := mock.HTTP()
-	cnt, handlers, crud := newHandlerMocked()
+	cnt, handlers, crud := newInstHandlerMocked()
 	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
@@ -191,7 +171,7 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 
 func TestInstanceHandler_Get(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, srv, mng := newHandlerFaked(t)
+	cnt, handlers, srv, mng := newInstHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -252,7 +232,7 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 	}
 
 	h := mock.HTTP()
-	cnt, handlers, crud := newHandlerMocked()
+	cnt, handlers, crud := newInstHandlerMocked()
 	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
@@ -267,19 +247,17 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 	}
 }
 
-func newHandlerFaked(t *testing.T) (*runtime.Container, Handlers, instance.Service, storage.Integration) {
-	mng := mock.NewStorageFake(t)
-	cnt := mock.NewContainerFake()
-	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
+func newInstHandlerFaked(t *testing.T) (*runtime.Container, Handlers, instance.Service, storage.Integration) {
+	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
 	srv := instance.NewService(cnt, crud)
-	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
+	hands := Handlers{InstHandler: NewInstanceHandle(srv, cnt)}
 	return cnt, hands, srv, mng
 }
 
-func newHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
+func newInstHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
 	cnt := mock.NewContainerFake()
 	crud := storage.NewErrMockCRUDOper()
 	srv := instance.NewService(cnt, crud)
-	hands := Handlers{InstHandler: NewInstanceHandl(srv, cnt)}
+	hands := Handlers{InstHandler: NewInstanceHandle(srv, cnt)}
 	return cnt, hands, crud
 }

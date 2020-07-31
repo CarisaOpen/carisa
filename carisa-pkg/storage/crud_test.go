@@ -27,19 +27,6 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-type Rel struct {
-	ID    string `json:"id,omitempty"`
-	Value int    `json:"value,omitempty"`
-}
-
-func (r Rel) ToString() string {
-	return r.ID
-}
-
-func (r Rel) Key() string {
-	return r.ID
-}
-
 type Object struct {
 	ID     string `json:"id,omitempty"`
 	Value  int    `json:"value,omitempty"`
@@ -58,10 +45,10 @@ func (o Object) ParentKey() string {
 	return o.Parent
 }
 
-func (o Object) Rel() Entity {
-	return Rel{
-		ID:    "RelKey",
-		Value: 2,
+func (o Object) Link() *Link {
+	return &Link{
+		ID:  "RelKey",
+		Rel: "",
 	}
 }
 

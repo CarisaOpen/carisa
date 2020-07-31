@@ -14,23 +14,45 @@
  *
  */
 
-package instance
+package space
 
 import (
 	"testing"
+
+	"github.com/rs/xid"
+
+	"github.com/carisa/pkg/storage"
 
 	"github.com/carisa/pkg/strings"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInstance_ToString(t *testing.T) {
-	i := NewInstance()
-	i.Name = "name"
-	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
+func TestSpace_ToString(t *testing.T) {
+	s := NewSpace()
+	assert.Equal(t, strings.Concat("space: ID:", s.Key(), ", Name:", s.Name), s.ToString())
 }
 
-func TestInstance_Key(t *testing.T) {
-	i := NewInstance()
-	assert.Equal(t, i.ID.String(), i.Key())
+func TestSpace_Key(t *testing.T) {
+	s := NewSpace()
+	assert.Equal(t, s.ID.String(), s.Key())
+}
+
+func TestSpace_ParentKey(t *testing.T) {
+	s := NewSpace()
+	s.InstID = xid.New()
+	assert.Equal(t, s.InstID.String(), s.ParentKey())
+}
+
+func TestSpace_Link(t *testing.T) {
+	s := NewSpace()
+	s.InstID = xid.New()
+
+	link := &storage.Link{
+		ID:   strings.Concat(s.InstID.String(), s.Name, s.Key()),
+		Name: s.Name,
+		Rel:  s.ID.String(),
+	}
+
+	assert.Equal(t, link, s.Link())
 }

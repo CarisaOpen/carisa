@@ -14,23 +14,22 @@
  *
  */
 
-package instance
+package space
 
 import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/storage"
-	"github.com/rs/xid"
 )
 
-const locService = "instance.service"
+const locService = "space.service"
 
-// Service implements CRUD operations for the instance domain
+// Service implements CRUD operations for the space domain
 type Service struct {
 	cnt  *runtime.Container
 	crud storage.CrudOperation
 }
 
-// NewService builds a instance service
+// NewService builds a space service
 func NewService(cnt *runtime.Container, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -38,23 +37,10 @@ func NewService(cnt *runtime.Container, crud storage.CrudOperation) Service {
 	}
 }
 
-// Create creates a instance into of the repository
-// If the instance exists returns false
-func (s *Service) Create(inst *Instance) (bool, error) {
-	inst.AutoID()
-	return s.crud.Create(locService, s.cnt.StoreWithTimeout, inst)
-}
-
-// Put creates or updates depending of if exists the instance into storage
-// If the instance is updated return true
-func (s *Service) Put(inst *Instance) (bool, error) {
-	return s.crud.Put(locService, s.cnt.StoreWithTimeout, inst)
-}
-
-// Get gets the instance from storage
-func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
-	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), inst)
-	cancel()
-	return ok, err
+// Create creates a space into of the repository and links instance and space.
+// If the space exists return false in the first param returned.
+// If the instance doesn't exist return false in the second param returned.
+func (s *Service) Create(space *Space) (bool, bool, error) {
+	space.AutoID()
+	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, space)
 }

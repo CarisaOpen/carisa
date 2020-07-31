@@ -23,7 +23,8 @@ import (
 
 // Handlers is a handlers container
 type Handlers struct {
-	InstHandler Instance
+	InstHandler  Instance
+	SpaceHandler Space
 }
 
 func (h *Handlers) InstCreate(ctx echo.Context) error {

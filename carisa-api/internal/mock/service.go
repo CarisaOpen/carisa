@@ -14,23 +14,23 @@
  *
  */
 
-package instance
+package mock
 
 import (
 	"testing"
 
-	"github.com/carisa/pkg/strings"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/pkg/storage"
 )
 
-func TestInstance_ToString(t *testing.T) {
-	i := NewInstance()
-	i.Name = "name"
-	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
+func NewFullCrudOperFaked(t *testing.T) (storage.Integration, *runtime.Container, storage.CrudOperation) {
+	mng := NewStorageFake(t)
+	cnt, crud := NewCrudOperFaked(mng)
+	return mng, cnt, crud
 }
 
-func TestInstance_Key(t *testing.T) {
-	i := NewInstance()
-	assert.Equal(t, i.ID.String(), i.Key())
+func NewCrudOperFaked(mng storage.Integration) (*runtime.Container, storage.CrudOperation) {
+	cnt := NewContainerFake()
+	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
+	return cnt, crud
 }

@@ -19,22 +19,18 @@ package instance
 import (
 	"testing"
 
+	"github.com/carisa/pkg/storage"
+
 	"github.com/carisa/api/internal/entity"
 	"github.com/carisa/api/internal/mock"
-	"github.com/carisa/pkg/storage"
 	"github.com/stretchr/testify/assert"
 )
 
 // Verify the crud integration. For all rest test look at http.handler.instance_test
 
 func TestInstanceService_Create(t *testing.T) {
-	i := Instance{
-		Descriptor: entity.Descriptor{
-			Name: "name",
-			Desc: "desc",
-		},
-	}
-	s, mng := newServiceFaked(t)
+	i := instance()
+	s, mng := newInstanceSrvFaked(t)
 	defer mng.Close()
 
 	ok, err := s.Create(&i)
@@ -44,6 +40,13 @@ func TestInstanceService_Create(t *testing.T) {
 	}
 }
 
+func instance() Instance {
+	inst := NewInstance()
+	inst.Name = "name"
+	inst.Desc = "desc"
+	return inst
+}
+
 func TestInstanceService_Put(t *testing.T) {
 	i := Instance{
 		Descriptor: entity.Descriptor{
@@ -51,7 +54,7 @@ func TestInstanceService_Put(t *testing.T) {
 			Desc: "desc",
 		},
 	}
-	s, mng := newServiceFaked(t)
+	s, mng := newInstanceSrvFaked(t)
 	defer mng.Close()
 
 	i.AutoID()
@@ -69,7 +72,7 @@ func TestInstanceService_Get(t *testing.T) {
 			Desc: "desc",
 		},
 	}
-	s, mng := newServiceFaked(t)
+	s, mng := newInstanceSrvFaked(t)
 	defer mng.Close()
 
 	_, err := s.Create(&i)
@@ -83,9 +86,8 @@ func TestInstanceService_Get(t *testing.T) {
 	}
 }
 
-func newServiceFaked(t *testing.T) (Service, storage.Integration) {
+func newInstanceSrvFaked(t *testing.T) (Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
-	cnt := mock.NewContainerFake()
-	crud := storage.NewCrudOperation(mng.Store(), cnt.Log, storage.NewTxn)
-	return NewService(cnt, crud), mng
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	return NewService(cnt, crudOper), mng
 }

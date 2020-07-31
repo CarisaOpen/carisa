@@ -97,6 +97,6 @@ func services(cnt *runtime.Container, store storage.CRUD) service {
 func handlers(srv service, cnt *runtime.Container) handler.Handlers {
 	cnt.Log.Info("configuring http handlers", locBuild)
 	return handler.Handlers{
-		InstHandler: handler.NewInstanceHandl(srv.instanceSrv, cnt),
+		InstHandler: handler.NewInstanceHandle(srv.instanceSrv, cnt),
 	}
 }
