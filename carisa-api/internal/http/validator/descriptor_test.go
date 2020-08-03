@@ -17,6 +17,7 @@
 package validator
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/rs/xid"
@@ -46,6 +47,20 @@ func TestValid_ValidDescriptor(t *testing.T) {
 				Desc: "",
 			},
 			message: "code=400, message=[the property: 'description' can not be empty]",
+		},
+		{
+			desc: entity.Descriptor{
+				Name: strings.Repeat("n", 51),
+				Desc: "desc",
+			},
+			message: "code=400, message=[the property: 'name' can not be more than 50]",
+		},
+		{
+			desc: entity.Descriptor{
+				Name: "name",
+				Desc: strings.Repeat("d", 501),
+			},
+			message: "code=400, message=[the property: 'description' can not be more than 500]",
 		},
 		{
 			desc: entity.Descriptor{

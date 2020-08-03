@@ -40,8 +40,11 @@ type Context interface {
 	// HTTPError return http error
 	HTTPError(code int, message ...interface{}) error
 
-	// NoEmpty validates that the name is not empty
+	// NoEmpty validates that the value is not empty
 	NoEmpty(name string, value string) error
+
+	// MaxLen validates that the value length can not be more than length param
+	MaxLen(name string, value string, length int) error
 }
 
 // Mock mocks http operations

@@ -33,6 +33,12 @@ func Descriptor(ctx http.Context, d entity.Descriptor) error {
 	if err := ctx.NoEmpty("description", d.Desc); err != nil {
 		return err
 	}
+	if err := ctx.MaxLen("name", d.Name, 50); err != nil {
+		return err
+	}
+	if err := ctx.MaxLen("description", d.Desc, 500); err != nil {
+		return err
+	}
 	return nil
 }
 

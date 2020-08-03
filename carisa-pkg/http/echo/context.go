@@ -17,6 +17,8 @@
 package echo
 
 import (
+	"strconv"
+
 	"github.com/carisa/pkg/http"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/strings"
@@ -84,6 +86,16 @@ func (c *context) HTTPError(code int, message ...interface{}) error {
 func (c *context) NoEmpty(name string, value string) error {
 	if len(value) == 0 {
 		return c.HTTPError(nethttp.StatusBadRequest, strings.Concat("the property: '", name, "' can not be empty"))
+	}
+	return nil
+}
+
+// NoEmpty implements http.interface.Context.NoEmpty
+func (c *context) MaxLen(name string, value string, length int) error {
+	if len(value) > length {
+		return c.HTTPError(
+			nethttp.StatusBadRequest,
+			strings.Concat("the property: '", name, "' can not be more than ", strconv.Itoa(length)))
 	}
 	return nil
 }

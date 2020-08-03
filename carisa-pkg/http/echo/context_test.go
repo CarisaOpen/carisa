@@ -134,6 +134,39 @@ func TestValid_ValidNoEmpty(t *testing.T) {
 	}
 }
 
+func TestValid_ValidMaxLen(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		len     int
+		message string
+	}{
+		{
+			name:    "property",
+			value:   "value",
+			len:     10,
+			message: "",
+		},
+		{
+			name:    "property",
+			value:   "value",
+			len:     3,
+			message: "code=400, message=[the property: 'property' can not be more than 3]",
+		},
+	}
+
+	ctxw := NewContext(nil)
+
+	for _, tt := range tests {
+		r := ctxw.MaxLen(tt.name, tt.value, tt.len)
+		if len(tt.message) == 0 {
+			assert.Nil(t, r)
+		} else {
+			assert.Equal(t, tt.message, r.Error())
+		}
+	}
+}
+
 func newLogger(level zapcore.Level) (*observer.ObservedLogs, logging.Logger) {
 	core, obs := observer.New(level)
 	return obs, logging.NewZapWrap(zap.New(core), logging.DebugLevel, "")
