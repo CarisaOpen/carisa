@@ -8,10 +8,11 @@ import (
 // ErrMockCRUD allows test the errors.
 // For testing other functions use storage.Integration
 type ErrMockCRUD struct {
-	create bool
-	close  bool
+	put    bool
+	remove bool
 	get    bool
 	exists bool
+	close  bool
 }
 
 func (e *ErrMockCRUD) Close() error {
@@ -22,8 +23,8 @@ func (e *ErrMockCRUD) Close() error {
 }
 
 func (e *ErrMockCRUD) Put(entity Entity) (OpeWrap, error) {
-	if e.create {
-		return OpeWrap{}, errors.New("create")
+	if e.put {
+		return OpeWrap{}, errors.New("put")
 	}
 	return OpeWrap{}, nil
 }
@@ -33,6 +34,10 @@ func (e *ErrMockCRUD) Get(ctx context.Context, key string, entity Entity) (bool,
 		return false, errors.New("get")
 	}
 	return true, nil
+}
+
+func (e *ErrMockCRUD) Remove(key string) OpeWrap {
+	return OpeWrap{}
 }
 
 func (e *ErrMockCRUD) Exists(ctx context.Context, key string) (bool, error) {
@@ -49,13 +54,15 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 	for _, method := range methods {
 		switch method {
 		case "Put":
-			e.create = true
-		case "Close":
-			e.close = true
+			e.put = true
+		case "Remove":
+			e.remove = true
 		case "Get":
 			e.get = true
 		case "Exists":
 			e.exists = true
+		case "Close":
+			e.close = true
 		default:
 			panic("method not found")
 		}
@@ -64,10 +71,11 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 
 // Clear deactivates all methods
 func (e *ErrMockCRUD) Clear() {
-	e.create = false
-	e.close = false
+	e.put = false
+	e.remove = false
 	e.get = false
 	e.exists = false
+	e.close = false
 }
 
 // ErrMockTxn allows test the errors.

@@ -18,6 +18,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	strs "strings"
 	"testing"
 	"time"
@@ -136,6 +137,11 @@ func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 	return OpeWrap{clientv3.OpPut(entity.Key(), encode)}, err
 }
 
+// Remove implements storage.interface.CRUD.Remove
+func (s *etcdStore) Remove(key string) OpeWrap {
+	return OpeWrap{clientv3.OpDelete(key)}
+}
+
 // Get implements storage.interface.CRUD.Get
 func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, error) {
 	res, err := s.client.Get(ctx, key)
@@ -176,11 +182,13 @@ func (s *etcdStore) Close() error {
 	return s.client.Close()
 }
 
+const operTrans = 3
+
 // etcdStore defines the operations of a transaction
 type etcdTxn struct {
 	client     *clientv3.Client
-	opeFound   [2]OpeWrap // Could use make but this avoids escape to heap and the number of operations at most is 2
-	opeNoFound [2]OpeWrap
+	opeFound   [operTrans]OpeWrap // Could use make but this avoids escape to heap
+	opeNoFound [operTrans]OpeWrap
 	indexF     uint8
 	indexNf    uint8
 	keyValue   string
@@ -193,8 +201,8 @@ func (txn *etcdTxn) Find(keyValue string) {
 
 // DoFound implements storage.interface.Txn.DoFound
 func (txn *etcdTxn) DoFound(ope OpeWrap) {
-	if txn.indexF > 1 {
-		panic("the transaction cannot have more than 2 operations for found")
+	if txn.indexF > operTrans-1 {
+		panic(fmt.Sprintf("the transaction cannot have more than %v operations for found", operTrans))
 	}
 	txn.opeFound[txn.indexF] = ope
 	txn.indexF++
@@ -202,8 +210,8 @@ func (txn *etcdTxn) DoFound(ope OpeWrap) {
 
 // DoNotFound implements storage.interface.Txn.DoNotFound
 func (txn *etcdTxn) DoNotFound(ope OpeWrap) {
-	if txn.indexNf > 1 {
-		panic("the transaction cannot have more than 2 operations for not found")
+	if txn.indexNf > operTrans-1 {
+		panic(fmt.Sprintf("the transaction cannot have more than %v operations for found", operTrans))
 	}
 	txn.opeNoFound[txn.indexNf] = ope
 	txn.indexNf++
@@ -212,20 +220,23 @@ func (txn *etcdTxn) DoNotFound(ope OpeWrap) {
 // Commit implements storage.interface.Txn.Commit
 func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	if txn.indexF == 0 && txn.indexNf == 0 {
-		panic("there aren't operations")
+		panic("commit. there isn't condition")
 	}
 	if len(txn.keyValue) == 0 {
-		panic("there isn't condition")
+		panic("commit. the key to find can not be empty")
 	}
 
 	tx := txn.client.KV.Txn(ctx)
 
 	if txn.indexF > 0 && txn.indexNf > 0 {
 		tx = txn.ifThen(tx, ">", txn.opeFound, txn.indexF)
-		if txn.indexNf == 1 {
+		switch txn.indexNf {
+		case 1:
 			tx = tx.Else(txn.opeNoFound[0].opeEtcd)
-		} else {
+		case 2:
 			tx = tx.Else(txn.opeNoFound[0].opeEtcd, txn.opeNoFound[1].opeEtcd)
+		case 3:
+			tx = tx.Else(txn.opeNoFound[0].opeEtcd, txn.opeNoFound[1].opeEtcd, txn.opeNoFound[2].opeEtcd)
 		}
 	} else {
 		if txn.indexF > 0 {
@@ -246,12 +257,16 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	return result.Succeeded, nil
 }
 
-func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [2]OpeWrap, index uint8) clientv3.Txn {
+func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [operTrans]OpeWrap, index uint8) clientv3.Txn {
 	tx = tx.If(clientv3.Compare(clientv3.ModRevision(txn.keyValue), compare, 0))
-	if index == 1 {
+	switch index {
+	case 1:
 		return tx.Then(opes[0].opeEtcd)
+	case 2:
+		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
+	default:
+		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd, opes[2].opeEtcd)
 	}
-	return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
 }
 
 type etcdIntegra struct {

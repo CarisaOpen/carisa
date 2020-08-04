@@ -31,11 +31,20 @@ type (
 
 	// Relation defines relation context
 	Relation interface {
+		// Key gets the key of the relation
+		RelKey() string
+
 		// ParentKey gets the key of the parent entity that contains this child entity
 		ParentKey() string
 
+		// Name gets the relation name
+		RelName() string
+
 		// Link gets the relation entity that joins the parent and child
-		Link() *Link
+		Link() Link
+
+		// Empty builds empty relation entity
+		Empty() EntityRelation
 	}
 
 	// EntityRelation groups Entity and Relation
@@ -52,13 +61,17 @@ type (
 		// See Txn interface
 		Put(entity Entity) (OpeWrap, error)
 
+		// Remove deletes the entity by key. This context is added to the transaction.
+		// See Txn interface
+		Remove(key string) OpeWrap
+
 		// Get gets the entity into entity param
 		Get(ctx context.Context, key string, entity Entity) (bool, error)
 
-		// Exists return if the key exists
+		// Exists if the key exists return true
 		Exists(ctx context.Context, key string) (bool, error)
 
-		// Close close resources
+		// Close closes resources
 		Close() error
 	}
 

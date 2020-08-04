@@ -308,6 +308,39 @@ func TestEtcd_Get(t *testing.T) {
 	}
 }
 
+func TestEtcd_Remove(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	result := []struct {
+		removed bool
+	}{
+		{
+			removed: true,
+		},
+		{
+			removed: false,
+		},
+	}
+
+	const key = "key"
+
+	txn := NewTxn(store)
+	txn.Find(key)
+
+	_, err := client.Put(ctx, key, "value")
+	if assert.NoError(t, err) {
+		for _, tt := range result {
+			txn.DoFound(store.Remove(key))
+			ok, err := txn.Commit(ctx)
+			if assert.NoErrorf(t, err, "Remove entity") {
+				assert.Equal(t, tt.removed, ok)
+			}
+		}
+	}
+}
+
 func TestEtcd_Exists(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
