@@ -21,7 +21,6 @@ import (
 
 	"github.com/carisa/pkg/storage"
 
-	"github.com/carisa/api/internal/entity"
 	"github.com/carisa/api/internal/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,23 +36,12 @@ func TestInstanceService_Create(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		assert.True(t, ok, "Created")
+		checkInstance(t, s, i)
 	}
-}
-
-func instance() Instance {
-	inst := NewInstance()
-	inst.Name = "name"
-	inst.Desc = "desc"
-	return inst
 }
 
 func TestInstanceService_Put(t *testing.T) {
-	i := Instance{
-		Descriptor: entity.Descriptor{
-			Name: "name",
-			Desc: "desc",
-		},
-	}
+	i := instance()
 	s, mng := newInstanceSrvFaked(t)
 	defer mng.Close()
 
@@ -62,16 +50,20 @@ func TestInstanceService_Put(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		assert.False(t, ok, "Created")
+		checkInstance(t, s, i)
+	}
+}
+
+func checkInstance(t *testing.T, s Service, i Instance) {
+	var ir Instance
+	_, err := s.Get(i.ID, &ir)
+	if assert.NoError(t, err) {
+		assert.Equal(t, i, ir, "Getting instance")
 	}
 }
 
 func TestInstanceService_Get(t *testing.T) {
-	i := Instance{
-		Descriptor: entity.Descriptor{
-			Name: "name",
-			Desc: "desc",
-		},
-	}
+	i := instance()
 	s, mng := newInstanceSrvFaked(t)
 	defer mng.Close()
 
@@ -84,6 +76,13 @@ func TestInstanceService_Get(t *testing.T) {
 			assert.Equal(t, i, geti, "Instance returned")
 		}
 	}
+}
+
+func instance() Instance {
+	inst := NewInstance()
+	inst.Name = "name"
+	inst.Desc = "desc"
+	return inst
 }
 
 func newInstanceSrvFaked(t *testing.T) (Service, storage.Integration) {

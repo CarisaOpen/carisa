@@ -43,6 +43,7 @@ func TestInstanceService_Create(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
 			assert.True(t, found, "Instance found")
+			checkSpace(t, srv, *s)
 		}
 	}
 }
@@ -88,7 +89,16 @@ func TestInstanceService_Put(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, "Space updated")
 			assert.True(t, found, "Instance found")
+			checkSpace(t, srv, *tt.space)
 		}
+	}
+}
+
+func checkSpace(t *testing.T, srv Service, s Space) {
+	var sr Space
+	_, err := srv.Get(s.ID, &sr)
+	if assert.NoError(t, err) {
+		assert.Equal(t, s, sr, "Getting space")
 	}
 }
 
