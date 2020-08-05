@@ -109,7 +109,6 @@ func TestEtcdConfig_EPSString(t *testing.T) {
 func TestEtcd_Create(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
-	client := cluster.RandClient()
 
 	tests := []struct {
 		e []*EntityTest
@@ -132,6 +131,10 @@ func TestEtcd_Create(t *testing.T) {
 					Prop1: "key2",
 					Prop2: 2,
 				},
+				{
+					Prop1: "key3",
+					Prop2: 3,
+				},
 			},
 		},
 	}
@@ -151,9 +154,10 @@ func TestEtcd_Create(t *testing.T) {
 		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
 			assert.True(t, ok, "Entity found")
 			for _, e := range tt.e {
-				r, errG := client.KV.Get(ctx, e.Prop1)
+				var er EntityTest
+				_, errG := store.Get(ctx, e.Prop1, &er)
 				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1) {
-					assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%s' not created", e.Prop1)
+					assert.Equalf(t, e, &er, e.Prop1, "Entity '%s' not created", e.Prop1)
 				}
 			}
 		}
@@ -186,6 +190,10 @@ func TestEtcd_Update(t *testing.T) {
 					Prop1: "key2",
 					Prop2: 2,
 				},
+				{
+					Prop1: "key3",
+					Prop2: 3,
+				},
 			},
 		},
 	}
@@ -208,9 +216,10 @@ func TestEtcd_Update(t *testing.T) {
 		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
 			assert.True(t, ok, "Entity not found")
 			for _, e := range tt.e {
-				r, errG := client.KV.Get(ctx, e.Prop1)
-				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $v", errG, e.Prop1) {
-					assert.Equalf(t, string(r.Kvs[0].Key), e.Prop1, "Entity '%v' not updated", e.Prop1)
+				var er EntityTest
+				_, errG := store.Get(ctx, e.Prop1, &er)
+				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1) {
+					assert.Equalf(t, e, &er, e.Prop1, "Entity '%s' not created", e.Prop1)
 				}
 			}
 		}
@@ -220,7 +229,6 @@ func TestEtcd_Update(t *testing.T) {
 func TestEtcd_Put(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
-	client := cluster.RandClient()
 
 	tests := []struct {
 		e     *EntityTest
@@ -256,9 +264,10 @@ func TestEtcd_Put(t *testing.T) {
 				found, err := txn.Commit(ctx)
 				if assert.NoErrorf(t, err, "Commit failed: %v", err) {
 					assert.Equal(t, found, tt.found, "Commit result")
-					r, err := client.KV.Get(ctx, tt.e.Prop1)
-					if assert.NoErrorf(t, err, "Get failed: %v. Entity: $v", err, tt.e.Prop1) {
-						assert.Equalf(t, string(r.Kvs[0].Key), tt.e.Prop1, "Entity '%v' not saved", tt.e.Prop1)
+					var er EntityTest
+					_, err := store.Get(ctx, tt.e.Prop1, &er)
+					if assert.NoErrorf(t, err, "Get failed: %v. Entity: $s", err, tt.e.Prop1) {
+						assert.Equalf(t, tt.e, &er, tt.e.Prop1, "Entity '%s' not created", tt.e.Prop1)
 					}
 				}
 			}
@@ -336,6 +345,10 @@ func TestEtcd_Remove(t *testing.T) {
 			ok, err := txn.Commit(ctx)
 			if assert.NoErrorf(t, err, "Remove entity") {
 				assert.Equal(t, tt.removed, ok)
+				exists, err := store.Exists(ctx, key)
+				if assert.NoErrorf(t, err, "Entity exists") {
+					assert.False(t, exists)
+				}
 			}
 		}
 	}
