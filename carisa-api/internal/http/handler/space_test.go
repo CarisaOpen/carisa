@@ -179,6 +179,79 @@ func TestSpaceHandler_PutWithError(t *testing.T) {
 	}
 }
 
+func TestSpaceHandler_Get(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, srv, mng := newSpcHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	inst, err := samples.CreateInstance(mng)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+	space := space.NewSpace()
+	space.Name = "name"
+	space.Desc = "desc"
+	space.InstID = inst.ID
+	created, _, err := srv.Create(&space)
+
+	if assert.NoError(t, err) {
+		assert.True(t, created, "Space created")
+
+		tests := []struct {
+			params map[string]string
+			status int
+		}{
+			{
+				params: map[string]string{"id": space.ID.String()},
+				status: nethttp.StatusOK,
+			},
+			{
+				params: map[string]string{"id": xid.NilID().String()},
+				status: nethttp.StatusNotFound,
+			},
+		}
+
+		for _, tt := range tests {
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.params)
+			err := handlers.SpaceHandler.Get(ctx)
+
+			if assert.NoError(t, err) {
+				if tt.status == nethttp.StatusOK {
+					assert.Contains(
+						t,
+						rec.Body.String(),
+						fmt.Sprintf(
+							`"name":"name","description":"desc","instanceId":"%s"`,
+							space.ParentKey()),
+						"Get space")
+				}
+				assert.Equal(t, tt.status, rec.Code, "Http status")
+			}
+		}
+	}
+}
+
+func TestSpaceHandler_GetWithError(t *testing.T) {
+	tests := samples.TestGetWithError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newSpcHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.Param)
+		err := handlers.SpaceHandler.Get(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
 func newSpcHandlerFaked(t *testing.T) (*runtime.Container, Handlers, space.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
 	srv := space.NewService(cnt, crud)

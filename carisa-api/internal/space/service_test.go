@@ -92,6 +92,25 @@ func TestInstanceService_Put(t *testing.T) {
 	}
 }
 
+func TestInstanceService_Get(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	s, err := space(mng)
+
+	if assert.NoError(t, err) {
+		_, _, err := srv.Create(s)
+		if assert.NoError(t, err) {
+			var gets Space
+			ok, err := srv.Get(s.ID, &gets)
+			if assert.NoError(t, err) {
+				assert.True(t, ok, "Get ok")
+				assert.Equal(t, s, &gets, "Space returned")
+			}
+		}
+	}
+}
+
 func space(mng storage.Integration) (*Space, error) {
 	inst, err := samples.CreateInstance(mng)
 	if err == nil {

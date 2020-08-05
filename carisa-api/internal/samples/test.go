@@ -19,6 +19,8 @@ package samples
 import (
 	nethttp "net/http"
 
+	"github.com/rs/xid"
+
 	"github.com/carisa/pkg/storage"
 )
 
@@ -41,12 +43,12 @@ func TestCreateWithError(method string) []struct {
 		},
 		{
 			Name:   "Descriptor validation. Bad request",
-			Body:   `{"name":"","description":"desc"}`,
+			Body:   `{"Name":"","description":"desc"}`,
 			Status: nethttp.StatusBadRequest,
 		},
 		{
 			Name:     "Creating the entity. Error creating",
-			Body:     `{"name":"name","description":"desc"}`,
+			Body:     `{"Name":"Name","description":"desc"}`,
 			MockOper: func(s *storage.ErrMockCRUDOper) { s.Activate(method) },
 			Status:   nethttp.StatusInternalServerError,
 		},
@@ -77,20 +79,47 @@ func TestPutWithError(method string, params map[string]string) []struct {
 		{
 			Name:   "ID validation. Bad request",
 			Params: map[string]string{"i": ""},
-			Body:   `{"name":"name","description":"desc"}`,
+			Body:   `{"Name":"Name","description":"desc"}`,
 			Status: nethttp.StatusBadRequest,
 		},
 		{
 			Name:   "Descriptor validation. Bad request",
 			Params: params,
-			Body:   `{"name":"name","description":""}`,
+			Body:   `{"Name":"Name","description":""}`,
 			Status: nethttp.StatusBadRequest,
 		},
 		{
 			Name:     "Putting the entity. Error putting",
 			Params:   params,
-			Body:     `{"name":"name","description":"desc"}`,
+			Body:     `{"Name":"Name","description":"desc"}`,
 			MockOper: func(s *storage.ErrMockCRUDOper) { s.Activate(method) },
+			Status:   nethttp.StatusInternalServerError,
+		},
+	}
+	return tests
+}
+
+func TestGetWithError() []struct {
+	Name     string
+	Param    map[string]string
+	MockOper func(txn *storage.ErrMockCRUDOper)
+	Status   int
+} {
+	tests := []struct {
+		Name     string
+		Param    map[string]string
+		MockOper func(txn *storage.ErrMockCRUDOper)
+		Status   int
+	}{
+		{
+			Name:   "Param not found. Bad request",
+			Param:  map[string]string{"i": ""},
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:     "Get error. Internal server error",
+			Param:    map[string]string{"id": xid.NilID().String()},
+			MockOper: func(s *storage.ErrMockCRUDOper) { s.Store().(*storage.ErrMockCRUD).Activate("Get") },
 			Status:   nethttp.StatusInternalServerError,
 		},
 	}

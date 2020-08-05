@@ -48,3 +48,7 @@ func (h *Handlers) SpaceCreate(ctx echo.Context) error {
 func (h *Handlers) SpacePut(ctx echo.Context) error {
 	return h.SpaceHandler.Put(echoc.NewContext(ctx))
 }
+
+func (h *Handlers) SpaceGet(ctx echo.Context) error {
+	return h.SpaceHandler.Get(echoc.NewContext(ctx))
+}

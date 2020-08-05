@@ -181,38 +181,21 @@ func TestInstanceHandler_Get(t *testing.T) {
 }
 
 func TestInstanceHandler_GetWithError(t *testing.T) {
-	tests := []struct {
-		name     string
-		param    map[string]string
-		mockOper func(txn *storage.ErrMockCRUDOper)
-		status   int
-	}{
-		{
-			name:   "Param not found. Bad request",
-			param:  map[string]string{"i": ""},
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:     "Get error. Internal server error",
-			param:    map[string]string{"id": xid.NilID().String()},
-			mockOper: func(s *storage.ErrMockCRUDOper) { s.Store().(*storage.ErrMockCRUD).Activate("Get") },
-			status:   nethttp.StatusInternalServerError,
-		},
-	}
+	tests := samples.TestGetWithError()
 
 	h := mock.HTTP()
 	cnt, handlers, crud := newInstHandlerMocked()
 	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
-		if tt.mockOper != nil {
-			tt.mockOper(crud)
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.param)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.Param)
 		err := handlers.InstHandler.Get(ctx)
 
-		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
-		assert.Error(t, err, tt.name)
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
 	}
 }
 

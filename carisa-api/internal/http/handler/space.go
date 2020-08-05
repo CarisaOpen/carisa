@@ -97,6 +97,22 @@ func (s *Space) Put(c httpc.Context) error {
 	return c.JSON(http.PutStatus(updated), space)
 }
 
+func (s *Space) Get(c httpc.Context) error {
+	var space space.Space
+
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	found, err := s.srv.Get(id, &space)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the space")
+	}
+
+	return c.JSON(http.GetStatus(found), space)
+}
+
 func (s *Space) ErrorRecover(c httpc.Context, err error) error {
 	return c.HTTPErrorLog(
 		nethttp.StatusBadRequest,

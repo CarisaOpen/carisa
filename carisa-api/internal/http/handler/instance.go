@@ -100,7 +100,7 @@ func (i *Instance) Get(c httpc.Context) error {
 
 	found, err := i.srv.Get(id, &inst)
 	if err != nil {
-		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the instance")
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the instance")
 	}
 
 	return c.JSON(http.GetStatus(found), inst)

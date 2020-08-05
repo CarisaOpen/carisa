@@ -19,6 +19,7 @@ package space
 import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 )
 
 const locService = "space.service"
@@ -50,4 +51,12 @@ func (s *Service) Create(space *Space) (bool, bool, error) {
 // If the instance doesn't exist return false in the second param returned.
 func (s *Service) Put(space *Space) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, space)
+}
+
+// Get gets the space from storage
+func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	ok, err := s.crud.Store().Get(ctx, id.String(), space)
+	cancel()
+	return ok, err
 }
