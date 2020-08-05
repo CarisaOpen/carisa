@@ -63,7 +63,7 @@ paths:
           required: true
         - in: "body"
           name: "body"
-          description: "Instance object that needs to be added to the platform"
+          description: "Instance object that needs to be added or updated to the platform"
           required: true
           schema:
             $ref: "#/definitions/InstanceReq"
@@ -134,6 +134,65 @@ paths:
           description: "Instance not found"
         "500":
           description: "Internal server error"
+  /spaces/{id}:
+    put:
+      tags:
+        - "space"
+      summary: "If the space ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Space identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Space object that needs to be added or updated to the platform"
+          required: true
+          schema:
+            $ref: "#/definitions/SpaceReq"
+      responses:
+        "200":
+          description: "Space updated"
+          schema:
+            $ref: "#/definitions/Space"
+        "201":
+          description: "Space created"
+          schema:
+            $ref: "#/definitions/Space"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "space"
+      summary: "Find space by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Space identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Space found"
+          schema:
+            $ref: "#/definitions/Space"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Space not found"
+        "500":
+          description: "Internal server error"
 definitions:
   Instance:
     type: "object"
@@ -155,9 +214,11 @@ definitions:
     properties:
       name:
         type: "string"
+        maxLength: 50
         description: "Instance name"
       description:
         type: "string"
+        maxLength: 500
         description: "Instance description"
   Space:
     type: "object"
@@ -182,9 +243,11 @@ definitions:
     properties:
       name:
         type: "string"
+        maxLength: 50
         description: "Space name"
       description:
         type: "string"
+        maxLength: 500
         description: "Space description"
       instanceId:
         type: "string"
