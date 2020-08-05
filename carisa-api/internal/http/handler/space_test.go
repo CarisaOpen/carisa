@@ -22,6 +22,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/rs/xid"
+
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/labstack/echo/v4"
@@ -46,7 +48,6 @@ func TestSpaceHandler_Create(t *testing.T) {
 	defer h.Close(cnt.Log)
 
 	inst, err := samples.CreateInstance(mng)
-
 	if err != nil {
 		assert.Error(t, err)
 		return
@@ -61,7 +62,7 @@ func TestSpaceHandler_Create(t *testing.T) {
 			status: nethttp.StatusCreated,
 		},
 		{
-			body:   `"name":"name","description":"desc","instanceId":"12345678901234567890"`,
+			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.NilID()),
 			status: nethttp.StatusNotFound,
 		},
 	}
@@ -100,6 +101,78 @@ func TestSpaceHandler_CreateWithError(t *testing.T) {
 		}
 		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/spaces", tt.Body, nil)
 		err := handlers.SpaceHandler.Create(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestSpaceHandler_Put(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newSpcHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	inst, err := samples.CreateInstance(mng)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+
+	params := map[string]string{"id": xid.NilID().String()}
+
+	tests := []struct {
+		body   string
+		status int
+	}{
+		{
+			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, inst.ID.String()),
+			status: nethttp.StatusCreated,
+		},
+		{
+			body:   fmt.Sprintf(`"name":"name1","description":"desc","instanceId":"%s"`, inst.ID.String()),
+			status: nethttp.StatusOK,
+		},
+		{
+			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.New().String()),
+			status: nethttp.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodPut,
+			"/api/spaces",
+			strings.Concat("{", tt.body, "}"),
+			params)
+		err := handlers.SpaceHandler.Put(ctx)
+
+		if err != nil && tt.status == err.(*echo.HTTPError).Code {
+			continue
+		}
+		if assert.NoError(t, err) {
+			assert.Equal(t, tt.status, rec.Code, "Http status")
+			if tt.status != nethttp.StatusNotFound {
+				assert.Contains(t, rec.Body.String(), tt.body, "Put")
+			}
+		}
+	}
+}
+
+func TestSpaceHandler_PutWithError(t *testing.T) {
+	params := map[string]string{"id": xid.NilID().String()}
+	tests := samples.TestPutWithError("PutWithRel", params)
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newSpcHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/spaces", tt.Body, tt.Params)
+		err := handlers.SpaceHandler.Put(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
 		assert.Error(t, err, tt.Name)

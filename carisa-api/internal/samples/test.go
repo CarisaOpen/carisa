@@ -53,3 +53,46 @@ func TestCreateWithError(method string) []struct {
 	}
 	return tests
 }
+
+func TestPutWithError(method string, params map[string]string) []struct {
+	Name     string
+	Params   map[string]string
+	Body     string
+	MockOper func(txn *storage.ErrMockCRUDOper)
+	Status   int
+} {
+	tests := []struct {
+		Name     string
+		Params   map[string]string
+		Body     string
+		MockOper func(txn *storage.ErrMockCRUDOper)
+		Status   int
+	}{
+		{
+			Name:   "Body wrong. Bad request",
+			Params: params,
+			Body:   "{df",
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "ID validation. Bad request",
+			Params: map[string]string{"i": ""},
+			Body:   `{"name":"name","description":"desc"}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "Descriptor validation. Bad request",
+			Params: params,
+			Body:   `{"name":"name","description":""}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:     "Putting the entity. Error putting",
+			Params:   params,
+			Body:     `{"name":"name","description":"desc"}`,
+			MockOper: func(s *storage.ErrMockCRUDOper) { s.Activate(method) },
+			Status:   nethttp.StatusInternalServerError,
+		},
+	}
+	return tests
+}

@@ -21,6 +21,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/rs/xid"
+
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/carisa/api/internal/runtime"
@@ -84,19 +86,19 @@ func TestInstanceHandler_Put(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	params := map[string]string{"id": "12345678901234567890"}
+	params := map[string]string{"id": xid.NilID().String()}
 
 	tests := []struct {
-		instJSON string
-		status   int
+		body   string
+		status int
 	}{
 		{
-			instJSON: `"name":"name","description":"desc"`,
-			status:   nethttp.StatusCreated,
+			body:   `"name":"name","description":"desc"`,
+			status: nethttp.StatusCreated,
 		},
 		{
-			instJSON: `"name":"name1","description":"desc"`,
-			status:   nethttp.StatusOK,
+			body:   `"name":"name1","description":"desc"`,
+			status: nethttp.StatusOK,
 		},
 	}
 
@@ -104,68 +106,35 @@ func TestInstanceHandler_Put(t *testing.T) {
 		rec, ctx := h.NewHTTP(
 			nethttp.MethodPut,
 			"/api/instances",
-			strings.Concat("{", tt.instJSON, "}"),
+			strings.Concat("{", tt.body, "}"),
 			params)
 
 		err := handlers.InstHandler.Put(ctx)
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, tt.status, rec.Code, "Http status")
-			assert.Contains(t, rec.Body.String(), tt.instJSON, "Put")
+			assert.Contains(t, rec.Body.String(), tt.body, "Put")
 		}
 	}
 }
 
 func TestInstanceHandler_PutWithError(t *testing.T) {
-	params := map[string]string{"id": "12345678901234567890"}
-
-	tests := []struct {
-		name     string
-		params   map[string]string
-		body     string
-		mockOper func(txn *storage.ErrMockCRUDOper)
-		status   int
-	}{
-		{
-			name:   "Body wrong. Bad request",
-			params: params,
-			body:   "{df",
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:   "ID validation. Bad request",
-			params: map[string]string{"i": ""},
-			body:   `{"name":"name","description":"desc"}`,
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:   "Descriptor validation. Bad request",
-			params: params,
-			body:   `{"name":"name","description":""}`,
-			status: nethttp.StatusBadRequest,
-		},
-		{
-			name:     "Putting the Instance. Error putting",
-			params:   params,
-			body:     `{"name":"name","description":"desc"}`,
-			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("Put") },
-			status:   nethttp.StatusInternalServerError,
-		},
-	}
+	params := map[string]string{"id": xid.NilID().String()}
+	tests := samples.TestPutWithError("Put", params)
 
 	h := mock.HTTP()
 	cnt, handlers, crud := newInstHandlerMocked()
 	defer h.Close(cnt.Log)
 
 	for _, tt := range tests {
-		if tt.mockOper != nil {
-			tt.mockOper(crud)
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/instances", tt.body, tt.params)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/instances", tt.Body, tt.Params)
 		err := handlers.InstHandler.Put(ctx)
 
-		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
-		assert.Error(t, err, tt.name)
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
 	}
 }
 
@@ -192,7 +161,7 @@ func TestInstanceHandler_Get(t *testing.T) {
 				status: nethttp.StatusOK,
 			},
 			{
-				params: map[string]string{"id": "12345678901234567890"},
+				params: map[string]string{"id": xid.NilID().String()},
 				status: nethttp.StatusNotFound,
 			},
 		}
@@ -225,7 +194,7 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 		},
 		{
 			name:     "Get error. Internal server error",
-			param:    map[string]string{"id": "12345678901234567890"},
+			param:    map[string]string{"id": xid.NilID().String()},
 			mockOper: func(s *storage.ErrMockCRUDOper) { s.Store().(*storage.ErrMockCRUD).Activate("Get") },
 			status:   nethttp.StatusInternalServerError,
 		},

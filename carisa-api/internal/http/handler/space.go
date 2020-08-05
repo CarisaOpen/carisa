@@ -19,6 +19,8 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/carisa/api/internal/http/convert"
+
 	"github.com/carisa/api/internal/space"
 
 	"github.com/carisa/pkg/http"
@@ -65,6 +67,34 @@ func (s *Space) Create(c httpc.Context) error {
 	}
 
 	return c.JSON(http.CreateStatus(created), spc)
+}
+
+// Put creates or update the space domain
+func (s *Space) Put(c httpc.Context) error {
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	space := space.Space{}
+	if err := c.Bind(&space); err != nil {
+		return s.ErrorRecover(c, err)
+	}
+
+	if httpErr := validator.Descriptor(c, space.Descriptor); httpErr != nil {
+		return httpErr
+	}
+
+	space.ID = id
+	updated, found, err := s.srv.Put(&space)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the space")
+	}
+	if !found {
+		return c.HTTPError(nethttp.StatusNotFound, "instance not found")
+	}
+
+	return c.JSON(http.PutStatus(updated), space)
 }
 
 func (s *Space) ErrorRecover(c httpc.Context, err error) error {

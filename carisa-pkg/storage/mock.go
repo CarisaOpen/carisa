@@ -124,6 +124,7 @@ type ErrMockCRUDOper struct {
 	create        bool
 	put           bool
 	createWithRel bool
+	putWithRel    bool
 	store         CRUD
 }
 
@@ -145,6 +146,8 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 			e.put = true
 		case "CreateWithRel":
 			e.createWithRel = true
+		case "PutWithRel":
+			e.putWithRel = true
 		default:
 			panic("method not found")
 		}
@@ -156,6 +159,7 @@ func (e *ErrMockCRUDOper) Clear() {
 	e.create = false
 	e.put = false
 	e.createWithRel = false
+	e.putWithRel = false
 }
 
 func (e *ErrMockCRUDOper) Store() CRUD {
@@ -181,4 +185,11 @@ func (e *ErrMockCRUDOper) Put(loc string, storeTimeout StoreWithTimeout, entity 
 		return false, errors.New("put")
 	}
 	return true, nil
+}
+
+func (e *ErrMockCRUDOper) PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error) {
+	if e.putWithRel {
+		return false, false, errors.New("putWithRel")
+	}
+	return true, true, nil
 }

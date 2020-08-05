@@ -27,6 +27,7 @@ type Handlers struct {
 	SpaceHandler Space
 }
 
+// Instance
 func (h *Handlers) InstCreate(ctx echo.Context) error {
 	return h.InstHandler.Create(echoc.NewContext(ctx))
 }
@@ -37,4 +38,13 @@ func (h *Handlers) InstPut(ctx echo.Context) error {
 
 func (h *Handlers) InstGet(ctx echo.Context) error {
 	return h.InstHandler.Get(echoc.NewContext(ctx))
+}
+
+// Space
+func (h *Handlers) SpaceCreate(ctx echo.Context) error {
+	return h.SpaceHandler.Create(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) SpacePut(ctx echo.Context) error {
+	return h.SpaceHandler.Put(echoc.NewContext(ctx))
 }

@@ -30,12 +30,18 @@ import (
 
 func TestSpace_ToString(t *testing.T) {
 	s := NewSpace()
-	assert.Equal(t, strings.Concat("space: ID:", s.Key(), ", Name:", s.Name), s.ToString())
+	assert.Equal(t, strings.Concat("space: ID:", s.Key(), ", name:", s.Name), s.ToString())
 }
 
 func TestSpace_Key(t *testing.T) {
 	s := NewSpace()
 	assert.Equal(t, s.ID.String(), s.Key())
+}
+
+func TestSpace_RelKey(t *testing.T) {
+	s := Space{}
+	s.Name = "name"
+	assert.Equal(t, "00000000000000000000name00000000000000000000", s.RelKey())
 }
 
 func TestSpace_ParentKey(t *testing.T) {
@@ -44,11 +50,16 @@ func TestSpace_ParentKey(t *testing.T) {
 	assert.Equal(t, s.InstID.String(), s.ParentKey())
 }
 
+func TestSpace_Empty(t *testing.T) {
+	s := NewSpace()
+	assert.Equal(t, &Space{}, s.Empty())
+}
+
 func TestSpace_Link(t *testing.T) {
 	s := NewSpace()
 	s.InstID = xid.New()
 
-	link := &storage.Link{
+	link := storage.Link{
 		ID:   strings.Concat(s.InstID.String(), s.Name, s.Key()),
 		Name: s.Name,
 		Rel:  s.ID.String(),

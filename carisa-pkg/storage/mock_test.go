@@ -73,13 +73,15 @@ func TestErrMockTxn_Clear(t *testing.T) {
 
 func TestErrMockOper_Activate(t *testing.T) {
 	m := NewErrMockCRUDOper()
-	m.Activate("Create", "Put", "CreateWithRel")
+	m.Activate("Create", "Put", "CreateWithRel", "PutWithRel")
 	_, err := m.Create("", nil, nil)
 	assert.Error(t, err, "Create")
 	_, err = m.Put("", nil, nil)
 	assert.Error(t, err, "Put")
 	_, _, err = m.CreateWithRel("", nil, nil)
 	assert.Error(t, err, "CreateWithError")
+	_, _, err = m.PutWithRel("", nil, nil)
+	assert.Error(t, err, "PutWithError")
 }
 
 func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
@@ -91,6 +93,7 @@ func TestErrMockOper_Clear(t *testing.T) {
 	m := NewErrMockCRUDOper()
 	m.Clear()
 	assert.False(t, m.create, "Create")
-	assert.False(t, m.create, "Put")
-	assert.False(t, m.create, "CreateWithError")
+	assert.False(t, m.put, "Put")
+	assert.False(t, m.createWithRel, "CreateWithError")
+	assert.False(t, m.putWithRel, "PutWithError")
 }

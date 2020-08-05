@@ -44,3 +44,10 @@ func (s *Service) Create(space *Space) (bool, bool, error) {
 	space.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, space)
 }
+
+// Create creates or updates a space into of the repository.
+// If the space exists return true in the first param returned otherwise return false.
+// If the instance doesn't exist return false in the second param returned.
+func (s *Service) Put(space *Space) (bool, bool, error) {
+	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, space)
+}

@@ -37,11 +37,19 @@ func NewSpace() Space {
 }
 
 func (s *Space) ToString() string {
-	return strings.Concat("space: ID:", s.Key(), ", Name:", s.Name)
+	return strings.Concat("space: ID:", s.Key(), ", name:", s.Name)
 }
 
 func (s *Space) Key() string {
 	return s.ID.String()
+}
+
+func (s *Space) RelKey() string {
+	return strings.Concat(s.InstID.String(), s.Name, s.Key())
+}
+
+func (s *Space) RelName() string {
+	return s.Name
 }
 
 // ParentKey gets the instance ID
@@ -50,10 +58,14 @@ func (s *Space) ParentKey() string {
 }
 
 // Link gets the link between instance and space
-func (s *Space) Link() *storage.Link {
-	return &storage.Link{
-		ID:   strings.Concat(s.InstID.String(), s.Name, s.Key()),
+func (s *Space) Link() storage.Link {
+	return storage.Link{
+		ID:   s.RelKey(),
 		Name: s.Name,
 		Rel:  s.ID.String(),
 	}
+}
+
+func (s *Space) Empty() storage.EntityRelation {
+	return &Space{}
 }

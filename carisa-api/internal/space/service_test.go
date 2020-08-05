@@ -19,6 +19,9 @@ package space
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/entity"
+	"github.com/rs/xid"
+
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/carisa/api/internal/mock"
@@ -39,6 +42,51 @@ func TestInstanceService_Create(t *testing.T) {
 
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
+			assert.True(t, found, "Instance found")
+		}
+	}
+}
+
+func TestInstanceService_Put(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+	inst, err := samples.CreateInstance(mng)
+	if err != nil {
+		assert.Error(t, err, "Creating instance")
+	}
+
+	tests := []struct {
+		updated bool
+		space   *Space
+	}{
+		{
+			updated: false,
+			space: &Space{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				InstID: inst.ID,
+			},
+		},
+		{
+			updated: true,
+			space: &Space{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				InstID: inst.ID,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		updated, found, err := srv.Put(tt.space)
+		if assert.NoError(t, err) {
+			assert.Equal(t, updated, tt.updated, "Space updated")
 			assert.True(t, found, "Instance found")
 		}
 	}
