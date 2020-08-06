@@ -171,6 +171,35 @@ func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
 	return false, nil
 }
 
+// List implements storage.interface.CRUD.List
+func (s *etcdStore) List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
+	if top == 0 {
+		return make([]Entity, 0), nil
+	}
+
+	res, err := s.client.Get(ctx,
+		key,
+		clientv3.WithLimit(int64(top)),
+		clientv3.WithPrefix(),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+
+	if err != nil {
+		return nil, errWithKey(err, key, "unexpected error listing entities from etcd store")
+	}
+
+	list := make([]Entity, len(res.Kvs))
+
+	for i, r := range res.Kvs {
+		e := empty()
+		err = encoding.DecodeByte(r.Value, e)
+		if err != nil {
+			return nil, errWithKey(err, string(r.Key), "unexpected decode error listing entity into etcd store")
+		}
+		list[i] = e
+	}
+	return list, nil
+}
+
 func errWithKey(err error, key string, msg string) error {
 	return errors.Wrap(
 		err,

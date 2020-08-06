@@ -71,6 +71,10 @@ type (
 		// Exists if the key exists return true
 		Exists(ctx context.Context, key string) (bool, error)
 
+		// List lists all entities that start by key with the limit of the top parameter.
+		// The first param to return a list of entities found.
+		List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
+
 		// Close closes resources
 		Close() error
 	}

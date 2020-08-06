@@ -12,6 +12,7 @@ type ErrMockCRUD struct {
 	remove bool
 	get    bool
 	exists bool
+	list   bool
 	close  bool
 }
 
@@ -47,6 +48,14 @@ func (e *ErrMockCRUD) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
+func (e *ErrMockCRUD) List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
+	if e.list {
+		return nil, errors.New("list")
+	}
+	list := make([]Entity, top)
+	return list, nil
+}
+
 // Activate activates the methods to throw a error
 func (e *ErrMockCRUD) Activate(methods ...string) {
 	e.Clear()
@@ -61,6 +70,8 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 			e.get = true
 		case "Exists":
 			e.exists = true
+		case "List":
+			e.list = true
 		case "Close":
 			e.close = true
 		default:
@@ -75,6 +86,7 @@ func (e *ErrMockCRUD) Clear() {
 	e.remove = false
 	e.get = false
 	e.exists = false
+	e.list = false
 	e.close = false
 }
 

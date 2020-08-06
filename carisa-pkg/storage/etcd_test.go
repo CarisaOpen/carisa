@@ -300,7 +300,7 @@ func TestEtcd_Get(t *testing.T) {
 	}
 
 	entitye, err := encoding.Encode(e)
-	if assert.NoErrorf(t, err, "Encoding entity") {
+	if assert.NoErrorf(t, err, "Coding entity") {
 		_, err := client.Put(ctx, e.Prop1, entitye)
 		if assert.NoErrorf(t, err, "Put entity") {
 			for _, tt := range result {
@@ -379,6 +379,101 @@ func TestEtcd_Exists(t *testing.T) {
 			found, err := store.Exists(ctx, tt.key)
 			if assert.NoErrorf(t, err, "Exists entity") {
 				assert.Equal(t, tt.found, found, "Entity found")
+			}
+		}
+	}
+}
+
+func TestEtcd_List(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	samples := []EntityTest{
+		{
+			Prop1: "key1",
+			Prop2: 1,
+		},
+		{
+			Prop1: "key0",
+			Prop2: 0,
+		},
+		{
+			Prop1: "ky1",
+			Prop2: 2,
+		},
+	}
+
+	for _, s := range samples {
+		entity, err := encoding.Encode(s)
+		if err != nil {
+			assert.Error(t, err, "Coding entity for sample")
+			return
+		}
+		_, err = client.Put(ctx, s.Prop1, entity)
+		if err != nil {
+			assert.Error(t, err)
+			return
+		}
+	}
+
+	tests := []struct {
+		key string
+		top int
+		res []EntityTest
+	}{
+		{
+			key: "",
+			top: 0,
+			res: []EntityTest{},
+		},
+		{
+			key: "y1",
+			top: 5,
+			res: []EntityTest{},
+		},
+		{
+			key: "key",
+			top: 10,
+			res: []EntityTest{
+				{
+					Prop1: "key0",
+					Prop2: 0,
+				},
+				{
+					Prop1: "key1",
+					Prop2: 1,
+				},
+			},
+		},
+		{
+			key: "key",
+			top: 1,
+			res: []EntityTest{
+				{
+					Prop1: "key0",
+					Prop2: 0,
+				},
+			},
+		},
+		{
+			key: "ky1",
+			top: 1,
+			res: []EntityTest{
+				{
+					Prop1: "ky1",
+					Prop2: 2,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		res, err := store.List(ctx, tt.key, tt.top, func() Entity { return &EntityTest{} })
+		if assert.NoErrorf(t, err, "List") {
+			assert.Equal(t, len(tt.res), len(res), "Count")
+			for i, r := range res {
+				assert.Equal(t, &tt.res[i], r, "List result")
 			}
 		}
 	}
