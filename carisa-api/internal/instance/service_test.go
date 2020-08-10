@@ -19,6 +19,9 @@ package instance
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/relation/samples"
+	"github.com/rs/xid"
+
 	"github.com/carisa/pkg/storage"
 
 	"github.com/carisa/api/internal/mock"
@@ -74,6 +77,35 @@ func TestInstanceService_Get(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Get ok")
 			assert.Equal(t, i, geti, "Instance returned")
+		}
+	}
+}
+
+func TestInstanceService_ListSpaces(t *testing.T) {
+	tests := []struct {
+		ranges bool
+	}{
+		{
+			ranges: true,
+		},
+		{
+			ranges: false,
+		},
+	}
+
+	s, mng := newInstanceSrvFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+
+	link, _, err := samples.CreateSpaceLink(mng, id)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListSpaces(id, "name", tt.ranges, 1)
+			if assert.NoError(t, err) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.ranges)
+			}
 		}
 	}
 }

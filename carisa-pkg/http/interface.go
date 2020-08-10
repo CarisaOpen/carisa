@@ -25,7 +25,10 @@ import (
 // Context is a adapter for http
 type Context interface {
 	// Param return path param
-	Param(name string) (string, error)
+	Param(name string) string
+
+	// Param return query param
+	QueryParam(name string) string
 
 	// Bind binds the request body into provided type `i`. The default binder
 	// does it based on Content-Type header.
@@ -53,7 +56,8 @@ type Mock interface {
 	NewHTTP(method string,
 		url string,
 		body string,
-		params map[string]string) (rec *httptest.ResponseRecorder, c Context)
+		params map[string]string,
+		qparams map[string]string) (rec *httptest.ResponseRecorder, c Context)
 
 	// Close closes http connection
 	Close(l logging.Logger)

@@ -24,7 +24,8 @@ import (
 
 	"github.com/rs/xid"
 
-	"github.com/carisa/api/internal/samples"
+	"github.com/carisa/api/internal/instance/samples"
+	tsamples "github.com/carisa/api/internal/samples"
 
 	"github.com/labstack/echo/v4"
 
@@ -68,7 +69,7 @@ func TestSpaceHandler_Create(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/spaces", strings.Concat("{", tt.body, "}"), nil)
+		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/spaces", strings.Concat("{", tt.body, "}"), nil, nil)
 		err := handlers.SpaceHandler.Create(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -89,7 +90,7 @@ func TestSpaceHandler_Create(t *testing.T) {
 }
 
 func TestSpaceHandler_CreateWithError(t *testing.T) {
-	tests := samples.TestCreateWithError("CreateWithRel")
+	tests := tsamples.TestCreateWithError("CreateWithRel")
 
 	h := mock.HTTP()
 	cnt, handlers, crud := newSpcHandlerMocked()
@@ -99,7 +100,7 @@ func TestSpaceHandler_CreateWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/spaces", tt.Body, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/spaces", tt.Body, nil, nil)
 		err := handlers.SpaceHandler.Create(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -144,7 +145,8 @@ func TestSpaceHandler_Put(t *testing.T) {
 			nethttp.MethodPut,
 			"/api/spaces",
 			strings.Concat("{", tt.body, "}"),
-			params)
+			params,
+			nil)
 		err := handlers.SpaceHandler.Put(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -161,7 +163,7 @@ func TestSpaceHandler_Put(t *testing.T) {
 
 func TestSpaceHandler_PutWithError(t *testing.T) {
 	params := map[string]string{"id": xid.NilID().String()}
-	tests := samples.TestPutWithError("PutWithRel", params)
+	tests := tsamples.TestPutWithError("PutWithRel", params)
 
 	h := mock.HTTP()
 	cnt, handlers, crud := newSpcHandlerMocked()
@@ -171,7 +173,7 @@ func TestSpaceHandler_PutWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/spaces", tt.Body, tt.Params)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/spaces", tt.Body, tt.Params, nil)
 		err := handlers.SpaceHandler.Put(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -214,7 +216,7 @@ func TestSpaceHandler_Get(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.params)
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.params, nil)
 			err := handlers.SpaceHandler.Get(ctx)
 
 			if assert.NoError(t, err) {
@@ -234,7 +236,7 @@ func TestSpaceHandler_Get(t *testing.T) {
 }
 
 func TestSpaceHandler_GetWithError(t *testing.T) {
-	tests := samples.TestGetWithError()
+	tests := tsamples.TestGetWithError()
 
 	h := mock.HTTP()
 	cnt, handlers, crud := newSpcHandlerMocked()
@@ -244,7 +246,7 @@ func TestSpaceHandler_GetWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.Param)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id", "", tt.Param, nil)
 		err := handlers.SpaceHandler.Get(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)

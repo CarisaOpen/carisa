@@ -48,11 +48,11 @@ type EtcdConfig struct {
 	DialKeepAliveTimeout uint8 `json:"dialKeepAliveTimeout,omitempty"`
 	// RequestTimeout in seconds. Default value: 10 seconds.
 	RequestTimeout uint8 `json:"requestTimeout,omitempty"`
-	// Endpoints is a list of URLs.
+	// Endpoints is a startKey of URLs.
 	Endpoints []string `json:"endpoints,omitempty"`
 }
 
-// String converts endpoint list to string
+// String converts endpoint startKey to string
 func (c *EtcdConfig) EPSString() string {
 	var b strs.Builder
 	b.Grow(len(c.Endpoints) * 10)
@@ -171,17 +171,40 @@ func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
 	return false, nil
 }
 
-// List implements storage.interface.CRUD.List
-func (s *etcdStore) List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
+// StartKey implements storage.interface.CRUD.StartKey
+func (s *etcdStore) StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
+	return s.list(
+		ctx,
+		key,
+		top,
+		empty,
+		clientv3.WithLimit(int64(top)),
+		clientv3.WithPrefix(),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+}
+
+func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
+	return s.list(
+		ctx,
+		skey,
+		top,
+		empty,
+		clientv3.WithLimit(int64(top)),
+		clientv3.WithFromKey(),
+		clientv3.WithRange(clientv3.GetPrefixRangeEnd(ekey)),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+}
+
+func (s *etcdStore) list(
+	ctx context.Context,
+	key string, top int,
+	empty func() Entity,
+	opts ...clientv3.OpOption) ([]Entity, error) {
 	if top == 0 {
 		return make([]Entity, 0), nil
 	}
 
-	res, err := s.client.Get(ctx,
-		key,
-		clientv3.WithLimit(int64(top)),
-		clientv3.WithPrefix(),
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+	res, err := s.client.Get(ctx, key, opts...)
 
 	if err != nil {
 		return nil, errWithKey(err, key, "unexpected error listing entities from etcd store")

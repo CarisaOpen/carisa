@@ -18,10 +18,12 @@ package echo
 
 import (
 	"net/http/httptest"
+	"net/url"
 	"strings"
 
 	"github.com/carisa/pkg/http"
 	"github.com/carisa/pkg/logging"
+	strs "github.com/carisa/pkg/strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -37,10 +39,11 @@ func HTTPMock() http.Mock {
 }
 
 func (h *echoHTTPMock) NewHTTP(method string,
-	url string,
+	urlr string,
 	body string,
-	params map[string]string) (*httptest.ResponseRecorder, http.Context) {
-	req := httptest.NewRequest(method, url, strings.NewReader(body))
+	params map[string]string,
+	qparams map[string]string) (*httptest.ResponseRecorder, http.Context) {
+	req := httptest.NewRequest(method, queryParams(urlr, qparams), strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := h.e.NewContext(req, rec)
@@ -67,4 +70,15 @@ func setParams(params map[string]string, c echo.Context) {
 
 	c.SetParamNames(names...)
 	c.SetParamValues(values...)
+}
+
+func queryParams(urlr string, qparams map[string]string) string {
+	if qparams == nil {
+		return urlr
+	}
+	q := make(url.Values)
+	for k, v := range qparams {
+		q.Set(k, v)
+	}
+	return strs.Concat(urlr, "/?", q.Encode())
 }

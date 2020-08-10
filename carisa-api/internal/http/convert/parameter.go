@@ -18,6 +18,7 @@ package convert
 
 import (
 	nethttp "net/http"
+	"strconv"
 
 	"github.com/carisa/pkg/http"
 	"github.com/rs/xid"
@@ -25,15 +26,66 @@ import (
 
 // ParamID convert string param ID to xId type
 func ParamID(c http.Context) (xid.ID, error) {
-	value, err := c.Param("id")
+	id, err := getID(c)
+	return id, err
+}
+
+// FilterLink gets the filter parameters.
+// The parameters are entity ID, sname or gtname, top and filter type. Look at api documentation
+// The default top parameter is 20
+func FilterLink(c http.Context) (xid.ID, string, int, bool, error) {
+	id, err := getID(c)
 	if err != nil {
-		return xid.NilID(), err
+		return xid.NilID(), "", 0, false, err
+	}
+
+	tops := c.QueryParam("top")
+	top := 20
+	if len(tops) != 0 {
+		top, err = strconv.Atoi(tops)
+		if err != nil {
+			return xid.NilID(),
+				"",
+				0,
+				false,
+				c.HTTPError(nethttp.StatusBadRequest, "the filter top parameter has a incorrect format")
+		}
+	}
+	if !(top >= 1 && top <= 100) {
+		return xid.NilID(),
+			"",
+			0,
+			false,
+			c.HTTPError(nethttp.StatusBadRequest, "the top parameters must be between 1 and 100")
+	}
+
+	sname := c.QueryParam("sname")
+	if len(sname) != 0 {
+		return id, sname, top, false, nil
+	}
+
+	gtname := c.QueryParam("gtname")
+	if len(gtname) != 0 {
+		return id, gtname, top, true, nil
+	}
+
+	return xid.NilID(),
+		"",
+		0,
+		false,
+		c.HTTPError(nethttp.StatusBadRequest, "the filter parameters are missing. sname or qtname")
+}
+
+func getID(c http.Context) (xid.ID, error) {
+	value := c.Param("id")
+
+	if len(value) == 0 {
+		return xid.NilID(), c.HTTPError(nethttp.StatusBadRequest, "the param path: id not found")
 	}
 
 	id, err := xid.FromString(value)
 	if err != nil {
 		return xid.NilID(), c.HTTPError(nethttp.StatusBadRequest, "the ID has a incorrect format")
 	}
-
 	return id, nil
 }

@@ -18,6 +18,7 @@ package space
 
 import (
 	"github.com/carisa/api/internal/entity"
+	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/pkg/storage"
 	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
@@ -58,11 +59,11 @@ func (s *Space) ParentKey() string {
 }
 
 // Link gets the link between instance and space
-func (s *Space) Link() storage.Link {
-	return storage.Link{
-		ID:   s.RelKey(),
-		Name: s.Name,
-		Rel:  s.ID.String(),
+func (s *Space) Link() storage.Entity {
+	return &relation.InstSpace{
+		ID:      s.RelKey(),
+		Name:    s.Name,
+		SpaceID: s.ID.String(),
 	}
 }
 

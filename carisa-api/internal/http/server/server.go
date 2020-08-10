@@ -61,6 +61,7 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/instances/:id", h.InstGet)
 	e.POST("/api/instances", h.InstCreate)
 	e.PUT("/api/instances/:id", h.InstPut)
+	e.GET("/api/instances/:id/spaces", h.InstListSpaces)
 
 	// Space
 	e.GET("/api/spaces/:id", h.SpaceGet)

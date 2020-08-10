@@ -56,8 +56,8 @@ func (o Object) RelName() string {
 	return o.Name
 }
 
-func (o Object) Link() Link {
-	return Link{
+func (o Object) Link() Entity {
+	return &Link{
 		ID:   o.RelKey(),
 		Name: o.Name,
 		Rel:  o.ID,
@@ -66,6 +66,20 @@ func (o Object) Link() Link {
 
 func (o Object) Empty() EntityRelation {
 	return &Object{}
+}
+
+type Link struct {
+	ID   string
+	Name string
+	Rel  string
+}
+
+func (l Link) ToString() string {
+	return strings.Concat("link: ID:", l.Key(), ", Name:", l.Name)
+}
+
+func (l Link) Key() string {
+	return l.ID
 }
 
 func TestCRUDOperation_Store(t *testing.T) {
@@ -180,7 +194,7 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 				found, err = oper.Store().Get(context.TODO(), e.RelKey(), &link)
 				if assert.NoError(t, err) {
 					assert.True(t, found, "Link found")
-					assert.Equal(t, e.Link(), link, "Link saved")
+					assert.Equal(t, e.Link(), &link, "Link saved")
 				}
 			}
 		}
@@ -303,7 +317,7 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			updated: false,
 			e: &Object{
 				ID:     "key",
-				Name:   "name",
+				Name:   "Name",
 				Value:  1,
 				Parent: "parentKey",
 			},
@@ -372,7 +386,7 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			found, err = storef.Store().Get(context.TODO(), tt.e.RelKey(), &link)
 			if assert.NoError(t, err, "Commit failed") {
 				assert.True(t, found, "Get link")
-				assert.Equal(t, tt.e.Link(), link, "Link saved")
+				assert.Equal(t, tt.e.Link(), &link, "Link saved")
 			}
 		}
 	}

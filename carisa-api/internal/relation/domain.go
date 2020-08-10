@@ -14,28 +14,21 @@
  *
  */
 
-package server
+package relation
 
-import (
-	"testing"
+import "github.com/carisa/pkg/strings"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/carisa/api/internal/http/handler"
-
-	"github.com/labstack/echo/v4"
-)
-
-func TestServer_Middleware(t *testing.T) {
-	e := echo.New()
-	Middleware(e)
+// Link represents the link between instance and space
+type InstSpace struct {
+	ID      string `json:"-"`
+	Name    string `json:"name"`
+	SpaceID string `json:"spaceId"`
 }
 
-func TestServer_Router(t *testing.T) {
-	e := echo.New()
-	h := handler.Handlers{}
+func (l *InstSpace) ToString() string {
+	return strings.Concat("spaceLink: ID:", l.Key(), ", Name:", l.Name)
+}
 
-	Router(e, h)
-
-	assert.Equal(t, 7, len(e.Routes()))
+func (l *InstSpace) Key() string {
+	return l.ID
 }

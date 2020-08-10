@@ -40,6 +40,10 @@ func (h *Handlers) InstGet(ctx echo.Context) error {
 	return h.InstHandler.Get(echoc.NewContext(ctx))
 }
 
+func (h *Handlers) InstListSpaces(ctx echo.Context) error {
+	return h.InstHandler.ListSpaces(echoc.NewContext(ctx))
+}
+
 // Space
 func (h *Handlers) SpaceCreate(ctx echo.Context) error {
 	return h.SpaceHandler.Create(echoc.NewContext(ctx))

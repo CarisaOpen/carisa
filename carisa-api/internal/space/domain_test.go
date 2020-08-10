@@ -19,9 +19,9 @@ package space
 import (
 	"testing"
 
-	"github.com/rs/xid"
+	"github.com/carisa/api/internal/relation"
 
-	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 
 	"github.com/carisa/pkg/strings"
 
@@ -59,11 +59,11 @@ func TestSpace_Link(t *testing.T) {
 	s := NewSpace()
 	s.InstID = xid.New()
 
-	link := storage.Link{
-		ID:   strings.Concat(s.InstID.String(), s.Name, s.Key()),
-		Name: s.Name,
-		Rel:  s.ID.String(),
+	link := relation.InstSpace{
+		ID:      strings.Concat(s.InstID.String(), s.Name, s.Key()),
+		Name:    s.Name,
+		SpaceID: s.ID.String(),
 	}
 
-	assert.Equal(t, link, s.Link())
+	assert.Equal(t, &link, s.Link())
 }

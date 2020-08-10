@@ -37,11 +37,11 @@ type (
 		// ParentKey gets the key of the parent entity that contains this child entity
 		ParentKey() string
 
-		// Name gets the relation name
+		// Name gets the relation Name
 		RelName() string
 
 		// Link gets the relation entity that joins the parent and child
-		Link() Link
+		Link() Entity
 
 		// Empty builds empty relation entity
 		Empty() EntityRelation
@@ -71,9 +71,11 @@ type (
 		// Exists if the key exists return true
 		Exists(ctx context.Context, key string) (bool, error)
 
-		// List lists all entities that start by key with the limit of the top parameter.
-		// The first param to return a list of entities found.
-		List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
+		// StartKey lists all entities that start by key with the limit of the top parameter.
+		StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
+
+		// Range lists all entities that is greater than skey and ended by eKey with the limit of the top parameter.
+		Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error)
 
 		// Close closes resources
 		Close() error

@@ -90,6 +90,7 @@ func (i *Instance) Put(c httpc.Context) error {
 	return c.JSON(http.PutStatus(updated), inst)
 }
 
+// Get gets the instance by ID
 func (i *Instance) Get(c httpc.Context) error {
 	var inst instance.Instance
 
@@ -104,6 +105,23 @@ func (i *Instance) Get(c httpc.Context) error {
 	}
 
 	return c.JSON(http.GetStatus(found), inst)
+}
+
+// ListSpaces list spaces by instance ID and return top spaces.
+// If sname query param is not empty, is filtered by spaces which name starts by name parameter
+// If gtname query param is not empty, is filtered by spaces which name is greater than name parameter
+func (i *Instance) ListSpaces(c httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(c)
+	if err != nil {
+		return err
+	}
+
+	spaces, err := i.srv.ListSpaces(id, name, ranges, top)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the spaces")
+	}
+
+	return c.JSON(nethttp.StatusOK, spaces)
 }
 
 func (i *Instance) ErrorRecover(c httpc.Context, err error) error {

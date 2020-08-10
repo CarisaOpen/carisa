@@ -14,28 +14,14 @@
  *
  */
 
-package server
+package entity
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/carisa/api/internal/http/handler"
-
-	"github.com/labstack/echo/v4"
+	"github.com/carisa/pkg/strings"
+	"github.com/rs/xid"
 )
 
-func TestServer_Middleware(t *testing.T) {
-	e := echo.New()
-	Middleware(e)
-}
-
-func TestServer_Router(t *testing.T) {
-	e := echo.New()
-	h := handler.Handlers{}
-
-	Router(e, h)
-
-	assert.Equal(t, 7, len(e.Routes()))
+// SoundLink builds a string to find links with id and link that starts name
+func SoundLink(id xid.ID, startName string) string {
+	return strings.Concat(id.String(), startName)
 }

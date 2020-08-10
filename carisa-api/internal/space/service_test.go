@@ -22,7 +22,7 @@ import (
 	"github.com/carisa/api/internal/entity"
 	"github.com/rs/xid"
 
-	"github.com/carisa/api/internal/samples"
+	instsamples "github.com/carisa/api/internal/instance/samples"
 
 	"github.com/carisa/api/internal/mock"
 	"github.com/carisa/pkg/storage"
@@ -51,7 +51,7 @@ func TestInstanceService_Create(t *testing.T) {
 func TestInstanceService_Put(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
-	inst, err := samples.CreateInstance(mng)
+	inst, err := instsamples.CreateInstance(mng)
 	if err != nil {
 		assert.Error(t, err, "Creating instance")
 	}
@@ -122,7 +122,7 @@ func TestInstanceService_Get(t *testing.T) {
 }
 
 func space(mng storage.Integration) (*Space, error) {
-	inst, err := samples.CreateInstance(mng)
+	inst, err := instsamples.CreateInstance(mng)
 	if err == nil {
 		space := NewSpace()
 		space.Name = "name"

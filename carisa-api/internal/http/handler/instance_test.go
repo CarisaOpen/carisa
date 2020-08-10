@@ -18,11 +18,13 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	nethttp "net/http"
 	"testing"
 
 	"github.com/rs/xid"
 
+	relsamples "github.com/carisa/api/internal/relation/samples"
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/carisa/api/internal/runtime"
@@ -47,7 +49,7 @@ func TestInstanceHandler_Create(t *testing.T) {
 	defer h.Close(cnt.Log)
 
 	instJSON := `"name":"name","description":"desc"`
-	rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", strings.Concat("{", instJSON, "}"), nil)
+	rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", strings.Concat("{", instJSON, "}"), nil, nil)
 	err := handlers.InstHandler.Create(ctx)
 
 	if assert.NoError(t, err) {
@@ -72,7 +74,7 @@ func TestInstanceHandler_CreateWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", tt.Body, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/instances", tt.Body, nil, nil)
 		err := handlers.InstHandler.Create(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -107,7 +109,8 @@ func TestInstanceHandler_Put(t *testing.T) {
 			nethttp.MethodPut,
 			"/api/instances",
 			strings.Concat("{", tt.body, "}"),
-			params)
+			params,
+			nil)
 
 		err := handlers.InstHandler.Put(ctx)
 
@@ -130,7 +133,7 @@ func TestInstanceHandler_PutWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/instances", tt.Body, tt.Params)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/instances", tt.Body, tt.Params, nil)
 		err := handlers.InstHandler.Put(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -167,7 +170,7 @@ func TestInstanceHandler_Get(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.params)
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.params, nil)
 			err := handlers.InstHandler.Get(ctx)
 
 			if assert.NoError(t, err) {
@@ -191,8 +194,55 @@ func TestInstanceHandler_GetWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.Param)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id", "", tt.Param, nil)
 		err := handlers.InstHandler.Get(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestInstanceHandler_ListSpaces(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newInstHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	_, space, err := relsamples.CreateSpaceLink(mng, xid.NilID())
+
+	if assert.NoError(t, err) {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodGet,
+			"/api/instances/:id/spaces",
+			"",
+			map[string]string{"id": xid.NilID().String()},
+			map[string]string{"sname": "name"})
+
+		err := handlers.InstHandler.ListSpaces(ctx)
+		if assert.NoError(t, err) {
+			assert.Contains(
+				t,
+				rec.Body.String(),
+				fmt.Sprintf(`[{"name":"name","spaceId":"%s"}]`, space.Key()),
+				"List space")
+			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
+		}
+	}
+}
+
+func TestInstanceHandler_GetListSpacesError(t *testing.T) {
+	tests := samples.TestListError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newInstHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/instances/:id/spaces", "", tt.Param, tt.QParam)
+		err := handlers.InstHandler.ListSpaces(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
 		assert.Error(t, err, tt.Name)

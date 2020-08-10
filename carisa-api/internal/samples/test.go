@@ -125,3 +125,33 @@ func TestGetWithError() []struct {
 	}
 	return tests
 }
+
+func TestListError() []struct {
+	Name     string
+	Param    map[string]string
+	QParam   map[string]string
+	MockOper func(txn *storage.ErrMockCRUDOper)
+	Status   int
+} {
+	tests := []struct {
+		Name     string
+		Param    map[string]string
+		QParam   map[string]string
+		MockOper func(txn *storage.ErrMockCRUDOper)
+		Status   int
+	}{
+		{
+			Name:   "Param not found. Bad request",
+			Param:  map[string]string{"i": ""},
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:     "List error. Internal server error",
+			Param:    map[string]string{"id": xid.NilID().String()},
+			QParam:   map[string]string{"sname": "sname"},
+			MockOper: func(s *storage.ErrMockCRUDOper) { s.Store().(*storage.ErrMockCRUD).Activate("StartKey") },
+			Status:   nethttp.StatusInternalServerError,
+		},
+	}
+	return tests
+}

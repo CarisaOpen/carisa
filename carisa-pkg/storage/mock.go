@@ -8,12 +8,13 @@ import (
 // ErrMockCRUD allows test the errors.
 // For testing other functions use storage.Integration
 type ErrMockCRUD struct {
-	put    bool
-	remove bool
-	get    bool
-	exists bool
-	list   bool
-	close  bool
+	put      bool
+	remove   bool
+	get      bool
+	exists   bool
+	startKey bool
+	rang     bool
+	close    bool
 }
 
 func (e *ErrMockCRUD) Close() error {
@@ -48,9 +49,17 @@ func (e *ErrMockCRUD) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
-func (e *ErrMockCRUD) List(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
-	if e.list {
-		return nil, errors.New("list")
+func (e *ErrMockCRUD) StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
+	if e.startKey {
+		return nil, errors.New("startKey")
+	}
+	list := make([]Entity, top)
+	return list, nil
+}
+
+func (e *ErrMockCRUD) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
+	if e.startKey {
+		return nil, errors.New("range")
 	}
 	list := make([]Entity, top)
 	return list, nil
@@ -70,8 +79,10 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 			e.get = true
 		case "Exists":
 			e.exists = true
-		case "List":
-			e.list = true
+		case "StartKey":
+			e.startKey = true
+		case "Range":
+			e.rang = true
 		case "Close":
 			e.close = true
 		default:
@@ -86,7 +97,8 @@ func (e *ErrMockCRUD) Clear() {
 	e.remove = false
 	e.get = false
 	e.exists = false
-	e.list = false
+	e.startKey = false
+	e.rang = false
 	e.close = false
 }
 

@@ -14,27 +14,19 @@
  *
  */
 
-package storage
+package entity
 
 import (
 	"testing"
 
+	"github.com/carisa/pkg/strings"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLink_ToString(t *testing.T) {
-	i := Link{
-		ID:   "key",
-		Name: "name",
-		Rel:  "1",
-	}
-	assert.Equal(t, "link: ID:key, Name:name", i.ToString())
-}
+func TestSoundLink(t *testing.T) {
+	id := xid.New()
+	likeName := "likeName"
 
-func TestLink_Key(t *testing.T) {
-	i := Link{
-		ID:  "key",
-		Rel: "1",
-	}
-	assert.Equal(t, i.ID, i.Key())
+	assert.Equal(t, strings.Concat(id.String(), likeName), SoundLink(id, likeName))
 }

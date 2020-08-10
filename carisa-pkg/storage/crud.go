@@ -45,7 +45,7 @@ type CrudOperation interface {
 	Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
 	// PutWithRel creates or updates the entity and the relation entity that joins the parent and child
-	// The relation is updated if the relation name has changed
+	// The relation is updated if the relation Name has changed
 	// If the entity was updated returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
 	PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
@@ -105,7 +105,7 @@ func (c *crudOperation) create(loc string, storeTimeout StoreWithTimeout, entity
 	if isRel {
 		rel, _ := entity.(EntityRelation)
 		link := rel.Link()
-		create, err := c.store.Put(&link)
+		create, err := c.store.Put(link)
 		if err != nil {
 			return false, c.log.ErrWrap(err, "creating relation", loc)
 		}
@@ -152,7 +152,7 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	}
 
 	ctx, cancel := storeTimeout()
-	var link Link
+	var link Entity
 	var rel EntityRelation
 	if isRel {
 		rel, _ = entity.(EntityRelation)
@@ -172,7 +172,7 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	txn.DoNotFound(put)
 	// If the relation is passed by param is inserted in the same transaction
 	if isRel {
-		create, err := c.store.Put(&link)
+		create, err := c.store.Put(link)
 		if err != nil {
 			return false, c.log.ErrWrap(err, "creating relation", loc)
 		}
@@ -194,7 +194,7 @@ func (c *crudOperation) updateRelation(
 	rel EntityRelation,
 	entity Entity,
 	txn Txn,
-	link Link) error {
+	link Entity) error {
 	oldEntity := rel.Empty()
 	found, err := c.store.Get(ctx, entity.Key(), oldEntity)
 	if err != nil {
@@ -204,9 +204,9 @@ func (c *crudOperation) updateRelation(
 	if found {
 		name := rel.RelName()
 		if len(name) != 0 && name != oldEntity.RelName() {
-			// it removes old relation and creating new relation when change name. Name is part of key
+			// it removes old relation and creating new relation when change Name. Name is part of key
 			txn.DoFound(c.store.Remove(oldEntity.RelKey()))
-			updRel, err := c.store.Put(&link)
+			updRel, err := c.store.Put(link)
 			if err != nil {
 				return c.log.ErrWrap(err, "updating relation", loc)
 			}

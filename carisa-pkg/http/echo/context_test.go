@@ -36,12 +36,21 @@ func TestContext_Param(t *testing.T) {
 	params := map[string]string{
 		"param1": "value1",
 	}
-	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", params)
+	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", params, nil)
 
-	value, _ := ctx.Param("param1")
-	assert.Equal(t, "value1", value)
-	_, err := ctx.Param("param2")
-	assert.Error(t, err)
+	assert.Equal(t, "value1", ctx.Param("param1"))
+}
+
+func TestContext_QueryParam(t *testing.T) {
+	h := HTTPMock()
+	defer h.Close(nil)
+
+	params := map[string]string{
+		"param1": "value1",
+	}
+	_, ctx := h.NewHTTP(http.MethodGet, "/api", "", nil, params)
+
+	assert.Equal(t, "value1", ctx.QueryParam("param1"))
 }
 
 func TestContext_Bind(t *testing.T) {
@@ -54,7 +63,7 @@ func TestContext_Bind(t *testing.T) {
 	h := HTTPMock()
 	defer h.Close(nil)
 
-	_, ctx := h.NewHTTP(http.MethodPost, "/api", `{"p":1}`, nil)
+	_, ctx := h.NewHTTP(http.MethodPost, "/api", `{"p":1}`, nil, nil)
 
 	if assert.NoError(t, ctx.Bind(&s)) {
 		assert.Equal(t, s.P, 1)
@@ -72,7 +81,7 @@ func TestContext_JSON(t *testing.T) {
 	defer h.Close(nil)
 	body := `{"p":1}`
 
-	rec, ctx := h.NewHTTP(http.MethodPost, "/api", body, nil)
+	rec, ctx := h.NewHTTP(http.MethodPost, "/api", body, nil, nil)
 
 	if assert.NoError(t, ctx.JSON(200, s)) {
 		assert.Contains(t, rec.Body.String(), body)

@@ -14,20 +14,27 @@
  *
  */
 
-package storage
+package relation
 
-import "github.com/carisa/pkg/strings"
+import (
+	"testing"
 
-type Link struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Rel  string `json:"rel"`
+	"github.com/stretchr/testify/assert"
+)
+
+func TestInstSpace_ToString(t *testing.T) {
+	i := InstSpace{
+		ID:      "key",
+		Name:    "name",
+		SpaceID: "1",
+	}
+	assert.Equal(t, "spaceLink: ID:key, Name:name", i.ToString())
 }
 
-func (l *Link) ToString() string {
-	return strings.Concat("link: ID:", l.Key(), ", Name:", l.Name)
-}
-
-func (l *Link) Key() string {
-	return l.ID
+func TestInstSpace_Key(t *testing.T) {
+	i := InstSpace{
+		ID:      "key",
+		SpaceID: "1",
+	}
+	assert.Equal(t, i.ID, i.Key())
 }
