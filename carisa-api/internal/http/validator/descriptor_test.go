@@ -31,10 +31,12 @@ import (
 
 func TestValid_ValidDescriptor(t *testing.T) {
 	tests := []struct {
+		name    string
 		desc    entity.Descriptor
 		message string
 	}{
 		{
+			name: "Name empty",
 			desc: entity.Descriptor{
 				Name: "",
 				Desc: "desc",
@@ -42,6 +44,7 @@ func TestValid_ValidDescriptor(t *testing.T) {
 			message: "code=400, message=[the property: 'name' can not be empty]",
 		},
 		{
+			name: "Description empty",
 			desc: entity.Descriptor{
 				Name: "name",
 				Desc: "",
@@ -49,6 +52,7 @@ func TestValid_ValidDescriptor(t *testing.T) {
 			message: "code=400, message=[the property: 'description' can not be empty]",
 		},
 		{
+			name: "Name > 50",
 			desc: entity.Descriptor{
 				Name: strings.Repeat("n", 51),
 				Desc: "desc",
@@ -56,6 +60,7 @@ func TestValid_ValidDescriptor(t *testing.T) {
 			message: "code=400, message=[the property: 'name' can not be more than 50]",
 		},
 		{
+			name: "Description > 500",
 			desc: entity.Descriptor{
 				Name: "name",
 				Desc: strings.Repeat("d", 501),
@@ -63,6 +68,7 @@ func TestValid_ValidDescriptor(t *testing.T) {
 			message: "code=400, message=[the property: 'description' can not be more than 500]",
 		},
 		{
+			name: "Descriptor validator. Ok",
 			desc: entity.Descriptor{
 				Name: "name",
 				Desc: "desc",
@@ -78,20 +84,23 @@ func TestValid_ValidDescriptor(t *testing.T) {
 		if len(tt.message) == 0 {
 			assert.Nil(t, r)
 		} else {
-			assert.Equal(t, tt.message, r.Error())
+			assert.Equal(t, tt.message, r.Error(), tt.name)
 		}
 	}
 }
 
 func TestValid_ValidID(t *testing.T) {
 	tests := []struct {
+		name    string
 		id      xid.ID
 		message string
 	}{
 		{
+			name:    "ID empty",
 			message: "code=400, message=[the property: 'ID' can not be empty]",
 		},
 		{
+			name:    "ID validation. Ok",
 			id:      xid.New(),
 			message: "",
 		},
@@ -102,9 +111,9 @@ func TestValid_ValidID(t *testing.T) {
 	for _, tt := range tests {
 		r := ID(ctx, tt.id)
 		if len(tt.message) == 0 {
-			assert.Nil(t, r)
+			assert.Nil(t, r, tt.name)
 		} else {
-			assert.Equal(t, tt.message, r.Error())
+			assert.Equal(t, tt.message, r.Error(), tt.name)
 		}
 	}
 }

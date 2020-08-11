@@ -35,10 +35,12 @@ func TestServer_Address(t *testing.T) {
 
 func TestRuntime_LoadConfig(t *testing.T) {
 	tests := []struct {
+		name string
 		envC string
 		cnf  Config
 	}{
 		{
+			name: "Default configuration",
 			envC: "",
 			cnf: Config{
 				Server: Server{
@@ -49,6 +51,7 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "All configuration",
 			envC: `{
   "log": {
     "development": true, 
@@ -88,6 +91,7 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "Partial configuration",
 			envC: `{
   "etcd": {
     "requestTimeout": 4, 
@@ -109,12 +113,12 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			},
 		},
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		if len(tt.envC) != 0 {
 			_ = os.Setenv(envConfig, tt.envC)
 		}
 		cnf := LoadConfig()
-		assert.Equalf(t, tt.cnf, cnf, "Configuration %v", i+1)
+		assert.Equalf(t, tt.cnf, cnf, tt.name)
 	}
 }
 

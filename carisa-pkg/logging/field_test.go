@@ -45,19 +45,22 @@ func TestField_Bool(t *testing.T) {
 
 func TestField_Compose(t *testing.T) {
 	tests := []struct {
-		msg string
-		fs  []Field
-		r   string
+		name string
+		msg  string
+		fs   []Field
+		r    string
 	}{
 		{
-			msg: "message",
+			name: "String",
+			msg:  "message",
 			fs: []Field{
 				String("key", "value"),
 			},
 			r: "message. key: value",
 		},
 		{
-			msg: "message",
+			name: "String and Bool",
+			msg:  "message",
 			fs: []Field{
 				String("key", "value"),
 				Bool("key1", false),
@@ -67,6 +70,6 @@ func TestField_Compose(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := Compose(tt.msg, tt.fs...)
-		assert.Equal(t, tt.r, r)
+		assert.Equal(t, tt.r, r, tt.name)
 	}
 }

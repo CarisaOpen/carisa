@@ -91,14 +91,17 @@ func TestInstanceHandler_Put(t *testing.T) {
 	params := map[string]string{"id": xid.NilID().String()}
 
 	tests := []struct {
+		name   string
 		body   string
 		status int
 	}{
 		{
+			name:   "Creating instance.",
 			body:   `"name":"name","description":"desc"`,
 			status: nethttp.StatusCreated,
 		},
 		{
+			name:   "Updating instance.",
 			body:   `"name":"name1","description":"desc"`,
 			status: nethttp.StatusOK,
 		},
@@ -115,8 +118,8 @@ func TestInstanceHandler_Put(t *testing.T) {
 		err := handlers.InstHandler.Put(ctx)
 
 		if assert.NoError(t, err) {
-			assert.Equal(t, tt.status, rec.Code, "Http status")
-			assert.Contains(t, rec.Body.String(), tt.body, "Put")
+			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
+			assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Put"))
 		}
 	}
 }
@@ -156,14 +159,17 @@ func TestInstanceHandler_Get(t *testing.T) {
 		assert.True(t, created, "Instance created")
 
 		tests := []struct {
+			name   string
 			params map[string]string
 			status int
 		}{
 			{
+				name:   "Find instance. Instance found.",
 				params: map[string]string{"id": inst.ID.String()},
 				status: nethttp.StatusOK,
 			},
 			{
+				name:   "Find instance. Instance not found.",
 				params: map[string]string{"id": xid.NilID().String()},
 				status: nethttp.StatusNotFound,
 			},
@@ -175,9 +181,13 @@ func TestInstanceHandler_Get(t *testing.T) {
 
 			if assert.NoError(t, err) {
 				if tt.status == nethttp.StatusOK {
-					assert.Contains(t, rec.Body.String(), `"name":"name","description":"desc"`, "Get instance")
+					assert.Contains(
+						t,
+						rec.Body.String(),
+						`"name":"name","description":"desc"`,
+						strings.Concat(tt.name, "Get instance"))
 				}
-				assert.Equal(t, tt.status, rec.Code, "Http status")
+				assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
 			}
 		}
 	}

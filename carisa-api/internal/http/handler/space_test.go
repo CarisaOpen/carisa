@@ -55,14 +55,17 @@ func TestSpaceHandler_Create(t *testing.T) {
 	}
 
 	tests := []struct {
+		name   string
 		body   string
 		status int
 	}{
 		{
+			name:   "Creating space.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, inst.ID.String()),
 			status: nethttp.StatusCreated,
 		},
 		{
+			name:   "Creating space. Instance not found.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.NilID()),
 			status: nethttp.StatusNotFound,
 		},
@@ -76,13 +79,13 @@ func TestSpaceHandler_Create(t *testing.T) {
 			continue
 		}
 		if assert.NoError(t, err) {
-			assert.Equal(t, tt.status, rec.Code, "Http status")
+			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
 			if rec.Code == nethttp.StatusCreated {
-				assert.Contains(t, rec.Body.String(), tt.body, "Created")
+				assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Created"))
 				var spc space.Space
 				errJ := json.NewDecoder(rec.Body).Decode(&spc)
 				if assert.NoError(t, errJ) {
-					assert.NotEmpty(t, spc.ID.String(), "ID no empty")
+					assert.NotEmpty(t, spc.ID.String(), strings.Concat(tt.name, "ID no empty"))
 				}
 			}
 		}
@@ -123,18 +126,22 @@ func TestSpaceHandler_Put(t *testing.T) {
 	params := map[string]string{"id": xid.NilID().String()}
 
 	tests := []struct {
+		name   string
 		body   string
 		status int
 	}{
 		{
+			name:   "Creating space.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, inst.ID.String()),
 			status: nethttp.StatusCreated,
 		},
 		{
+			name:   "Updating space.",
 			body:   fmt.Sprintf(`"name":"name1","description":"desc","instanceId":"%s"`, inst.ID.String()),
 			status: nethttp.StatusOK,
 		},
 		{
+			name:   "Creating space. Instance not found",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.New().String()),
 			status: nethttp.StatusNotFound,
 		},
@@ -202,14 +209,17 @@ func TestSpaceHandler_Get(t *testing.T) {
 		assert.True(t, created, "Space created")
 
 		tests := []struct {
+			name   string
 			params map[string]string
 			status int
 		}{
 			{
+				name:   "Finding instance. Ok",
 				params: map[string]string{"id": space.ID.String()},
 				status: nethttp.StatusOK,
 			},
 			{
+				name:   "Finding instance. Not found",
 				params: map[string]string{"id": xid.NilID().String()},
 				status: nethttp.StatusNotFound,
 			},

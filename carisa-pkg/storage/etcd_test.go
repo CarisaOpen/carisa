@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/carisa/pkg/strings"
+
 	"github.com/carisa/pkg/encoding"
 
 	"go.etcd.io/etcd/clientv3"
@@ -44,10 +46,12 @@ func (e *EntityTest) Key() string {
 
 func TestEtcd_Config(t *testing.T) {
 	tests := []struct {
-		s EtcdConfig
-		t clientv3.Config
+		name string
+		s    EtcdConfig
+		t    clientv3.Config
 	}{
 		{
+			name: "Configuring default(nil) etcd endpoints.",
 			s: EtcdConfig{
 				DialTimeout:          0,
 				DialKeepAliveTime:    0,
@@ -62,6 +66,7 @@ func TestEtcd_Config(t *testing.T) {
 			},
 		},
 		{
+			name: "Configuring default([]) etcd endpoints.",
 			s: EtcdConfig{
 				DialTimeout:          0,
 				DialKeepAliveTime:    0,
@@ -76,6 +81,7 @@ func TestEtcd_Config(t *testing.T) {
 			},
 		},
 		{
+			name: "Configuring etcd",
 			s: EtcdConfig{
 				DialTimeout:          1,
 				DialKeepAliveTime:    2,
@@ -92,10 +98,10 @@ func TestEtcd_Config(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := config(tt.s)
-		assert.Equal(t, tt.t.DialTimeout, r.DialTimeout, "DialTimeout")
-		assert.Equal(t, tt.t.DialKeepAliveTime, r.DialKeepAliveTime, "DialKeepAliveTime")
-		assert.Equal(t, tt.t.DialKeepAliveTimeout, r.DialKeepAliveTimeout, "DialKeepAliveTimeout")
-		assert.Equal(t, tt.t.Endpoints, r.Endpoints, "Endpoints")
+		assert.Equal(t, tt.t.DialTimeout, r.DialTimeout, strings.Concat(tt.name, "DialTimeout"))
+		assert.Equal(t, tt.t.DialKeepAliveTime, r.DialKeepAliveTime, strings.Concat(tt.name, "DialKeepAliveTime"))
+		assert.Equal(t, tt.t.DialKeepAliveTimeout, r.DialKeepAliveTimeout, strings.Concat(tt.name, "DialKeepAliveTimeout"))
+		assert.Equal(t, tt.t.Endpoints, r.Endpoints, strings.Concat(tt.name, "Endpoints"))
 	}
 }
 
@@ -111,9 +117,11 @@ func TestEtcd_Create(t *testing.T) {
 	defer cluster.Terminate(t)
 
 	tests := []struct {
-		e []*EntityTest
+		name string
+		e    []*EntityTest
 	}{
 		{
+			name: "Creating.",
 			e: []*EntityTest{
 				{
 					Prop1: "key",
@@ -122,6 +130,7 @@ func TestEtcd_Create(t *testing.T) {
 			},
 		},
 		{
+			name: "Creating many keys.",
 			e: []*EntityTest{
 				{
 					Prop1: "key1",
@@ -145,19 +154,19 @@ func TestEtcd_Create(t *testing.T) {
 
 		for _, e := range tt.e {
 			create, err := store.Put(e)
-			if assert.NoErrorf(t, err, "Put failed: %v. Entity: %s", err, e.Prop1) {
+			if assert.NoErrorf(t, err, "%s Put failed: %v. Entity: %s", tt.name, err, e.Prop1) {
 				txn.DoNotFound(create)
 			}
 		}
 
 		ok, errC := txn.Commit(ctx)
-		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
-			assert.True(t, ok, "Entity found")
+		if assert.NoErrorf(t, errC, "%s Commit failed: %v", tt.name, errC) {
+			assert.True(t, ok, strings.Concat(tt.name, "Entity found"))
 			for _, e := range tt.e {
 				var er EntityTest
 				_, errG := store.Get(ctx, e.Prop1, &er)
-				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1) {
-					assert.Equalf(t, e, &er, e.Prop1, "Entity '%s' not created", e.Prop1)
+				if assert.NoErrorf(t, errC, "%s Get failed: %v. Entity: $s", tt.name, errG, e.Prop1) {
+					assert.Equalf(t, e, &er, e.Prop1, "%s Entity '%s' not created", tt.name, e.Prop1)
 				}
 			}
 		}
@@ -170,9 +179,11 @@ func TestEtcd_Update(t *testing.T) {
 	client := cluster.RandClient()
 
 	tests := []struct {
-		e []*EntityTest
+		name string
+		e    []*EntityTest
 	}{
 		{
+			name: "Updating.",
 			e: []*EntityTest{
 				{
 					Prop1: "key",
@@ -181,6 +192,7 @@ func TestEtcd_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "Updating many keys.",
 			e: []*EntityTest{
 				{
 					Prop1: "key1",
@@ -204,22 +216,22 @@ func TestEtcd_Update(t *testing.T) {
 
 		for _, e := range tt.e {
 			_, errp := client.KV.Put(ctx, e.Prop1, "1")
-			if assert.NoErrorf(t, errp, "Put KV failed: %v. Entity: %s", errp, e.Prop1) {
+			if assert.NoErrorf(t, errp, "%s Put KV failed: %v. Entity: %s", tt.name, errp, e.Prop1) {
 				update, err := store.Put(e)
-				if assert.NoErrorf(t, err, "Put failed: %v. Entity: %s", err, e.Prop1) {
+				if assert.NoErrorf(t, err, "%s Put failed: %v. Entity: %s", tt.name, err, e.Prop1) {
 					txn.DoFound(update)
 				}
 			}
 		}
 
 		ok, errC := txn.Commit(ctx)
-		if assert.NoErrorf(t, errC, "Commit failed: %v", errC) {
-			assert.True(t, ok, "Entity not found")
+		if assert.NoErrorf(t, errC, "%s Commit failed: %v", tt.name, errC) {
+			assert.True(t, ok, strings.Concat(tt.name, "Entity not found"))
 			for _, e := range tt.e {
 				var er EntityTest
 				_, errG := store.Get(ctx, e.Prop1, &er)
-				if assert.NoErrorf(t, errC, "Get failed: %v. Entity: $s", errG, e.Prop1) {
-					assert.Equalf(t, e, &er, e.Prop1, "Entity '%s' not created", e.Prop1)
+				if assert.NoErrorf(t, errC, "%s Get failed: %v. Entity: $s", tt.name, errG, e.Prop1) {
+					assert.Equalf(t, e, &er, e.Prop1, "%s Entity '%s' not created", tt.name, e.Prop1)
 				}
 			}
 		}
@@ -231,10 +243,12 @@ func TestEtcd_Put(t *testing.T) {
 	defer cluster.Terminate(t)
 
 	tests := []struct {
+		name  string
 		e     *EntityTest
 		found bool
 	}{
 		{
+			name: "Creating.",
 			e: &EntityTest{
 				Prop1: "key",
 				Prop2: 1,
@@ -242,6 +256,7 @@ func TestEtcd_Put(t *testing.T) {
 			found: false,
 		},
 		{
+			name: "Updating.",
 			e: &EntityTest{
 				Prop1: "key",
 				Prop2: 2,
@@ -254,7 +269,7 @@ func TestEtcd_Put(t *testing.T) {
 	txn.Find(tests[0].e.Prop1)
 
 	putnf, err := store.Put(tests[0].e)
-	if assert.NoErrorf(t, err, "Put to create failed: %v. Entity: %s", err, tests[0].e.Prop1) {
+	if assert.NoErrorf(t, err, "%Put to create failed: %v. Entity: %s", err, tests[0].e.Prop1) {
 		putf, err := store.Put(tests[1].e)
 		if assert.NoErrorf(t, err, "Put to Update failed: %v. Entity: %s", err, tests[1].e.Prop1) {
 			txn.DoNotFound(putnf) // Create
@@ -262,12 +277,12 @@ func TestEtcd_Put(t *testing.T) {
 
 			for _, tt := range tests {
 				found, err := txn.Commit(ctx)
-				if assert.NoErrorf(t, err, "Commit failed: %v", err) {
-					assert.Equal(t, found, tt.found, "Commit result")
+				if assert.NoErrorf(t, err, "%s Commit failed: %v", tt.name, err) {
+					assert.Equal(t, found, tt.found, strings.Concat(tt.name, "Commit result"))
 					var er EntityTest
 					_, err := store.Get(ctx, tt.e.Prop1, &er)
-					if assert.NoErrorf(t, err, "Get failed: %v. Entity: $s", err, tt.e.Prop1) {
-						assert.Equalf(t, tt.e, &er, tt.e.Prop1, "Entity '%s' not created", tt.e.Prop1)
+					if assert.NoErrorf(t, err, "%s Get failed: %v. Entity: $s", tt.name, err, tt.e.Prop1) {
+						assert.Equalf(t, tt.e, &er, tt.e.Prop1, "%s Entity '%s' not created", tt.name, tt.e.Prop1)
 					}
 				}
 			}
@@ -286,14 +301,17 @@ func TestEtcd_Get(t *testing.T) {
 	}
 
 	result := []struct {
+		name  string
 		key   string
 		found bool
 	}{
 		{
+			name:  "Getting. Found.",
 			key:   e.Prop1,
 			found: true,
 		},
 		{
+			name:  "Getting. Not found.",
 			key:   "key2",
 			found: false,
 		},
@@ -306,10 +324,10 @@ func TestEtcd_Get(t *testing.T) {
 			for _, tt := range result {
 				var entityg EntityTest
 				found, err := store.Get(ctx, tt.key, &entityg)
-				if assert.NoErrorf(t, err, "Get entity") {
-					assert.Equal(t, tt.found, found, "Entity found")
+				if assert.NoErrorf(t, err, strings.Concat(tt.name, "Get entity")) {
+					assert.Equal(t, tt.found, found, strings.Concat(tt.name, "Entity found"))
 					if found {
-						assert.Equal(t, e, &entityg, "Get result")
+						assert.Equal(t, e, &entityg, strings.Concat(tt.name, "Get result"))
 					}
 				}
 			}
@@ -323,12 +341,15 @@ func TestEtcd_Remove(t *testing.T) {
 	client := cluster.RandClient()
 
 	result := []struct {
+		name    string
 		removed bool
 	}{
 		{
+			name:    "Removing. Ok.",
 			removed: true,
 		},
 		{
+			name:    "Removing. Not found.",
 			removed: false,
 		},
 	}
@@ -343,10 +364,10 @@ func TestEtcd_Remove(t *testing.T) {
 		for _, tt := range result {
 			txn.DoFound(store.Remove(key))
 			ok, err := txn.Commit(ctx)
-			if assert.NoErrorf(t, err, "Remove entity") {
+			if assert.NoErrorf(t, err, strings.Concat(tt.name, "Remove entity")) {
 				assert.Equal(t, tt.removed, ok)
 				exists, err := store.Exists(ctx, key)
-				if assert.NoErrorf(t, err, "Entity exists") {
+				if assert.NoErrorf(t, err, strings.Concat(tt.name, "Entity exists")) {
 					assert.False(t, exists)
 				}
 			}
@@ -360,14 +381,17 @@ func TestEtcd_Exists(t *testing.T) {
 	client := cluster.RandClient()
 
 	result := []struct {
+		name  string
 		key   string
 		found bool
 	}{
 		{
+			name:  "Found.",
 			key:   "key",
 			found: true,
 		},
 		{
+			name:  "Not found.",
 			key:   "key1",
 			found: false,
 		},
@@ -377,8 +401,8 @@ func TestEtcd_Exists(t *testing.T) {
 	if assert.NoErrorf(t, err, "Put entity") {
 		for _, tt := range result {
 			found, err := store.Exists(ctx, tt.key)
-			if assert.NoErrorf(t, err, "Exists entity") {
-				assert.Equal(t, tt.found, found, "Entity found")
+			if assert.NoErrorf(t, err, strings.Concat(tt.name, "Exists entity")) {
+				assert.Equal(t, tt.found, found, strings.Concat(tt.name, "Entity found"))
 			}
 		}
 	}
@@ -413,23 +437,27 @@ func TestEtcd_StartKey(t *testing.T) {
 	}
 
 	tests := []struct {
-		key string
-		top int
-		res []EntityTest
+		name string
+		key  string
+		top  int
+		res  []EntityTest
 	}{
 		{
-			key: "",
-			top: 0,
-			res: []EntityTest{},
+			name: "Top 0.",
+			key:  "",
+			top:  0,
+			res:  []EntityTest{},
 		},
 		{
-			key: "y1",
-			top: 5,
-			res: []EntityTest{},
+			name: "Not found.",
+			key:  "y1",
+			top:  5,
+			res:  []EntityTest{},
 		},
 		{
-			key: "key1",
-			top: 10,
+			name: "Found. < 10. Top 10.",
+			key:  "key1",
+			top:  10,
 			res: []EntityTest{
 				{
 					Prop1: "key1",
@@ -442,8 +470,9 @@ func TestEtcd_StartKey(t *testing.T) {
 			},
 		},
 		{
-			key: "key",
-			top: 1,
+			name: "Found. > 10. Top 1.",
+			key:  "key",
+			top:  1,
 			res: []EntityTest{
 				{
 					Prop1: "key0",
@@ -452,8 +481,9 @@ func TestEtcd_StartKey(t *testing.T) {
 			},
 		},
 		{
-			key: "ky1",
-			top: 2,
+			name: "Other key.",
+			key:  "ky1",
+			top:  2,
 			res: []EntityTest{
 				{
 					Prop1: "ky1",
@@ -466,9 +496,9 @@ func TestEtcd_StartKey(t *testing.T) {
 	for _, tt := range tests {
 		res, err := store.StartKey(ctx, tt.key, tt.top, func() Entity { return &EntityTest{} })
 		if assert.NoErrorf(t, err, "StartKey") {
-			assert.Equal(t, len(tt.res), len(res), "Count")
+			assert.Equal(t, len(tt.res), len(res), strings.Concat(tt.name, "Count"))
 			for i, r := range res {
-				assert.Equal(t, &tt.res[i], r, "StartKey result")
+				assert.Equal(t, &tt.res[i], r, strings.Concat(tt.name, "StartKey result"))
 			}
 		}
 	}
@@ -503,18 +533,21 @@ func TestEtcd_Range(t *testing.T) {
 	}
 
 	tests := []struct {
+		name string
 		skey string
 		ekey string
 		top  int
 		res  []EntityTest
 	}{
 		{
+			name: "Not found.",
 			skey: "y1",
 			ekey: "y",
 			top:  5,
 			res:  []EntityTest{},
 		},
 		{
+			name: "Found. < 10. Top 10.",
 			skey: "key1",
 			ekey: "key",
 			top:  10,
@@ -530,6 +563,7 @@ func TestEtcd_Range(t *testing.T) {
 			},
 		},
 		{
+			name: "Found. < 10. Top 3.",
 			skey: "key",
 			ekey: "key",
 			top:  3,
@@ -549,6 +583,7 @@ func TestEtcd_Range(t *testing.T) {
 			},
 		},
 		{
+			name: "Other key.",
 			skey: "key1",
 			ekey: "key",
 			top:  1,
@@ -564,9 +599,9 @@ func TestEtcd_Range(t *testing.T) {
 	for _, tt := range tests {
 		res, err := store.Range(ctx, tt.skey, tt.ekey, tt.top, func() Entity { return &EntityTest{} })
 		if assert.NoErrorf(t, err, "Range") {
-			assert.Equal(t, len(tt.res), len(res), "Count")
+			assert.Equal(t, len(tt.res), len(res), strings.Concat(tt.name, "Count"))
 			for i, r := range res {
-				assert.Equal(t, &tt.res[i], r, "Range result")
+				assert.Equal(t, &tt.res[i], r, strings.Concat(tt.name, "Range result"))
 			}
 		}
 	}

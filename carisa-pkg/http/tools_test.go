@@ -32,6 +32,7 @@ import (
 
 func TestHttpTools_CreateStatus(t *testing.T) {
 	tests := []struct {
+		name   string
 		found  bool
 		status int
 	}{

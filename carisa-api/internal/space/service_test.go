@@ -19,6 +19,8 @@ package space
 import (
 	"testing"
 
+	"github.com/carisa/pkg/strings"
+
 	"github.com/carisa/api/internal/entity"
 	"github.com/rs/xid"
 
@@ -57,10 +59,12 @@ func TestInstanceService_Put(t *testing.T) {
 	}
 
 	tests := []struct {
+		name    string
 		updated bool
 		space   *Space
 	}{
 		{
+			name:    "Creating space",
 			updated: false,
 			space: &Space{
 				Descriptor: entity.Descriptor{
@@ -72,6 +76,7 @@ func TestInstanceService_Put(t *testing.T) {
 			},
 		},
 		{
+			name:    "Updating space",
 			updated: true,
 			space: &Space{
 				Descriptor: entity.Descriptor{
@@ -87,8 +92,8 @@ func TestInstanceService_Put(t *testing.T) {
 	for _, tt := range tests {
 		updated, found, err := srv.Put(tt.space)
 		if assert.NoError(t, err) {
-			assert.Equal(t, updated, tt.updated, "Space updated")
-			assert.True(t, found, "Instance found")
+			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Space updated"))
+			assert.True(t, found, strings.Concat(tt.name, "Instance found"))
 			checkSpace(t, srv, *tt.space)
 		}
 	}

@@ -83,12 +83,15 @@ func TestInstanceService_Get(t *testing.T) {
 
 func TestInstanceService_ListSpaces(t *testing.T) {
 	tests := []struct {
+		name   string
 		ranges bool
 	}{
 		{
+			name:   "Find by start name",
 			ranges: true,
 		},
 		{
+			name:   "Find by range",
 			ranges: false,
 		},
 	}
@@ -104,7 +107,7 @@ func TestInstanceService_ListSpaces(t *testing.T) {
 		for _, tt := range tests {
 			list, err := s.ListSpaces(id, "name", tt.ranges, 1)
 			if assert.NoError(t, err) {
-				assert.Equalf(t, link, list[0], "Ranges: %v", tt.ranges)
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.name)
 			}
 		}
 	}
