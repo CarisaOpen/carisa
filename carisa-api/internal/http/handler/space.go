@@ -25,15 +25,13 @@ import (
 
 	"github.com/carisa/pkg/http"
 
-	"github.com/carisa/api/internal/http/validator"
-
 	"github.com/carisa/api/internal/runtime"
 	httpc "github.com/carisa/pkg/http"
 )
 
 const locSpace = "http.space"
 
-// Space hands the http request of the instance
+// Space hands the http request of the space
 type Space struct {
 	srv space.Service
 	cnt *runtime.Container
@@ -50,20 +48,14 @@ func NewSpaceHandle(srv space.Service, cnt *runtime.Container) Space {
 // Create creates the space domain
 func (s *Space) Create(c httpc.Context) error {
 	spc := space.Space{}
-	if err := c.Bind(&spc); err != nil {
-		return s.ErrorRecover(c, err)
-	}
-
-	if httpErr := validator.Descriptor(c, spc.Descriptor); httpErr != nil {
-		return httpErr
+	if err := bind(c, locSpace, s.cnt.Log, &spc, spc.Descriptor); err != nil {
+		return err
 	}
 
 	created, found, err := s.srv.Create(&spc)
-	if err != nil {
-		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create the space")
-	}
-	if !found {
-		return c.HTTPError(nethttp.StatusNotFound, "instance not found")
+	if err := errService(
+		c, err, "it was impossible to create the space", "instance not found", found); err != nil {
+		return err
 	}
 
 	return c.JSON(http.CreateStatus(created), spc)
@@ -76,27 +68,22 @@ func (s *Space) Put(c httpc.Context) error {
 		return err
 	}
 
-	space := space.Space{}
-	if err := c.Bind(&space); err != nil {
-		return s.ErrorRecover(c, err)
+	spc := space.Space{}
+	if err := bind(c, locSpace, s.cnt.Log, &spc, spc.Descriptor); err != nil {
+		return err
 	}
 
-	if httpErr := validator.Descriptor(c, space.Descriptor); httpErr != nil {
-		return httpErr
+	spc.ID = id
+	updated, found, err := s.srv.Put(&spc)
+	if err := errService(
+		c, err, "it was impossible to create or update the space", "instance not found", found); err != nil {
+		return err
 	}
 
-	space.ID = id
-	updated, found, err := s.srv.Put(&space)
-	if err != nil {
-		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create or update the space")
-	}
-	if !found {
-		return c.HTTPError(nethttp.StatusNotFound, "instance not found")
-	}
-
-	return c.JSON(http.PutStatus(updated), space)
+	return c.JSON(http.PutStatus(updated), spc)
 }
 
+// Get gets the space by ID
 func (s *Space) Get(c httpc.Context) error {
 	var space space.Space
 
@@ -111,13 +98,4 @@ func (s *Space) Get(c httpc.Context) error {
 	}
 
 	return c.JSON(http.GetStatus(found), space)
-}
-
-func (s *Space) ErrorRecover(c httpc.Context, err error) error {
-	return c.HTTPErrorLog(
-		nethttp.StatusBadRequest,
-		"cannot recover the space",
-		err,
-		s.cnt.Log,
-		locSpace)
 }

@@ -27,7 +27,7 @@ type Instance struct {
 	entity.Descriptor
 }
 
-func NewInstance() Instance {
+func New() Instance {
 	return Instance{
 		Descriptor: entity.NewDescriptor(),
 	}

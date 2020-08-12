@@ -14,7 +14,7 @@
  *
  */
 
-package space
+package ente
 
 import (
 	"testing"
@@ -24,116 +24,116 @@ import (
 	"github.com/carisa/api/internal/entity"
 	"github.com/rs/xid"
 
-	instsamples "github.com/carisa/api/internal/instance/samples"
+	spcsamples "github.com/carisa/api/internal/space/samples"
 
 	"github.com/carisa/api/internal/mock"
 	"github.com/carisa/pkg/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-// Verify the crud integration. For all rest test look at http.handler.space_test
+// Verify the crud integration. For all rest test look at http.handler.ente_test
 
-func TestSpaceService_Create(t *testing.T) {
+func TestEnteService_Create(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
 
-	s, err := space(mng)
+	s, err := ente(mng)
 
 	if assert.NoError(t, err) {
 		ok, found, err := srv.Create(s)
 
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
-			assert.True(t, found, "Instance found")
-			checkSpace(t, srv, *s)
+			assert.True(t, found, "Space found")
+			checkEnte(t, srv, *s)
 		}
 	}
 }
 
-func TestSpaceService_Put(t *testing.T) {
+func TestEnteService_Put(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
-	inst, err := instsamples.CreateInstance(mng)
+	space, err := spcsamples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating instance")
+		assert.Error(t, err, "Creating ente")
 	}
 
 	tests := []struct {
 		name    string
 		updated bool
-		space   *Space
+		ente    *Ente
 	}{
 		{
-			name:    "Creating space",
+			name:    "Creating ente",
 			updated: false,
-			space: &Space{
+			ente: &Ente{
 				Descriptor: entity.Descriptor{
 					ID:   xid.NilID(),
 					Name: "name",
 					Desc: "desc",
 				},
-				InstID: inst.ID,
+				SpaceID: space.ID,
 			},
 		},
 		{
-			name:    "Updating space",
+			name:    "Updating ente",
 			updated: true,
-			space: &Space{
+			ente: &Ente{
 				Descriptor: entity.Descriptor{
 					ID:   xid.NilID(),
 					Name: "name",
 					Desc: "desc",
 				},
-				InstID: inst.ID,
+				SpaceID: space.ID,
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		updated, found, err := srv.Put(tt.space)
+		updated, found, err := srv.Put(tt.ente)
 		if assert.NoError(t, err) {
-			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Space updated"))
-			assert.True(t, found, strings.Concat(tt.name, "Instance found"))
-			checkSpace(t, srv, *tt.space)
+			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Ente updated"))
+			assert.True(t, found, strings.Concat(tt.name, "Space found"))
+			checkEnte(t, srv, *tt.ente)
 		}
 	}
 }
 
-func checkSpace(t *testing.T, srv Service, s Space) {
-	var sr Space
-	_, err := srv.Get(s.ID, &sr)
+func checkEnte(t *testing.T, srv Service, e Ente) {
+	var er Ente
+	_, err := srv.Get(e.ID, &er)
 	if assert.NoError(t, err) {
-		assert.Equal(t, s, sr, "Getting space")
+		assert.Equal(t, e, er, "Getting ente")
 	}
 }
 
-func TestSpaceService_Get(t *testing.T) {
+func TestEnteService_Get(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
 
-	s, err := space(mng)
+	s, err := ente(mng)
 
 	if assert.NoError(t, err) {
 		_, _, err := srv.Create(s)
 		if assert.NoError(t, err) {
-			var gets Space
-			ok, err := srv.Get(s.ID, &gets)
+			var get Ente
+			ok, err := srv.Get(s.ID, &get)
 			if assert.NoError(t, err) {
 				assert.True(t, ok, "Get ok")
-				assert.Equal(t, s, &gets, "Space returned")
+				assert.Equal(t, s, &get, "Ente returned")
 			}
 		}
 	}
 }
 
-func space(mng storage.Integration) (*Space, error) {
-	inst, err := instsamples.CreateInstance(mng)
+func ente(mng storage.Integration) (*Ente, error) {
+	space, err := spcsamples.CreateSpace(mng)
 	if err == nil {
-		space := New()
-		space.Name = "name"
-		space.Desc = "desc"
-		space.InstID = inst.ID
-		return &space, nil
+		ente := New()
+		ente.Name = "name"
+		ente.Desc = "desc"
+		ente.SpaceID = space.ID
+		return &ente, nil
 	}
 	return nil, err
 }

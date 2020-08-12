@@ -25,6 +25,7 @@ import (
 type Handlers struct {
 	InstHandler  Instance
 	SpaceHandler Space
+	EnteHandler  Ente
 }
 
 // Instance
@@ -55,4 +56,17 @@ func (h *Handlers) SpacePut(ctx echo.Context) error {
 
 func (h *Handlers) SpaceGet(ctx echo.Context) error {
 	return h.SpaceHandler.Get(echoc.NewContext(ctx))
+}
+
+// Ente
+func (h *Handlers) EnteCreate(ctx echo.Context) error {
+	return h.EnteHandler.Create(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) EntePut(ctx echo.Context) error {
+	return h.EnteHandler.Put(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) EnteGet(ctx echo.Context) error {
+	return h.EnteHandler.Get(echoc.NewContext(ctx))
 }

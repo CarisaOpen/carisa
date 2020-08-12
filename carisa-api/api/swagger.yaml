@@ -15,6 +15,8 @@ tags:
     description: "Instance represents a set of spaces independently of another instance in all system"
   - name: "space"
     description: "The space splits the instance in logic categories"
+  - name: "ente"
+    description: "The ente is the items of spaces to trace, count, measure, etc."
 schemes:
   - "https"
   - "http"
@@ -192,7 +194,7 @@ paths:
           required: true
         - in: "body"
           name: "body"
-          description: "Space object that needs to be added or updated to the platform"
+          description: "Space object that needs to be added or updated to the instance"
           required: true
           schema:
             $ref: "#/definitions/SpaceReq"
@@ -232,6 +234,94 @@ paths:
           description: "Invalid input"
         "404":
           description: "Space not found"
+        "500":
+          description: "Internal server error"
+  /entes:
+    post:
+      tags:
+        - "ente"
+      summary: "Add a new ente to the space"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Ente object that needs to be added to the space"
+          required: true
+          schema:
+            $ref: "#/definitions/EnteReq"
+      responses:
+        "201":
+          description: "Ente created"
+          schema:
+            $ref: "#/definitions/Ente"
+        "302":
+          description: "Ente found"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Space not found"
+        "500":
+          description: "Internal server error"
+  /entes/{id}:
+    put:
+      tags:
+        - "ente"
+      summary: "If the ente ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Ente object that needs to be added or updated to the space"
+          required: true
+          schema:
+            $ref: "#/definitions/EnteReq"
+      responses:
+        "200":
+          description: "Ente updated"
+          schema:
+            $ref: "#/definitions/Ente"
+        "201":
+          description: "Ente created"
+          schema:
+            $ref: "#/definitions/Ente"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "ente"
+      summary: "Find ente by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Ente found"
+          schema:
+            $ref: "#/definitions/Ente"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Ente not found"
         "500":
           description: "Internal server error"
 definitions:
@@ -302,3 +392,35 @@ definitions:
       spaceId:
         type: "string"
         description: "Space identifier"
+  Ente:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Ente identifier"
+      name:
+        type: "string"
+        description: "Ente name"
+      description:
+        type: "string"
+        description: "Ente description"
+      spaceId:
+        type: "string"
+        description: "Space identifier where the ente has been added"
+  EnteReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Ente name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Ente description"
+      spaceId:
+        type: "string"
+        description: "Space identifier where the ente is added"

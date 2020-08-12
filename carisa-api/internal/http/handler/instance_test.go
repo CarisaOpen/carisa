@@ -150,7 +150,7 @@ func TestInstanceHandler_Get(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	inst := instance.NewInstance()
+	inst := instance.New()
 	inst.Name = "name"
 	inst.Desc = "desc"
 

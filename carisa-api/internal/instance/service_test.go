@@ -114,7 +114,7 @@ func TestInstanceService_ListSpaces(t *testing.T) {
 }
 
 func instance() Instance {
-	inst := NewInstance()
+	inst := New()
 	inst.Name = "name"
 	inst.Desc = "desc"
 	return inst

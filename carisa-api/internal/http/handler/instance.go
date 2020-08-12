@@ -23,8 +23,6 @@ import (
 
 	"github.com/carisa/pkg/http"
 
-	"github.com/carisa/api/internal/http/validator"
-
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
 	httpc "github.com/carisa/pkg/http"
@@ -49,12 +47,8 @@ func NewInstanceHandle(srv instance.Service, cnt *runtime.Container) Instance {
 // Create creates the instance domain
 func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
-	if err := c.Bind(&inst); err != nil {
-		return i.ErrorRecover(c, err)
-	}
-
-	if httpErr := validator.Descriptor(c, inst.Descriptor); httpErr != nil {
-		return httpErr
+	if err := bind(c, locInstance, i.cnt.Log, &inst, inst.Descriptor); err != nil {
+		return err
 	}
 
 	created, err := i.srv.Create(&inst)
@@ -73,12 +67,8 @@ func (i *Instance) Put(c httpc.Context) error {
 	}
 
 	inst := instance.Instance{}
-	if err := c.Bind(&inst); err != nil {
-		return i.ErrorRecover(c, err)
-	}
-
-	if httpErr := validator.Descriptor(c, inst.Descriptor); httpErr != nil {
-		return httpErr
+	if err := bind(c, locInstance, i.cnt.Log, &inst, inst.Descriptor); err != nil {
+		return err
 	}
 
 	inst.ID = id
@@ -122,13 +112,4 @@ func (i *Instance) ListSpaces(c httpc.Context) error {
 	}
 
 	return c.JSON(nethttp.StatusOK, spaces)
-}
-
-func (i *Instance) ErrorRecover(c httpc.Context, err error) error {
-	return c.HTTPErrorLog(
-		nethttp.StatusBadRequest,
-		"cannot recover the instance",
-		err,
-		i.cnt.Log,
-		locInstance)
 }

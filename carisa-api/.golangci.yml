@@ -38,3 +38,5 @@ linters-settings:
     min-complexity: 20
   lll:
     line-length: 130
+  dupl:
+    threshold: 340

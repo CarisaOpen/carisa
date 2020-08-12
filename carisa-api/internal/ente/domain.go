@@ -14,7 +14,7 @@
  *
  */
 
-package space
+package ente
 
 import (
 	"github.com/carisa/api/internal/entity"
@@ -24,49 +24,49 @@ import (
 	"github.com/rs/xid"
 )
 
-// The space splits the instance in logic categories.
-// Each space can have several entes, dashboard, etc...
-type Space struct {
+// The thinks of spaces.
+// The ente are the items of spaces to trace, count, measure, etc.
+type Ente struct {
 	entity.Descriptor
-	InstID xid.ID `json:"instanceId"` // Instance container
+	SpaceID xid.ID `json:"spaceId"` // Space container
 }
 
-func New() Space {
-	return Space{
+func New() Ente {
+	return Ente{
 		Descriptor: entity.NewDescriptor(),
 	}
 }
 
-func (s *Space) ToString() string {
-	return strings.Concat("space: ID:", s.Key(), ", name:", s.Name)
+func (e *Ente) ToString() string {
+	return strings.Concat("ente: ID:", e.Key(), ", name:", e.Name)
 }
 
-func (s *Space) Key() string {
-	return s.ID.String()
+func (e *Ente) Key() string {
+	return e.ID.String()
 }
 
-func (s *Space) RelKey() string {
-	return strings.Concat(s.InstID.String(), s.Name, s.Key())
+func (e *Ente) RelKey() string {
+	return strings.Concat(e.SpaceID.String(), e.Name, e.Key())
 }
 
-func (s *Space) RelName() string {
-	return s.Name
+func (e *Ente) RelName() string {
+	return e.Name
 }
 
-// ParentKey gets the instance ID
-func (s *Space) ParentKey() string {
-	return s.InstID.String()
+// ParentKey gets the Space ID
+func (e *Ente) ParentKey() string {
+	return e.SpaceID.String()
 }
 
-// Link gets the link between instance and space
-func (s *Space) Link() storage.Entity {
-	return &relation.InstSpace{
-		ID:      s.RelKey(),
-		Name:    s.Name,
-		SpaceID: s.ID.String(),
+// Link gets the link between instance and ente
+func (e *Ente) Link() storage.Entity {
+	return &relation.SpaceEnte{
+		ID:     e.RelKey(),
+		Name:   e.Name,
+		EnteID: e.ID.String(),
 	}
 }
 
-func (s *Space) Empty() storage.EntityRelation {
-	return &Space{}
+func (e *Ente) Empty() storage.EntityRelation {
+	return &Ente{}
 }

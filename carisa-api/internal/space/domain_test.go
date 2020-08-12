@@ -29,12 +29,12 @@ import (
 )
 
 func TestSpace_ToString(t *testing.T) {
-	s := NewSpace()
+	s := New()
 	assert.Equal(t, strings.Concat("space: ID:", s.Key(), ", name:", s.Name), s.ToString())
 }
 
 func TestSpace_Key(t *testing.T) {
-	s := NewSpace()
+	s := New()
 	assert.Equal(t, s.ID.String(), s.Key())
 }
 
@@ -45,18 +45,18 @@ func TestSpace_RelKey(t *testing.T) {
 }
 
 func TestSpace_ParentKey(t *testing.T) {
-	s := NewSpace()
+	s := New()
 	s.InstID = xid.New()
 	assert.Equal(t, s.InstID.String(), s.ParentKey())
 }
 
 func TestSpace_Empty(t *testing.T) {
-	s := NewSpace()
+	s := New()
 	assert.Equal(t, &Space{}, s.Empty())
 }
 
 func TestSpace_Link(t *testing.T) {
-	s := NewSpace()
+	s := New()
 	s.InstID = xid.New()
 
 	link := relation.InstSpace{

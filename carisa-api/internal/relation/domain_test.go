@@ -28,13 +28,30 @@ func TestInstSpace_ToString(t *testing.T) {
 		Name:    "name",
 		SpaceID: "1",
 	}
-	assert.Equal(t, "spaceLink: ID:key, Name:name", i.ToString())
+	assert.Equal(t, "instSpaceLink: ID:key, Name:name", i.ToString())
 }
 
 func TestInstSpace_Key(t *testing.T) {
 	i := InstSpace{
 		ID:      "key",
 		SpaceID: "1",
+	}
+	assert.Equal(t, i.ID, i.Key())
+}
+
+func TestSpaceEnte_ToString(t *testing.T) {
+	s := SpaceEnte{
+		ID:     "key",
+		Name:   "name",
+		EnteID: "1",
+	}
+	assert.Equal(t, "spaceEnteLink: ID:key, Name:name", s.ToString())
+}
+
+func TestSpaceEnte_Key(t *testing.T) {
+	i := SpaceEnte{
+		ID:     "key",
+		EnteID: "1",
 	}
 	assert.Equal(t, i.ID, i.Key())
 }

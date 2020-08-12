@@ -25,7 +25,7 @@ import (
 func CreateInstance(mng storage.Integration) (instance.Instance, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	srv := instance.NewService(cnt, crudOper)
-	inst := instance.NewInstance()
+	inst := instance.New()
 	inst.Name = "Name"
 	inst.Desc = "desc"
 	_, err := srv.Create(&inst)

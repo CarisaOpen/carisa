@@ -26,9 +26,24 @@ type InstSpace struct {
 }
 
 func (l *InstSpace) ToString() string {
-	return strings.Concat("spaceLink: ID:", l.Key(), ", Name:", l.Name)
+	return strings.Concat("instSpaceLink: ID:", l.Key(), ", Name:", l.Name)
 }
 
 func (l *InstSpace) Key() string {
 	return l.ID
+}
+
+// Link represents the link between space and ente
+type SpaceEnte struct {
+	ID     string `json:"-"`
+	Name   string `json:"name"`
+	EnteID string `json:"enteId"`
+}
+
+func (s *SpaceEnte) ToString() string {
+	return strings.Concat("spaceEnteLink: ID:", s.Key(), ", Name:", s.Name)
+}
+
+func (s *SpaceEnte) Key() string {
+	return s.ID
 }

@@ -25,12 +25,12 @@ import (
 )
 
 func TestInstance_ToString(t *testing.T) {
-	i := NewInstance()
+	i := New()
 	i.Name = "name"
 	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
 }
 
 func TestInstance_Key(t *testing.T) {
-	i := NewInstance()
+	i := New()
 	assert.Equal(t, i.ID.String(), i.Key())
 }

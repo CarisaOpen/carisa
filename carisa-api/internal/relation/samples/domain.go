@@ -25,7 +25,7 @@ import (
 
 func CreateSpaceLink(mng storage.Integration, instanceID xid.ID) (storage.Entity, space.Space, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
-	s := space.NewSpace()
+	s := space.New()
 	s.Name = "name"
 	s.Desc = "desc"
 	s.InstID = instanceID
