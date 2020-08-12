@@ -19,6 +19,8 @@ package ente
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/entity"
+
 	"github.com/carisa/api/internal/relation"
 
 	"github.com/rs/xid"
@@ -36,6 +38,11 @@ func TestEnte_ToString(t *testing.T) {
 func TestEnte_Key(t *testing.T) {
 	e := New()
 	assert.Equal(t, e.ID.String(), e.Key())
+}
+
+func TestEnte_Nominative(t *testing.T) {
+	e := Ente{}
+	assert.Equal(t, entity.Descriptor{}, e.Nominative())
 }
 
 func TestEnte_RelKey(t *testing.T) {

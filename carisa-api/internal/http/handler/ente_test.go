@@ -42,7 +42,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEnteService_Create(t *testing.T) {
+func TestEnteHandler_Create(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, _, mng := newEnteHandlerFaked(t)
 	defer mng.Close()
@@ -78,7 +78,7 @@ func TestEnteService_Create(t *testing.T) {
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
 			continue
 		}
-		if assert.NoError(t, err) {
+		if assert.NoError(t, err, tt.name) {
 			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
 			if rec.Code == nethttp.StatusCreated {
 				assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Created"))
@@ -92,7 +92,7 @@ func TestEnteService_Create(t *testing.T) {
 	}
 }
 
-func TestEnteService_CreateWithError(t *testing.T) {
+func TestEnteHandler_CreateWithError(t *testing.T) {
 	tests := tsamples.TestCreateWithError("CreateWithRel")
 
 	h := mock.HTTP()
@@ -111,7 +111,7 @@ func TestEnteService_CreateWithError(t *testing.T) {
 	}
 }
 
-func TestEnteService_Put(t *testing.T) {
+func TestEnteHandler_Put(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, _, mng := newEnteHandlerFaked(t)
 	defer mng.Close()
@@ -168,7 +168,7 @@ func TestEnteService_Put(t *testing.T) {
 	}
 }
 
-func TestEnteService_PutWithError(t *testing.T) {
+func TestEnteHandler_PutWithError(t *testing.T) {
 	params := map[string]string{"id": xid.NilID().String()}
 	tests := tsamples.TestPutWithError("PutWithRel", params)
 
@@ -188,7 +188,7 @@ func TestEnteService_PutWithError(t *testing.T) {
 	}
 }
 
-func TestEnteService_Get(t *testing.T) {
+func TestEnteHandler_Get(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, srv, mng := newEnteHandlerFaked(t)
 	defer mng.Close()
@@ -245,7 +245,7 @@ func TestEnteService_Get(t *testing.T) {
 	}
 }
 
-func TestEnteService_GetWithError(t *testing.T) {
+func TestEnteHandler_GetWithError(t *testing.T) {
 	tests := tsamples.TestGetWithError()
 
 	h := mock.HTTP()

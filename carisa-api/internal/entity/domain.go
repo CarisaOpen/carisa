@@ -14,30 +14,11 @@
  *
  */
 
-package instance
+package entity
 
-import (
-	"testing"
+import "github.com/carisa/pkg/storage"
 
-	"github.com/carisa/api/internal/entity"
-
-	"github.com/carisa/pkg/strings"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestInstance_ToString(t *testing.T) {
-	i := New()
-	i.Name = "name"
-	assert.Contains(t, strings.Concat("instance: ID:", i.Key(), ", Name:", i.Name), i.ToString())
-}
-
-func TestInstance_Key(t *testing.T) {
-	i := New()
-	assert.Equal(t, i.ID.String(), i.Key())
-}
-
-func TestInstnace_Nominative(t *testing.T) {
-	i := Instance{}
-	assert.Equal(t, entity.Descriptor{}, i.Nominative())
+type Domain interface {
+	storage.Entity
+	Descriptors
 }

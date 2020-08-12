@@ -19,6 +19,8 @@ package space
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/entity"
+
 	"github.com/carisa/api/internal/relation"
 
 	"github.com/rs/xid"
@@ -36,6 +38,11 @@ func TestSpace_ToString(t *testing.T) {
 func TestSpace_Key(t *testing.T) {
 	s := New()
 	assert.Equal(t, s.ID.String(), s.Key())
+}
+
+func TestEnte_Nominative(t *testing.T) {
+	s := Space{}
+	assert.Equal(t, entity.Descriptor{}, s.Nominative())
 }
 
 func TestSpace_RelKey(t *testing.T) {

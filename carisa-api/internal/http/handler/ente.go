@@ -48,7 +48,7 @@ func NewEnteHandle(srv ente.Service, cnt *runtime.Container) Ente {
 // Create creates the ente domain
 func (e *Ente) Create(c httpc.Context) error {
 	ente := ente.Ente{}
-	if err := bind(c, locEnte, e.cnt.Log, &ente, ente.Descriptor); err != nil {
+	if err := bind(c, locEnte, e.cnt.Log, &ente); err != nil {
 		return err
 	}
 
@@ -68,7 +68,7 @@ func (e *Ente) Put(c httpc.Context) error {
 	}
 
 	ente := ente.Ente{}
-	if err := bind(c, locEnte, e.cnt.Log, &ente, ente.Descriptor); err != nil {
+	if err := bind(c, locEnte, e.cnt.Log, &ente); err != nil {
 		return err
 	}
 

@@ -16,7 +16,13 @@
 
 package entity
 
-import "github.com/rs/xid"
+import (
+	"github.com/rs/xid"
+)
+
+type Descriptors interface {
+	Nominative() Descriptor
+}
 
 // Descriptor describes the entity with name and description
 type Descriptor struct {

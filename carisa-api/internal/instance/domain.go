@@ -40,3 +40,7 @@ func (i *Instance) ToString() string {
 func (i *Instance) Key() string {
 	return i.ID.String()
 }
+
+func (i *Instance) Nominative() entity.Descriptor {
+	return i.Descriptor
+}

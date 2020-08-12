@@ -47,7 +47,7 @@ func NewInstanceHandle(srv instance.Service, cnt *runtime.Container) Instance {
 // Create creates the instance domain
 func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
-	if err := bind(c, locInstance, i.cnt.Log, &inst, inst.Descriptor); err != nil {
+	if err := bind(c, locInstance, i.cnt.Log, &inst); err != nil {
 		return err
 	}
 
@@ -67,7 +67,7 @@ func (i *Instance) Put(c httpc.Context) error {
 	}
 
 	inst := instance.Instance{}
-	if err := bind(c, locInstance, i.cnt.Log, &inst, inst.Descriptor); err != nil {
+	if err := bind(c, locInstance, i.cnt.Log, &inst); err != nil {
 		return err
 	}
 

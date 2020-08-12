@@ -48,7 +48,7 @@ func NewSpaceHandle(srv space.Service, cnt *runtime.Container) Space {
 // Create creates the space domain
 func (s *Space) Create(c httpc.Context) error {
 	spc := space.Space{}
-	if err := bind(c, locSpace, s.cnt.Log, &spc, spc.Descriptor); err != nil {
+	if err := bind(c, locSpace, s.cnt.Log, &spc); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func (s *Space) Put(c httpc.Context) error {
 	}
 
 	spc := space.Space{}
-	if err := bind(c, locSpace, s.cnt.Log, &spc, spc.Descriptor); err != nil {
+	if err := bind(c, locSpace, s.cnt.Log, &spc); err != nil {
 		return err
 	}
 

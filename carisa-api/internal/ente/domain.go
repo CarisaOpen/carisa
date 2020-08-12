@@ -45,6 +45,10 @@ func (e *Ente) Key() string {
 	return e.ID.String()
 }
 
+func (e *Ente) Nominative() entity.Descriptor {
+	return e.Descriptor
+}
+
 func (e *Ente) RelKey() string {
 	return strings.Concat(e.SpaceID.String(), e.Name, e.Key())
 }

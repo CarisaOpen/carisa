@@ -22,7 +22,6 @@ import (
 	"github.com/carisa/api/internal/entity"
 	"github.com/carisa/api/internal/http/validator"
 	"github.com/carisa/pkg/logging"
-	"github.com/carisa/pkg/storage"
 	"github.com/carisa/pkg/strings"
 
 	httpc "github.com/carisa/pkg/http"
@@ -40,8 +39,8 @@ func errService(c httpc.Context, err error, msg string, msgNotFound string, foun
 }
 
 // bind binds entity from http body and doing validation
-func bind(c httpc.Context, loc string, log logging.Logger, e storage.Entity, d entity.Descriptor) error {
-	if err := c.Bind(&e); err != nil {
+func bind(c httpc.Context, loc string, log logging.Logger, e entity.Domain) error {
+	if err := c.Bind(e); err != nil {
 		return c.HTTPErrorLog(
 			nethttp.StatusBadRequest,
 			strings.Concat("cannot recover ", e.ToString()),
@@ -50,7 +49,7 @@ func bind(c httpc.Context, loc string, log logging.Logger, e storage.Entity, d e
 			loc)
 	}
 
-	if httpErr := validator.Descriptor(c, d); httpErr != nil {
+	if httpErr := validator.Descriptor(c, e.Nominative()); httpErr != nil {
 		return httpErr
 	}
 	return nil
