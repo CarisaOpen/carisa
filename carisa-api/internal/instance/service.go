@@ -17,9 +17,8 @@
 package instance
 
 import (
-	"github.com/carisa/api/internal/entity"
-	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
 	"github.com/rs/xid"
 )
@@ -62,20 +61,7 @@ func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 }
 
 // ListSpaces lists spaces depending ranges parameter.
-// If ranges is equal to true is filtered by spaces which name is greater than name parameter
-// If ranges is equal to false is filtered by spaces which name starts by name parameter
+// Look at service.List
 func (s *Service) ListSpaces(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	var list []storage.Entity
-	var err error
-
-	ctx, cancel := s.cnt.StoreWithTimeout()
-	empty := func() storage.Entity { return &relation.InstSpace{} }
-	if ranges {
-		list, err = s.crud.Store().Range(ctx, entity.SoundLink(id, name), id.String(), top, empty)
-	} else {
-		list, err = s.crud.Store().StartKey(ctx, entity.SoundLink(id, name), top, empty)
-	}
-	cancel()
-
-	return list, err
+	return service.List(s.cnt, s.crud.Store(), id, name, ranges, top)
 }

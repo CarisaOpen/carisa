@@ -18,6 +18,7 @@ package space
 
 import (
 	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
 	"github.com/rs/xid"
 )
@@ -59,4 +60,10 @@ func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 	ok, err := s.crud.Store().Get(ctx, id.String(), space)
 	cancel()
 	return ok, err
+}
+
+// ListSpaces lists entes depending ranges parameter.
+// Look at service.List
+func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
+	return service.List(s.cnt, s.crud.Store(), id, name, ranges, top)
 }
