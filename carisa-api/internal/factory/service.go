@@ -17,21 +17,28 @@
 package factory
 
 import (
+	"github.com/carisa/api/internal/ente"
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
+	srv "github.com/carisa/api/internal/service"
+	"github.com/carisa/api/internal/space"
 	"github.com/carisa/pkg/storage"
 )
 
 // Service configures all transversal services for API
 type service struct {
 	instanceSrv instance.Service
+	spaceSrv    space.Service
+	enteSrv     ente.Service
 }
 
 // configService builds the services
 func configService(cnt *runtime.Container, store storage.CRUD) service {
 	crud := storage.NewCrudOperation(store, cnt.Log, storage.NewTxn)
-
+	ext := srv.NewExt(cnt, store)
 	return service{
-		instanceSrv: instance.NewService(cnt, crud),
+		instanceSrv: instance.NewService(cnt, ext, crud),
+		spaceSrv:    space.NewService(cnt, ext, crud),
+		enteSrv:     ente.NewService(cnt, crud),
 	}
 }

@@ -99,3 +99,20 @@ func (s *Space) Get(c httpc.Context) error {
 
 	return c.JSON(http.GetStatus(found), space)
 }
+
+// ListEntes list entes by space ID and return top entes.
+// If sname query param is not empty, is filtered by entes which name starts by name parameter
+// If gtname query param is not empty, is filtered by entes which name is greater than name parameter
+func (s *Space) ListEntes(c httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(c)
+	if err != nil {
+		return err
+	}
+
+	entes, err := s.srv.ListEntes(id, name, ranges, top)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the entes")
+	}
+
+	return c.JSON(nethttp.StatusOK, entes)
+}

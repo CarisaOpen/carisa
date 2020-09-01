@@ -19,6 +19,10 @@ package space
 import (
 	"testing"
 
+	entesmpl "github.com/carisa/api/internal/ente/samples"
+	"github.com/carisa/api/internal/samples"
+	srv "github.com/carisa/api/internal/service"
+
 	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/api/internal/entity"
@@ -126,6 +130,25 @@ func TestSpaceService_Get(t *testing.T) {
 	}
 }
 
+func TestSpaceService_ListEntes(t *testing.T) {
+	tests := samples.TestList()
+
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+	link, _, err := entesmpl.CreateLink(mng, id)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListEntes(id, "name", tt.Ranges, 1)
+			if assert.NoError(t, err) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
+			}
+		}
+	}
+}
+
 func space(mng storage.Integration) (*Space, error) {
 	inst, err := instsamples.CreateInstance(mng)
 	if err == nil {
@@ -140,5 +163,6 @@ func space(mng storage.Integration) (*Space, error) {
 
 func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng, cnt, crudOper := mock.NewFullCrudOperFaked(t)
-	return NewService(cnt, crudOper), mng
+	ext := srv.NewExt(cnt, crudOper.Store())
+	return NewService(cnt, ext, crudOper), mng
 }

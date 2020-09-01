@@ -40,5 +40,7 @@ func TestController_Build(t *testing.T) {
 
 	assert.Equal(t, cnf, factory.Config, "Config")
 	assert.NotNil(t, cnf, factory.Echo, "Http")
-	assert.NotNil(t, factory.Handlers.InstHandler, "InstCreate Handler")
+	assert.NotNil(t, factory.Handlers.InstHandler, "Inst Handler")
+	assert.NotNil(t, factory.Handlers.SpaceHandler, "Space Handler")
+	assert.NotNil(t, factory.Handlers.EnteHandler, "Ente Handler")
 }

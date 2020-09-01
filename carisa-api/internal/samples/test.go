@@ -24,13 +24,32 @@ import (
 	"github.com/carisa/pkg/storage"
 )
 
+func TestList() []struct {
+	Name   string
+	Ranges bool
+} {
+	return []struct {
+		Name   string
+		Ranges bool
+	}{
+		{
+			Name:   "Find by start name",
+			Ranges: true,
+		},
+		{
+			Name:   "Find by range",
+			Ranges: false,
+		},
+	}
+}
+
 func TestCreateWithError(method string) []struct {
 	Name     string
 	Body     string
 	MockOper func(txn *storage.ErrMockCRUDOper)
 	Status   int
 } {
-	tests := []struct {
+	return []struct {
 		Name     string
 		Body     string
 		MockOper func(txn *storage.ErrMockCRUDOper)
@@ -53,7 +72,6 @@ func TestCreateWithError(method string) []struct {
 			Status:   nethttp.StatusInternalServerError,
 		},
 	}
-	return tests
 }
 
 func TestPutWithError(method string, params map[string]string) []struct {
@@ -63,7 +81,7 @@ func TestPutWithError(method string, params map[string]string) []struct {
 	MockOper func(txn *storage.ErrMockCRUDOper)
 	Status   int
 } {
-	tests := []struct {
+	return []struct {
 		Name     string
 		Params   map[string]string
 		Body     string
@@ -96,7 +114,6 @@ func TestPutWithError(method string, params map[string]string) []struct {
 			Status:   nethttp.StatusInternalServerError,
 		},
 	}
-	return tests
 }
 
 func TestGetWithError() []struct {
@@ -105,7 +122,7 @@ func TestGetWithError() []struct {
 	MockOper func(txn *storage.ErrMockCRUDOper)
 	Status   int
 } {
-	tests := []struct {
+	return []struct {
 		Name     string
 		Param    map[string]string
 		MockOper func(txn *storage.ErrMockCRUDOper)
@@ -123,7 +140,6 @@ func TestGetWithError() []struct {
 			Status:   nethttp.StatusInternalServerError,
 		},
 	}
-	return tests
 }
 
 func TestListError() []struct {
@@ -133,7 +149,7 @@ func TestListError() []struct {
 	MockOper func(txn *storage.ErrMockCRUDOper)
 	Status   int
 } {
-	tests := []struct {
+	return []struct {
 		Name     string
 		Param    map[string]string
 		QParam   map[string]string
@@ -153,5 +169,4 @@ func TestListError() []struct {
 			Status:   nethttp.StatusInternalServerError,
 		},
 	}
-	return tests
 }

@@ -17,6 +17,7 @@
 package space
 
 import (
+	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
@@ -28,13 +29,15 @@ const locService = "space.service"
 // Service implements CRUD operations for the space domain
 type Service struct {
 	cnt  *runtime.Container
+	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
 // NewService builds a space service
-func NewService(cnt *runtime.Container, crud storage.CrudOperation) Service {
+func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
+		ext:  ext,
 		crud: crud,
 	}
 }
@@ -62,8 +65,8 @@ func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 	return ok, err
 }
 
-// ListSpaces lists entes depending ranges parameter.
+// ListEntes lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return service.List(s.cnt, s.crud.Store(), id, name, ranges, top)
+	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.SpaceEnte{} })
 }

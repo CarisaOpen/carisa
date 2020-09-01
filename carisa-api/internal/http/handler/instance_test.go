@@ -22,9 +22,11 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/service"
+	spacesmpl "github.com/carisa/api/internal/space/samples"
+
 	"github.com/rs/xid"
 
-	relsamples "github.com/carisa/api/internal/relation/samples"
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/carisa/api/internal/runtime"
@@ -218,7 +220,7 @@ func TestInstanceHandler_ListSpaces(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	_, space, err := relsamples.CreateSpaceLink(mng, xid.NilID())
+	_, space, err := spacesmpl.CreateLink(mng, xid.NilID())
 
 	if assert.NoError(t, err) {
 		rec, ctx := h.NewHTTP(
@@ -261,7 +263,8 @@ func TestInstanceHandler_GetListSpacesError(t *testing.T) {
 
 func newInstHandlerFaked(t *testing.T) (*runtime.Container, Handlers, instance.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
-	srv := instance.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := instance.NewService(cnt, ext, crud)
 	hands := Handlers{InstHandler: NewInstanceHandle(srv, cnt)}
 	return cnt, hands, srv, mng
 }
@@ -269,7 +272,8 @@ func newInstHandlerFaked(t *testing.T) (*runtime.Container, Handlers, instance.S
 func newInstHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
 	cnt := mock.NewContainerFake()
 	crud := storage.NewErrMockCRUDOper()
-	srv := instance.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := instance.NewService(cnt, ext, crud)
 	hands := Handlers{InstHandler: NewInstanceHandle(srv, cnt)}
 	return cnt, hands, crud
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/carisa/api/internal/mock"
 	"github.com/carisa/api/internal/space"
 	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 )
 
 func CreateSpace(mng storage.Integration) (space.Space, error) {
@@ -29,4 +30,15 @@ func CreateSpace(mng storage.Integration) (space.Space, error) {
 	space.Desc = "desc"
 	_, err := crudOper.Put("loc", cnt.StoreWithTimeout, &space)
 	return space, err
+}
+
+func CreateLink(mng storage.Integration, instanceID xid.ID) (storage.Entity, space.Space, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	s := space.New()
+	s.Name = "name"
+	s.Desc = "desc"
+	s.InstID = instanceID
+	link := s.Link()
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
+	return link, s, err
 }

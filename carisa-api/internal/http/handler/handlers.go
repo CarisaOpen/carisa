@@ -70,3 +70,7 @@ func (h *Handlers) EntePut(ctx echo.Context) error {
 func (h *Handlers) EnteGet(ctx echo.Context) error {
 	return h.EnteHandler.Get(echoc.NewContext(ctx))
 }
+
+func (h *Handlers) SpcListEntes(ctx echo.Context) error {
+	return h.SpaceHandler.ListEntes(echoc.NewContext(ctx))
+}

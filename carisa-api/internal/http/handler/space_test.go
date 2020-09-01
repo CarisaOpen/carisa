@@ -22,6 +22,10 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	entesmpl "github.com/carisa/api/internal/ente/samples"
+
+	"github.com/carisa/api/internal/service"
+
 	"github.com/rs/xid"
 
 	"github.com/carisa/api/internal/instance/samples"
@@ -264,9 +268,57 @@ func TestSpaceHandler_GetWithError(t *testing.T) {
 	}
 }
 
+func TestSpaceHandler_ListEntes(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newSpcHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	_, ente, err := entesmpl.CreateLink(mng, xid.NilID())
+
+	if assert.NoError(t, err) {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodGet,
+			"/api/spaces/:id/entes",
+			"",
+			map[string]string{"id": xid.NilID().String()},
+			map[string]string{"sname": "name"})
+
+		err := handlers.SpaceHandler.ListEntes(ctx)
+		if assert.NoError(t, err) {
+			assert.Contains(
+				t,
+				rec.Body.String(),
+				fmt.Sprintf(`[{"name":"name","enteId":"%s"}]`, ente.Key()),
+				"List entes")
+			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
+		}
+	}
+}
+
+func TestSpaceHandler_GetListEntesError(t *testing.T) {
+	tests := tsamples.TestListError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newSpcHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id/entes", "", tt.Param, tt.QParam)
+		err := handlers.SpaceHandler.ListEntes(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
 func newSpcHandlerFaked(t *testing.T) (*runtime.Container, Handlers, space.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
-	srv := space.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := space.NewService(cnt, ext, crud)
 	hands := Handlers{SpaceHandler: NewSpaceHandle(srv, cnt)}
 	return cnt, hands, srv, mng
 }
@@ -274,7 +326,8 @@ func newSpcHandlerFaked(t *testing.T) (*runtime.Container, Handlers, space.Servi
 func newSpcHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
 	cnt := mock.NewContainerFake()
 	crud := storage.NewErrMockCRUDOper()
-	srv := space.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := space.NewService(cnt, ext, crud)
 	hands := Handlers{SpaceHandler: NewSpaceHandle(srv, cnt)}
 	return cnt, hands, crud
 }

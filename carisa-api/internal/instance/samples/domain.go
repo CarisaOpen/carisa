@@ -19,12 +19,14 @@ package samples
 import (
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/mock"
+	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
 )
 
 func CreateInstance(mng storage.Integration) (instance.Instance, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
-	srv := instance.NewService(cnt, crudOper)
+	ext := service.NewExt(cnt, crudOper.Store())
+	srv := instance.NewService(cnt, ext, crudOper)
 	inst := instance.New()
 	inst.Name = "Name"
 	inst.Desc = "desc"

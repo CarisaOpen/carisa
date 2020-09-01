@@ -19,6 +19,12 @@ package instance
 import (
 	"testing"
 
+	srv "github.com/carisa/api/internal/service"
+
+	"github.com/carisa/api/internal/samples"
+	spacesmpl "github.com/carisa/api/internal/space/samples"
+	"github.com/rs/xid"
+
 	"github.com/carisa/pkg/storage"
 
 	"github.com/carisa/api/internal/mock"
@@ -29,7 +35,7 @@ import (
 
 func TestInstanceService_Create(t *testing.T) {
 	i := instance()
-	s, mng := newInstanceSrvFaked(t)
+	s, mng := newServiceFaked(t)
 	defer mng.Close()
 
 	ok, err := s.Create(&i)
@@ -42,7 +48,7 @@ func TestInstanceService_Create(t *testing.T) {
 
 func TestInstanceService_Put(t *testing.T) {
 	i := instance()
-	s, mng := newInstanceSrvFaked(t)
+	s, mng := newServiceFaked(t)
 	defer mng.Close()
 
 	i.AutoID()
@@ -64,7 +70,7 @@ func checkInstance(t *testing.T, s Service, i Instance) {
 
 func TestInstanceService_Get(t *testing.T) {
 	i := instance()
-	s, mng := newInstanceSrvFaked(t)
+	s, mng := newServiceFaked(t)
 	defer mng.Close()
 
 	_, err := s.Create(&i)
@@ -78,6 +84,25 @@ func TestInstanceService_Get(t *testing.T) {
 	}
 }
 
+func TestInstanceService_ListSpaces(t *testing.T) {
+	tests := samples.TestList()
+
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+	link, _, err := spacesmpl.CreateLink(mng, id)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListSpaces(id, "name", tt.Ranges, 1)
+			if assert.NoError(t, err) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
+			}
+		}
+	}
+}
+
 func instance() Instance {
 	inst := New()
 	inst.Name = "name"
@@ -85,8 +110,9 @@ func instance() Instance {
 	return inst
 }
 
-func newInstanceSrvFaked(t *testing.T) (Service, storage.Integration) {
+func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
-	return NewService(cnt, crudOper), mng
+	ext := srv.NewExt(cnt, crudOper.Store())
+	return NewService(cnt, ext, crudOper), mng
 }

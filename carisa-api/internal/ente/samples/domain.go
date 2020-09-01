@@ -17,18 +17,18 @@
 package samples
 
 import (
+	"github.com/carisa/api/internal/ente"
 	"github.com/carisa/api/internal/mock"
-	"github.com/carisa/api/internal/space"
 	"github.com/carisa/pkg/storage"
 	"github.com/rs/xid"
 )
 
-func CreateSpaceLink(mng storage.Integration, instanceID xid.ID) (storage.Entity, space.Space, error) {
+func CreateLink(mng storage.Integration, spaceID xid.ID) (storage.Entity, ente.Ente, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
-	s := space.New()
+	s := ente.New()
 	s.Name = "name"
 	s.Desc = "desc"
-	s.InstID = instanceID
+	s.SpaceID = spaceID
 	link := s.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
 	return link, s, err
