@@ -236,6 +236,47 @@ paths:
           description: "Space not found"
         "500":
           description: "Internal server error"
+  /spaces/{id}/entes:
+    get:
+      tags:
+        - "space"
+      summary: "List entes of the space by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Space identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List entes that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List entes greater or equal than 'sname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of entes"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/EnteLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
   /entes:
     post:
       tags:
@@ -424,3 +465,12 @@ definitions:
       spaceId:
         type: "string"
         description: "Space identifier where the ente is added"
+  EnteLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Ente name"
+      enteId:
+        type: "string"
+        description: "Ente identifier"
