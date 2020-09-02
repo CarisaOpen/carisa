@@ -28,7 +28,7 @@ func TestInstSpace_ToString(t *testing.T) {
 		Name:    "name",
 		SpaceID: "1",
 	}
-	assert.Equal(t, "instSpaceLink: ID:key, Name:name", i.ToString())
+	assert.Equal(t, "inst-space-link: ID:key, Name:name", i.ToString())
 }
 
 func TestInstSpace_Key(t *testing.T) {
@@ -45,13 +45,30 @@ func TestSpaceEnte_ToString(t *testing.T) {
 		Name:   "name",
 		EnteID: "1",
 	}
-	assert.Equal(t, "spaceEnteLink: ID:key, Name:name", s.ToString())
+	assert.Equal(t, "space-ente-link: ID:key, Name:name", s.ToString())
 }
 
 func TestSpaceEnte_Key(t *testing.T) {
 	i := SpaceEnte{
 		ID:     "key",
 		EnteID: "1",
+	}
+	assert.Equal(t, i.ID, i.Key())
+}
+
+func TestEnteEnteProp_ToString(t *testing.T) {
+	s := EnteEnteProp{
+		ID:         "key",
+		Name:       "name",
+		EntePropID: "1",
+	}
+	assert.Equal(t, "ente-enteprop-link: ID:key, Name:name", s.ToString())
+}
+
+func TestEnteEnteProp_Key(t *testing.T) {
+	i := EnteEnteProp{
+		ID:         "key",
+		EntePropID: "1",
 	}
 	assert.Equal(t, i.ID, i.Key())
 }

@@ -23,6 +23,15 @@ import (
 	"github.com/rs/xid"
 )
 
+func CreateEnte(mng storage.Integration) (ente.Ente, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	ente := ente.New()
+	ente.Name = "Name"
+	ente.Desc = "desc"
+	_, err := crudOper.Put("loc", cnt.StoreWithTimeout, &ente)
+	return ente, err
+}
+
 func CreateLink(mng storage.Integration, spaceID xid.ID) (storage.Entity, ente.Ente, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	s := ente.New()
@@ -32,4 +41,15 @@ func CreateLink(mng storage.Integration, spaceID xid.ID) (storage.Entity, ente.E
 	link := s.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
 	return link, s, err
+}
+
+func CreateLinkProp(mng storage.Integration, enteID xid.ID) (storage.Entity, ente.EnteProp, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	prop := ente.NewProp()
+	prop.Name = "name"
+	prop.Desc = "desc"
+	prop.EnteID = enteID
+	link := prop.Link()
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
+	return link, prop, err
 }

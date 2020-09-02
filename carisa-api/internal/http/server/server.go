@@ -73,4 +73,8 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/entes/:id", h.EnteGet)
 	e.POST("/api/entes", h.EnteCreate)
 	e.PUT("/api/entes/:id", h.EntePut)
+	e.GET("/api/entes/:id/properties", h.EnteListProps)
+	e.GET("/api/entesprop/:id", h.EnteGetProp)
+	e.POST("/api/entesprop", h.EnteCreateProp)
+	e.PUT("/api/entesprop/:id", h.EntePutProp)
 }

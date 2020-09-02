@@ -22,10 +22,13 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/carisa/api/internal/service"
+
 	"github.com/carisa/api/internal/ente"
 
 	"github.com/rs/xid"
 
+	esamples "github.com/carisa/api/internal/ente/samples"
 	tsamples "github.com/carisa/api/internal/samples"
 	"github.com/carisa/api/internal/space/samples"
 
@@ -264,9 +267,279 @@ func TestEnteHandler_GetWithError(t *testing.T) {
 	}
 }
 
+func TestEnteHandler_ListProps(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newEnteHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	_, prop, err := esamples.CreateLinkProp(mng, xid.NilID())
+
+	if assert.NoError(t, err) {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodGet,
+			"/api/entes/:id/properties",
+			"",
+			map[string]string{"id": xid.NilID().String()},
+			map[string]string{"sname": "name"})
+
+		err := handlers.EnteHandler.ListProps(ctx)
+		if assert.NoError(t, err) {
+			assert.Contains(
+				t,
+				rec.Body.String(),
+				fmt.Sprintf(`[{"name":"name","entePropId":"%s"}]`, prop.Key()),
+				"List properties of the ente")
+			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
+		}
+	}
+}
+
+func TestEnteHandler_GetListPropsError(t *testing.T) {
+	tests := tsamples.TestListError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newEnteHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entes/:id/properties", "", tt.Param, tt.QParam)
+		err := handlers.EnteHandler.ListProps(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestEnteHandler_CreateProp(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newEnteHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	e, err := esamples.CreateEnte(mng)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+
+	tests := []struct {
+		name   string
+		body   string
+		status int
+	}{
+		{
+			name:   "Creating ente property.",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, e.ID.String()),
+			status: nethttp.StatusCreated,
+		},
+		{
+			name:   "Creating ente property. Ente not found.",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, xid.NilID()),
+			status: nethttp.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesprop", strings.Concat("{", tt.body, "}"), nil, nil)
+		err := handlers.EnteHandler.CreateProp(ctx)
+
+		if err != nil && tt.status == err.(*echo.HTTPError).Code {
+			continue
+		}
+		if assert.NoError(t, err, tt.name) {
+			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
+			if rec.Code == nethttp.StatusCreated {
+				assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Created"))
+				var prop ente.EnteProp
+				errj := json.NewDecoder(rec.Body).Decode(&prop)
+				if assert.NoError(t, errj) {
+					assert.NotEmpty(t, prop.ID.String(), strings.Concat(tt.name, "ID no empty"))
+				}
+			}
+		}
+	}
+}
+
+func TestEnteHandler_CreatePropWithError(t *testing.T) {
+	tests := tsamples.TestCreateWithError("CreateWithRel")
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newEnteHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesprop", tt.Body, nil, nil)
+		err := handlers.EnteHandler.CreateProp(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestEnteHandler_PutProp(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newEnteHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	ente, err := esamples.CreateEnte(mng)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+
+	params := map[string]string{"id": xid.NilID().String()}
+
+	tests := []struct {
+		name   string
+		body   string
+		status int
+	}{
+		{
+			name:   "Creating ente property.",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, ente.ID.String()),
+			status: nethttp.StatusCreated,
+		},
+		{
+			name:   "Updating ente property.",
+			body:   fmt.Sprintf(`"name":"name1","description":"desc","enteId":"%s","type":3`, ente.ID.String()),
+			status: nethttp.StatusOK,
+		},
+		{
+			name:   "Creating ente property. Ente not found",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, xid.New().String()),
+			status: nethttp.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodPut,
+			"/api/entesprop",
+			strings.Concat("{", tt.body, "}"),
+			params,
+			nil)
+		err := handlers.EnteHandler.PutProp(ctx)
+
+		if err != nil && tt.status == err.(*echo.HTTPError).Code {
+			continue
+		}
+		if assert.NoError(t, err, tt.name) {
+			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
+			if tt.status != nethttp.StatusNotFound {
+				assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Put"))
+			}
+		}
+	}
+}
+
+func TestEnteHandler_PutPropWithError(t *testing.T) {
+	params := map[string]string{"id": xid.NilID().String()}
+	tests := tsamples.TestPutWithError("PutWithRel", params)
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newEnteHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entesprop", tt.Body, tt.Params, nil)
+		err := handlers.EnteHandler.PutProp(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestEnteHandler_GetProp(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, srv, mng := newEnteHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	e, err := esamples.CreateEnte(mng)
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+	prop := ente.NewProp()
+	prop.Name = "name"
+	prop.Desc = "desc"
+	prop.EnteID = e.ID
+	created, _, err := srv.CreateProp(&prop)
+
+	if assert.NoError(t, err) {
+		assert.True(t, created, "Ente property created")
+
+		tests := []struct {
+			name   string
+			params map[string]string
+			status int
+		}{
+			{
+				name:   "Finding property of the ente. Ok",
+				params: map[string]string{"id": prop.ID.String()},
+				status: nethttp.StatusOK,
+			},
+			{
+				name:   "Finding property of the ente. Not found",
+				params: map[string]string{"id": xid.NilID().String()},
+				status: nethttp.StatusNotFound,
+			},
+		}
+
+		for _, tt := range tests {
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesprop/:id", "", tt.params, nil)
+			err := handlers.EnteHandler.GetProp(ctx)
+
+			if assert.NoError(t, err) {
+				if tt.status == nethttp.StatusOK {
+					assert.Contains(
+						t,
+						rec.Body.String(),
+						fmt.Sprintf(
+							`"name":"name","description":"desc","enteId":"%s","type":1`,
+							prop.ParentKey()),
+						"Get property of the ente")
+				}
+				assert.Equal(t, tt.status, rec.Code, "Http status")
+			}
+		}
+	}
+}
+
+func TestEnteHandler_GetPropWithError(t *testing.T) {
+	tests := tsamples.TestGetWithError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newEnteHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesprop/:id", "", tt.Param, nil)
+		err := handlers.EnteHandler.GetProp(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
 func newEnteHandlerFaked(t *testing.T) (*runtime.Container, Handlers, ente.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
-	srv := ente.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := ente.NewService(cnt, ext, crud)
 	hands := Handlers{EnteHandler: NewEnteHandle(srv, cnt)}
 	return cnt, hands, srv, mng
 }
@@ -274,7 +547,8 @@ func newEnteHandlerFaked(t *testing.T) (*runtime.Container, Handlers, ente.Servi
 func newEnteHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {
 	cnt := mock.NewContainerFake()
 	crud := storage.NewErrMockCRUDOper()
-	srv := ente.NewService(cnt, crud)
+	ext := service.NewExt(cnt, crud.Store())
+	srv := ente.NewService(cnt, ext, crud)
 	hands := Handlers{EnteHandler: NewEnteHandle(srv, cnt)}
 	return cnt, hands, crud
 }

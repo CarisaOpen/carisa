@@ -74,3 +74,71 @@ func (e *Ente) Link() storage.Entity {
 func (e *Ente) Empty() storage.EntityRelation {
 	return &Ente{}
 }
+
+// TypeProp is the field type of the property
+type TypeProp uint8
+
+const (
+	// None is not defined
+	None TypeProp = iota
+	// Integer is a integer value
+	Integer
+	// Decimal is a decimal value (default)
+	Decimal
+	// Boolean is un logic value
+	Boolean
+	// DateTime is a value with date and time
+	DateTime
+)
+
+// The ente properties contains the fields
+type EnteProp struct {
+	entity.Descriptor
+	EnteID xid.ID   `json:"enteId"` // Ente container
+	Type   TypeProp `json:"type"`
+}
+
+func NewProp() EnteProp {
+	return EnteProp{
+		Descriptor: entity.NewDescriptor(),
+		Type:       Integer,
+	}
+}
+
+func (e *EnteProp) ToString() string {
+	return strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name)
+}
+
+func (e *EnteProp) Key() string {
+	return e.ID.String()
+}
+
+func (e *EnteProp) Nominative() entity.Descriptor {
+	return e.Descriptor
+}
+
+func (e *EnteProp) RelKey() string {
+	return strings.Concat(e.EnteID.String(), e.Name, e.Key())
+}
+
+func (e *EnteProp) RelName() string {
+	return e.Name
+}
+
+// ParentKey gets the Ente ID
+func (e *EnteProp) ParentKey() string {
+	return e.EnteID.String()
+}
+
+// Link gets the link between Ente and properties
+func (e *EnteProp) Link() storage.Entity {
+	return &relation.EnteEnteProp{
+		ID:         e.RelKey(),
+		Name:       e.Name,
+		EntePropID: e.ID.String(),
+	}
+}
+
+func (e *EnteProp) Empty() storage.EntityRelation {
+	return &EnteProp{}
+}

@@ -98,3 +98,74 @@ func (e *Ente) Get(c httpc.Context) error {
 
 	return c.JSON(http.GetStatus(found), ente)
 }
+
+// ListProps list properties by ente ID and return top properties.
+// If sname query param is not empty, is filtered by properties which name starts by name parameter
+// If gtname query param is not empty, is filtered by properties which name is greater than name parameter
+func (s *Ente) ListProps(c httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(c)
+	if err != nil {
+		return err
+	}
+
+	props, err := s.srv.ListProps(id, name, ranges, top)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the properties of the ente")
+	}
+
+	return c.JSON(nethttp.StatusOK, props)
+}
+
+// CreateProp creates the property of ente
+func (e *Ente) CreateProp(c httpc.Context) error {
+	prop := ente.EnteProp{}
+	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
+		return err
+	}
+
+	created, found, err := e.srv.CreateProp(&prop)
+	if err = errService(c, err, "it was impossible to create the property of the ente", "ente not found", found); err != nil {
+		return err
+	}
+
+	return c.JSON(http.CreateStatus(created), prop)
+}
+
+// PutProp creates or update the property of ente domain
+func (e *Ente) PutProp(c httpc.Context) error {
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	prop := ente.EnteProp{}
+	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
+		return err
+	}
+
+	prop.ID = id
+	updated, found, err := e.srv.PutProp(&prop)
+	if err = errService(
+		c, err, "it was impossible to create or update the property of the ente", "ente not found", found); err != nil {
+		return err
+	}
+
+	return c.JSON(http.PutStatus(updated), prop)
+}
+
+// GetProp gets the property of ente by ID
+func (e *Ente) GetProp(c httpc.Context) error {
+	var prop ente.EnteProp
+
+	id, err := convert.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	found, err := e.srv.GetProp(id, &prop)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the property of the ente")
+	}
+
+	return c.JSON(http.GetStatus(found), prop)
+}

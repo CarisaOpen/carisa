@@ -16,7 +16,9 @@ tags:
   - name: "space"
     description: "The space splits the instance in logic categories"
   - name: "ente"
-    description: "The ente is the items of spaces to trace, count, measure, etc."
+    description: "The ente are the items of spaces to trace, count, measure, etc."
+  - name: "enteprop"
+    description: "The ente property are the fields of the ente."
 schemes:
   - "https"
   - "http"
@@ -129,7 +131,7 @@ paths:
           type: string
         - in: "query"
           name: "gtname"
-          description: "List spaces greater or equal than 'sname'"
+          description: "List spaces greater or equal than 'gtname'"
           type: string
         - in: "query"
           name: "top"
@@ -258,7 +260,7 @@ paths:
           type: string
         - in: "query"
           name: "gtname"
-          description: "List entes greater or equal than 'sname'"
+          description: "List entes greater or equal than 'gtname'"
           type: string
         - in: "query"
           name: "top"
@@ -363,6 +365,135 @@ paths:
           description: "Invalid input"
         "404":
           description: "Ente not found"
+        "500":
+          description: "Internal server error"
+  /entes/{id}/properties:
+    get:
+      tags:
+        - "ente"
+      summary: "List properties of the ente by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List ente properties that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List ente properties greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of properties"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/EntePropLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /entesprop:
+    post:
+      tags:
+        - "enteprop"
+      summary: "Add a new property to the ente"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "The property object that needs to be added to the ente"
+          required: true
+          schema:
+            $ref: "#/definitions/EntePropReq"
+      responses:
+        "201":
+          description: "Ente property created"
+          schema:
+            $ref: "#/definitions/EnteProp"
+        "302":
+          description: "Ente property found"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Ente not found"
+        "500":
+          description: "Internal server error"
+  /entesprop/{id}:
+    put:
+      tags:
+        - "enteprop"
+      summary: "If the ente property ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente property identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Ente property object that needs to be added or updated to the ente"
+          required: true
+          schema:
+            $ref: "#/definitions/EntePropReq"
+      responses:
+        "200":
+          description: "Ente property updated"
+          schema:
+            $ref: "#/definitions/EnteProp"
+        "201":
+          description: "Ente property created"
+          schema:
+            $ref: "#/definitions/EnteProp"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "enteprop"
+      summary: "Find ente property by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente property identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Ente property found"
+          schema:
+            $ref: "#/definitions/EnteProp"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Ente property not found"
         "500":
           description: "Internal server error"
 definitions:
@@ -474,3 +605,50 @@ definitions:
       enteId:
         type: "string"
         description: "Ente identifier"
+  EnteProp:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Ente property identifier"
+      name:
+        type: "string"
+        description: "Ente property name"
+      description:
+        type: "string"
+        description: "Ente property description"
+      enteId:
+        type: "string"
+        description: "Ente identifier where the ente property has been added"
+      type:
+        type: "integer"
+        description: "Type of field: (Integer=0, Decimal=1, Boolean=2, DateTime=3)"
+  EntePropReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Ente property name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Ente property description"
+      enteId:
+        type: "string"
+        description: "Ente identifier where the ente property is added"
+      type:
+        type: "integer"
+        description: "Type of field. See the description in EnteProp"
+  EntePropLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Ente property name"
+      entePropId:
+        type: "string"
+        description: "Ente property identifier"

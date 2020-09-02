@@ -19,6 +19,12 @@ package ente
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/service"
+
+	"github.com/carisa/api/internal/samples"
+
+	"github.com/carisa/api/internal/runtime"
+
 	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/api/internal/entity"
@@ -55,7 +61,7 @@ func TestEnteService_Put(t *testing.T) {
 	defer mng.Close()
 	space, err := spcsamples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating ente")
+		assert.Error(t, err, "Creating space")
 	}
 
 	tests := []struct {
@@ -111,18 +117,136 @@ func TestEnteService_Get(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
 
-	s, err := ente(mng)
+	e, err := ente(mng)
 
 	if assert.NoError(t, err) {
-		_, _, err := srv.Create(s)
+		_, _, err := srv.Create(e)
 		if assert.NoError(t, err) {
 			var get Ente
-			ok, err := srv.Get(s.ID, &get)
+			ok, err := srv.Get(e.ID, &get)
 			if assert.NoError(t, err) {
 				assert.True(t, ok, "Get ok")
-				assert.Equal(t, s, &get, "Ente returned")
+				assert.Equal(t, e, &get, "Ente returned")
 			}
 		}
+	}
+}
+
+func TestEnteService_ListProps(t *testing.T) {
+	tests := samples.TestList()
+
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+	prop := NewProp()
+	prop.EnteID = id
+	prop.Name = "name"
+	link := prop.Link()
+
+	_, err := s.crud.Create("", s.cnt.StoreWithTimeout, link)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListProps(id, "name", tt.Ranges, 1)
+			if assert.NoError(t, err, tt.Name) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
+			}
+		}
+	}
+}
+
+func TestEnteService_CreateProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	prop, err := prop(srv.cnt, srv.crud)
+
+	if assert.NoError(t, err) {
+		ok, found, err := srv.CreateProp(prop)
+
+		if assert.NoError(t, err) {
+			assert.True(t, ok, "Created")
+			assert.True(t, found, "Ente found")
+			checkProp(t, srv, *prop)
+		}
+	}
+}
+
+func TestEnteService_PutProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+	ente, err := createEnte(srv.cnt, srv.crud)
+	if err != nil {
+		assert.Error(t, err, "Creating ente")
+	}
+
+	tests := []struct {
+		name    string
+		updated bool
+		prop    *EnteProp
+	}{
+		{
+			name:    "Creating property",
+			updated: false,
+			prop: &EnteProp{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				EnteID: ente.ID,
+			},
+		},
+		{
+			name:    "Updating property",
+			updated: true,
+			prop: &EnteProp{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				Type:   Boolean,
+				EnteID: ente.ID,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		updated, found, err := srv.PutProp(tt.prop)
+		if assert.NoError(t, err) {
+			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Property updated"))
+			assert.True(t, found, strings.Concat(tt.name, "Ente found"))
+			checkProp(t, srv, *tt.prop)
+		}
+	}
+}
+
+func TestEnteService_GetProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	prop, err := prop(srv.cnt, srv.crud)
+
+	if assert.NoError(t, err) {
+		_, _, err := srv.CreateProp(prop)
+		if assert.NoError(t, err) {
+			var get EnteProp
+			ok, err := srv.GetProp(prop.ID, &get)
+			if assert.NoError(t, err) {
+				assert.True(t, ok, "Get ok")
+				assert.Equal(t, prop, &get, "Property returned")
+			}
+		}
+	}
+}
+
+func checkProp(t *testing.T, srv Service, p EnteProp) {
+	var prop EnteProp
+	_, err := srv.GetProp(p.ID, &prop)
+	if assert.NoError(t, err) {
+		assert.Equal(t, p, prop, "Getting property")
 	}
 }
 
@@ -138,7 +262,27 @@ func ente(mng storage.Integration) (*Ente, error) {
 	return nil, err
 }
 
+func prop(cnt *runtime.Container, crud storage.CrudOperation) (*EnteProp, error) {
+	ente, err := createEnte(cnt, crud)
+	if err == nil {
+		prop := NewProp()
+		prop.Name = "name"
+		prop.Desc = "desc"
+		prop.Type = Decimal
+		prop.EnteID = ente.ID
+		return &prop, nil
+	}
+	return nil, err
+}
+
+func createEnte(cnt *runtime.Container, crud storage.CrudOperation) (Ente, error) {
+	ente := New()
+	_, err := crud.Put("loc", cnt.StoreWithTimeout, &ente)
+	return ente, err
+}
+
 func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng, cnt, crudOper := mock.NewFullCrudOperFaked(t)
-	return NewService(cnt, crudOper), mng
+	ext := service.NewExt(cnt, crudOper.Store())
+	return NewService(cnt, ext, crudOper), mng
 }

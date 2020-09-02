@@ -74,3 +74,53 @@ func TestEnte_Link(t *testing.T) {
 
 	assert.Equal(t, &link, e.Link())
 }
+
+func TestEnteEnteProp_Field(t *testing.T) {
+	e := NewProp()
+	assert.Equal(t, e.Type, Integer)
+}
+
+func TestEnteEnteProp_ToString(t *testing.T) {
+	e := NewProp()
+	assert.Equal(t, strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name), e.ToString())
+}
+
+func TestEnteEnteProp_Key(t *testing.T) {
+	e := NewProp()
+	assert.Equal(t, e.ID.String(), e.Key())
+}
+
+func TestEnteEnteProp_Nominative(t *testing.T) {
+	e := EnteProp{}
+	assert.Equal(t, entity.Descriptor{}, e.Nominative())
+}
+
+func TestEnteEnteProp_RelKey(t *testing.T) {
+	e := EnteProp{}
+	e.Name = "name"
+	assert.Equal(t, "00000000000000000000name00000000000000000000", e.RelKey())
+}
+
+func TestEnteEnteProp_ParentKey(t *testing.T) {
+	e := NewProp()
+	e.EnteID = xid.New()
+	assert.Equal(t, e.EnteID.String(), e.ParentKey())
+}
+
+func TestEnteEnteProp_Empty(t *testing.T) {
+	e := NewProp()
+	assert.Equal(t, &EnteProp{}, e.Empty())
+}
+
+func TestEnteEnteProp_Link(t *testing.T) {
+	e := NewProp()
+	e.EnteID = xid.New()
+
+	link := relation.EnteEnteProp{
+		ID:         strings.Concat(e.EnteID.String(), e.Name, e.Key()),
+		Name:       e.Name,
+		EntePropID: e.ID.String(),
+	}
+
+	assert.Equal(t, &link, e.Link())
+}

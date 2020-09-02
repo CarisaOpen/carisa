@@ -58,6 +58,10 @@ func (h *Handlers) SpaceGet(ctx echo.Context) error {
 	return h.SpaceHandler.Get(echoc.NewContext(ctx))
 }
 
+func (h *Handlers) SpcListEntes(ctx echo.Context) error {
+	return h.SpaceHandler.ListEntes(echoc.NewContext(ctx))
+}
+
 // Ente
 func (h *Handlers) EnteCreate(ctx echo.Context) error {
 	return h.EnteHandler.Create(echoc.NewContext(ctx))
@@ -71,6 +75,18 @@ func (h *Handlers) EnteGet(ctx echo.Context) error {
 	return h.EnteHandler.Get(echoc.NewContext(ctx))
 }
 
-func (h *Handlers) SpcListEntes(ctx echo.Context) error {
-	return h.SpaceHandler.ListEntes(echoc.NewContext(ctx))
+func (h *Handlers) EnteListProps(ctx echo.Context) error {
+	return h.EnteHandler.ListProps(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) EnteCreateProp(ctx echo.Context) error {
+	return h.EnteHandler.CreateProp(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) EntePutProp(ctx echo.Context) error {
+	return h.EnteHandler.PutProp(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) EnteGetProp(ctx echo.Context) error {
+	return h.EnteHandler.GetProp(echoc.NewContext(ctx))
 }

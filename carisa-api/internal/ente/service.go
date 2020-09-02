@@ -17,7 +17,9 @@
 package ente
 
 import (
+	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/api/internal/runtime"
+	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
 	"github.com/rs/xid"
 )
@@ -27,28 +29,30 @@ const locService = "ente.service"
 // Service implements CRUD operations for the ente domain
 type Service struct {
 	cnt  *runtime.Container
+	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
 // NewService builds a ente service
-func NewService(cnt *runtime.Container, crud storage.CrudOperation) Service {
+func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
+		ext:  ext,
 		crud: crud,
 	}
 }
 
-// Create creates a ente into of the repository and links ente and ente.
+// Create creates a ente into of the repository and links ente and space.
 // If the ente exists return false in the first param returned.
-// If the ente doesn't exist return false in the second param returned.
+// If the space doesn't exist return false in the second param returned.
 func (s *Service) Create(ente *Ente) (bool, bool, error) {
 	ente.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
 
-// Create creates or updates a ente into of the repository.
+// Put creates or updates a ente into of the repository.
 // If the ente exists return true in the first param returned otherwise return false.
-// If the ente doesn't exist return false in the second param returned.
+// If the space doesn't exist return false in the second param returned.
 func (s *Service) Put(ente *Ente) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
@@ -57,6 +61,35 @@ func (s *Service) Put(ente *Ente) (bool, bool, error) {
 func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, id.String(), ente)
+	cancel()
+	return ok, err
+}
+
+// ListProps lists entes depending ranges parameter.
+// Look at service.List
+func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
+	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.EnteEnteProp{} })
+}
+
+// CreateProp creates a property into of the repository and links ente property and ente.
+// If the property exists return false in the first param returned.
+// If the ente doesn't exist return false in the second param returned.
+func (s *Service) CreateProp(prop *EnteProp) (bool, bool, error) {
+	prop.AutoID()
+	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
+}
+
+// PutProp creates or updates a peroperty into of the repository.
+// If the property exists return true in the first param returned otherwise return false.
+// If the ente doesn't exist return false in the second param returned.
+func (s *Service) PutProp(prop *EnteProp) (bool, bool, error) {
+	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, prop)
+}
+
+// GetProp gets the property from storage
+func (s *Service) GetProp(id xid.ID, prop *EnteProp) (bool, error) {
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	ok, err := s.crud.Store().Get(ctx, id.String(), prop)
 	cancel()
 	return ok, err
 }
