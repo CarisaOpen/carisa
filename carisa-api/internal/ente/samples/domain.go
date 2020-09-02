@@ -43,11 +43,11 @@ func CreateLink(mng storage.Integration, spaceID xid.ID) (storage.Entity, ente.E
 	return link, s, err
 }
 
-func CreateLinkProp(mng storage.Integration, enteID xid.ID) (storage.Entity, ente.EnteProp, error) {
+func CreateLinkProp(mng storage.Integration, enteID xid.ID) (storage.Entity, ente.Prop, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	prop := ente.NewProp()
-	prop.Name = "name"
-	prop.Desc = "desc"
+	prop.Name = "namep"
+	prop.Desc = "descp"
 	prop.EnteID = enteID
 	link := prop.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)

@@ -92,46 +92,46 @@ const (
 )
 
 // The ente properties contains the fields
-type EnteProp struct {
+type Prop struct {
 	entity.Descriptor
 	EnteID xid.ID   `json:"enteId"` // Ente container
 	Type   TypeProp `json:"type"`
 }
 
-func NewProp() EnteProp {
-	return EnteProp{
+func NewProp() Prop {
+	return Prop{
 		Descriptor: entity.NewDescriptor(),
 		Type:       Integer,
 	}
 }
 
-func (e *EnteProp) ToString() string {
+func (e *Prop) ToString() string {
 	return strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name)
 }
 
-func (e *EnteProp) Key() string {
+func (e *Prop) Key() string {
 	return e.ID.String()
 }
 
-func (e *EnteProp) Nominative() entity.Descriptor {
+func (e *Prop) Nominative() entity.Descriptor {
 	return e.Descriptor
 }
 
-func (e *EnteProp) RelKey() string {
+func (e *Prop) RelKey() string {
 	return strings.Concat(e.EnteID.String(), e.Name, e.Key())
 }
 
-func (e *EnteProp) RelName() string {
+func (e *Prop) RelName() string {
 	return e.Name
 }
 
 // ParentKey gets the Ente ID
-func (e *EnteProp) ParentKey() string {
+func (e *Prop) ParentKey() string {
 	return e.EnteID.String()
 }
 
 // Link gets the link between Ente and properties
-func (e *EnteProp) Link() storage.Entity {
+func (e *Prop) Link() storage.Entity {
 	return &relation.EnteEnteProp{
 		ID:         e.RelKey(),
 		Name:       e.Name,
@@ -139,6 +139,6 @@ func (e *EnteProp) Link() storage.Entity {
 	}
 }
 
-func (e *EnteProp) Empty() storage.EntityRelation {
-	return &EnteProp{}
+func (e *Prop) Empty() storage.EntityRelation {
+	return &Prop{}
 }

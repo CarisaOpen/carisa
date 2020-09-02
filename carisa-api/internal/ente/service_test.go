@@ -141,14 +141,14 @@ func TestEnteService_ListProps(t *testing.T) {
 	id := xid.New()
 	prop := NewProp()
 	prop.EnteID = id
-	prop.Name = "name"
+	prop.Name = "namep"
 	link := prop.Link()
 
 	_, err := s.crud.Create("", s.cnt.StoreWithTimeout, link)
 
 	if assert.NoError(t, err) {
 		for _, tt := range tests {
-			list, err := s.ListProps(id, "name", tt.Ranges, 1)
+			list, err := s.ListProps(id, "namep", tt.Ranges, 1)
 			if assert.NoError(t, err, tt.Name) {
 				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
 			}
@@ -184,12 +184,12 @@ func TestEnteService_PutProp(t *testing.T) {
 	tests := []struct {
 		name    string
 		updated bool
-		prop    *EnteProp
+		prop    *Prop
 	}{
 		{
 			name:    "Creating property",
 			updated: false,
-			prop: &EnteProp{
+			prop: &Prop{
 				Descriptor: entity.Descriptor{
 					ID:   xid.NilID(),
 					Name: "name",
@@ -201,7 +201,7 @@ func TestEnteService_PutProp(t *testing.T) {
 		{
 			name:    "Updating property",
 			updated: true,
-			prop: &EnteProp{
+			prop: &Prop{
 				Descriptor: entity.Descriptor{
 					ID:   xid.NilID(),
 					Name: "name",
@@ -232,7 +232,7 @@ func TestEnteService_GetProp(t *testing.T) {
 	if assert.NoError(t, err) {
 		_, _, err := srv.CreateProp(prop)
 		if assert.NoError(t, err) {
-			var get EnteProp
+			var get Prop
 			ok, err := srv.GetProp(prop.ID, &get)
 			if assert.NoError(t, err) {
 				assert.True(t, ok, "Get ok")
@@ -242,8 +242,8 @@ func TestEnteService_GetProp(t *testing.T) {
 	}
 }
 
-func checkProp(t *testing.T, srv Service, p EnteProp) {
-	var prop EnteProp
+func checkProp(t *testing.T, srv Service, p Prop) {
+	var prop Prop
 	_, err := srv.GetProp(p.ID, &prop)
 	if assert.NoError(t, err) {
 		assert.Equal(t, p, prop, "Getting property")
@@ -262,7 +262,7 @@ func ente(mng storage.Integration) (*Ente, error) {
 	return nil, err
 }
 
-func prop(cnt *runtime.Container, crud storage.CrudOperation) (*EnteProp, error) {
+func prop(cnt *runtime.Container, crud storage.CrudOperation) (*Prop, error) {
 	ente, err := createEnte(cnt, crud)
 	if err == nil {
 		prop := NewProp()

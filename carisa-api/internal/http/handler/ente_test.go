@@ -281,14 +281,14 @@ func TestEnteHandler_ListProps(t *testing.T) {
 			"/api/entes/:id/properties",
 			"",
 			map[string]string{"id": xid.NilID().String()},
-			map[string]string{"sname": "name"})
+			map[string]string{"sname": "namep"})
 
 		err := handlers.EnteHandler.ListProps(ctx)
 		if assert.NoError(t, err) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","entePropId":"%s"}]`, prop.Key()),
+				fmt.Sprintf(`[{"name":"namep","entePropId":"%s"}]`, prop.Key()),
 				"List properties of the ente")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}
@@ -354,7 +354,7 @@ func TestEnteHandler_CreateProp(t *testing.T) {
 			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
 			if rec.Code == nethttp.StatusCreated {
 				assert.Contains(t, rec.Body.String(), tt.body, strings.Concat(tt.name, "Created"))
-				var prop ente.EnteProp
+				var prop ente.Prop
 				errj := json.NewDecoder(rec.Body).Decode(&prop)
 				if assert.NoError(t, errj) {
 					assert.NotEmpty(t, prop.ID.String(), strings.Concat(tt.name, "ID no empty"))
@@ -472,8 +472,8 @@ func TestEnteHandler_GetProp(t *testing.T) {
 		return
 	}
 	prop := ente.NewProp()
-	prop.Name = "name"
-	prop.Desc = "desc"
+	prop.Name = "namep"
+	prop.Desc = "descp"
 	prop.EnteID = e.ID
 	created, _, err := srv.CreateProp(&prop)
 
@@ -507,7 +507,7 @@ func TestEnteHandler_GetProp(t *testing.T) {
 						t,
 						rec.Body.String(),
 						fmt.Sprintf(
-							`"name":"name","description":"desc","enteId":"%s","type":1`,
+							`"name":"namep","description":"descp","enteId":"%s","type":1`,
 							prop.ParentKey()),
 						"Get property of the ente")
 				}

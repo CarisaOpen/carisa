@@ -47,8 +47,8 @@ func TestEnte_Nominative(t *testing.T) {
 
 func TestEnte_RelKey(t *testing.T) {
 	e := Ente{}
-	e.Name = "name"
-	assert.Equal(t, "00000000000000000000name00000000000000000000", e.RelKey())
+	e.Name = "namee"
+	assert.Equal(t, "00000000000000000000namee00000000000000000000", e.RelKey())
 }
 
 func TestEnte_ParentKey(t *testing.T) {
@@ -91,14 +91,14 @@ func TestEnteEnteProp_Key(t *testing.T) {
 }
 
 func TestEnteEnteProp_Nominative(t *testing.T) {
-	e := EnteProp{}
+	e := Prop{}
 	assert.Equal(t, entity.Descriptor{}, e.Nominative())
 }
 
 func TestEnteEnteProp_RelKey(t *testing.T) {
-	e := EnteProp{}
-	e.Name = "name"
-	assert.Equal(t, "00000000000000000000name00000000000000000000", e.RelKey())
+	e := Prop{}
+	e.Name = "namep"
+	assert.Equal(t, "00000000000000000000namep00000000000000000000", e.RelKey())
 }
 
 func TestEnteEnteProp_ParentKey(t *testing.T) {
@@ -109,7 +109,7 @@ func TestEnteEnteProp_ParentKey(t *testing.T) {
 
 func TestEnteEnteProp_Empty(t *testing.T) {
 	e := NewProp()
-	assert.Equal(t, &EnteProp{}, e.Empty())
+	assert.Equal(t, &Prop{}, e.Empty())
 }
 
 func TestEnteEnteProp_Link(t *testing.T) {

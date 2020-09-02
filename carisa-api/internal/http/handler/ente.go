@@ -102,13 +102,13 @@ func (e *Ente) Get(c httpc.Context) error {
 // ListProps list properties by ente ID and return top properties.
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
-func (s *Ente) ListProps(c httpc.Context) error {
+func (e *Ente) ListProps(c httpc.Context) error {
 	id, name, top, ranges, err := convert.FilterLink(c)
 	if err != nil {
 		return err
 	}
 
-	props, err := s.srv.ListProps(id, name, ranges, top)
+	props, err := e.srv.ListProps(id, name, ranges, top)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the properties of the ente")
 	}
@@ -118,7 +118,7 @@ func (s *Ente) ListProps(c httpc.Context) error {
 
 // CreateProp creates the property of ente
 func (e *Ente) CreateProp(c httpc.Context) error {
-	prop := ente.EnteProp{}
+	prop := ente.Prop{}
 	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (e *Ente) PutProp(c httpc.Context) error {
 		return err
 	}
 
-	prop := ente.EnteProp{}
+	prop := ente.Prop{}
 	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (e *Ente) PutProp(c httpc.Context) error {
 
 // GetProp gets the property of ente by ID
 func (e *Ente) GetProp(c httpc.Context) error {
-	var prop ente.EnteProp
+	var prop ente.Prop
 
 	id, err := convert.ParamID(c)
 	if err != nil {

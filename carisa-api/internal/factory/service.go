@@ -39,6 +39,6 @@ func configService(cnt *runtime.Container, store storage.CRUD) service {
 	return service{
 		instanceSrv: instance.NewService(cnt, ext, crud),
 		spaceSrv:    space.NewService(cnt, ext, crud),
-		enteSrv:     ente.NewService(cnt, crud),
+		enteSrv:     ente.NewService(cnt, ext, crud),
 	}
 }

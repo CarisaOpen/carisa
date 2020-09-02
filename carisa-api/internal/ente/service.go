@@ -74,7 +74,7 @@ func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]sto
 // CreateProp creates a property into of the repository and links ente property and ente.
 // If the property exists return false in the first param returned.
 // If the ente doesn't exist return false in the second param returned.
-func (s *Service) CreateProp(prop *EnteProp) (bool, bool, error) {
+func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 	prop.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
@@ -82,12 +82,12 @@ func (s *Service) CreateProp(prop *EnteProp) (bool, bool, error) {
 // PutProp creates or updates a peroperty into of the repository.
 // If the property exists return true in the first param returned otherwise return false.
 // If the ente doesn't exist return false in the second param returned.
-func (s *Service) PutProp(prop *EnteProp) (bool, bool, error) {
+func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
 
 // GetProp gets the property from storage
-func (s *Service) GetProp(id xid.ID, prop *EnteProp) (bool, error) {
+func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, id.String(), prop)
 	cancel()
