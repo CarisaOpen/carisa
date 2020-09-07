@@ -17,6 +17,7 @@
 package factory
 
 import (
+	"github.com/carisa/api/internal/category"
 	"github.com/carisa/api/internal/ente"
 	"github.com/carisa/api/internal/instance"
 	"github.com/carisa/api/internal/runtime"
@@ -30,6 +31,7 @@ type service struct {
 	instanceSrv instance.Service
 	spaceSrv    space.Service
 	enteSrv     ente.Service
+	catSrv      category.Service
 }
 
 // configService builds the services
@@ -40,5 +42,6 @@ func configService(cnt *runtime.Container, store storage.CRUD) service {
 		instanceSrv: instance.NewService(cnt, ext, crud),
 		spaceSrv:    space.NewService(cnt, ext, crud),
 		enteSrv:     ente.NewService(cnt, ext, crud),
+		catSrv:      category.NewService(cnt, ext, crud),
 	}
 }

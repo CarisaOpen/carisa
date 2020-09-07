@@ -145,34 +145,29 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
+	ctx, cancel := storeTimeout()
+
+	// If the relation is passed by param and the entity exists is updated in the same transaction
+	if isRel {
+		if err := c.updateRelation(ctx, loc, entity, txn); err != nil {
+			return false, err
+		}
+	}
+
 	put, err := c.store.Put(entity)
 	if err != nil {
 		c.log.ErrorE(err, loc)
 		return false, err
 	}
-
-	ctx, cancel := storeTimeout()
-	var link Entity
-	var rel EntityRelation
-	if isRel {
-		rel, _ = entity.(EntityRelation)
-		link = rel.Link()
-	}
-
 	// Update entity
 	txn.DoFound(put)
-	// If the relation is passed by param and the entity exists is updated in the same transaction
-	if isRel {
-		if err := c.updateRelation(ctx, loc, rel, entity, txn, link); err != nil {
-			return false, err
-		}
-	}
 
 	// Create entity
 	txn.DoNotFound(put)
 	// If the relation is passed by param is inserted in the same transaction
 	if isRel {
-		create, err := c.store.Put(link)
+		rel, _ := entity.(EntityRelation)
+		create, err := c.store.Put(rel.Link())
 		if err != nil {
 			return false, c.log.ErrWrap(err, "creating relation", loc)
 		}
@@ -188,13 +183,8 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	return updated, nil
 }
 
-func (c *crudOperation) updateRelation(
-	ctx context.Context,
-	loc string,
-	rel EntityRelation,
-	entity Entity,
-	txn Txn,
-	link Entity) error {
+func (c *crudOperation) updateRelation(ctx context.Context, loc string, entity Entity, txn Txn) error {
+	rel, _ := entity.(EntityRelation)
 	oldEntity := rel.Empty()
 	found, err := c.store.Get(ctx, entity.Key(), oldEntity)
 	if err != nil {
@@ -203,10 +193,14 @@ func (c *crudOperation) updateRelation(
 	// Even if the entity is not found later it will be created with with DoNotFound
 	if found {
 		name := rel.RelName()
+		// The parentID cannot be changed. To change remove before
+		if err := rel.SetParentKey(oldEntity.ParentKey()); err != nil {
+			return c.log.ErrWrap(err, "Setting parent old key", loc)
+		}
 		if len(name) != 0 && name != oldEntity.RelName() {
 			// it removes old relation and creating new relation when change Name. Name is part of key
 			txn.DoFound(c.store.Remove(oldEntity.RelKey()))
-			updRel, err := c.store.Put(link)
+			updRel, err := c.store.Put(rel.Link())
 			if err != nil {
 				return c.log.ErrWrap(err, "updating relation", loc)
 			}

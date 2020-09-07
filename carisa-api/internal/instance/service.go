@@ -26,7 +26,7 @@ import (
 
 const locService = "instance.service"
 
-// Service implements CRUD operations for the instance domain
+// Service implements CRUD operations for the instance category
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension

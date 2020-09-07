@@ -43,4 +43,5 @@ func TestController_Build(t *testing.T) {
 	assert.NotNil(t, factory.Handlers.InstHandler, "Inst Handler")
 	assert.NotNil(t, factory.Handlers.SpaceHandler, "Space Handler")
 	assert.NotNil(t, factory.Handlers.EnteHandler, "Ente Handler")
+	assert.NotNil(t, factory.Handlers.CategoryHandler, "Category Handler")
 }

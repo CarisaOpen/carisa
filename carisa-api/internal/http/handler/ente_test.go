@@ -68,7 +68,7 @@ func TestEnteHandler_Create(t *testing.T) {
 			status: nethttp.StatusCreated,
 		},
 		{
-			name:   "Creating ente. Instance not found.",
+			name:   "Creating ente. Space not found.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","spaceId":"%s"`, xid.NilID()),
 			status: nethttp.StatusNotFound,
 		},

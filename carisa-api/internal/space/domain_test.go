@@ -57,6 +57,12 @@ func TestSpace_ParentKey(t *testing.T) {
 	assert.Equal(t, s.InstID.String(), s.ParentKey())
 }
 
+func TestSpace_SetParentKey(t *testing.T) {
+	e := New()
+	_ = e.SetParentKey(xid.New().String())
+	assert.Equal(t, e.InstID.String(), e.ParentKey())
+}
+
 func TestSpace_Empty(t *testing.T) {
 	s := New()
 	assert.Equal(t, &Space{}, s.Empty())

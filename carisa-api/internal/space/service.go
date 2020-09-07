@@ -21,12 +21,13 @@ import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
 const locService = "space.service"
 
-// Service implements CRUD operations for the space domain
+// Service implements CRUD operations for the space category
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
@@ -68,5 +69,11 @@ func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 // ListEntes lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.SpaceEnte{} })
+	return s.ext.List(id, strings.Concat("E", name), ranges, top, func() storage.Entity { return &relation.SpaceEnte{} })
+}
+
+// ListCategories lists categories depending ranges parameter.
+// Look at service.List
+func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
+	return s.ext.List(id, strings.Concat("S", name), ranges, top, func() storage.Entity { return &relation.SpaceCategory{} })
 }

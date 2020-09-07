@@ -48,12 +48,18 @@ func TestEnte_Nominative(t *testing.T) {
 func TestEnte_RelKey(t *testing.T) {
 	e := Ente{}
 	e.Name = "namee"
-	assert.Equal(t, "00000000000000000000namee00000000000000000000", e.RelKey())
+	assert.Equal(t, "00000000000000000000Enamee00000000000000000000", e.RelKey())
 }
 
 func TestEnte_ParentKey(t *testing.T) {
 	e := New()
 	e.SpaceID = xid.New()
+	assert.Equal(t, e.SpaceID.String(), e.ParentKey())
+}
+
+func TestEnte_SetParentKey(t *testing.T) {
+	e := New()
+	_ = e.SetParentKey(xid.New().String())
 	assert.Equal(t, e.SpaceID.String(), e.ParentKey())
 }
 
@@ -67,7 +73,7 @@ func TestEnte_Link(t *testing.T) {
 	e.SpaceID = xid.New()
 
 	link := relation.SpaceEnte{
-		ID:     strings.Concat(e.SpaceID.String(), e.Name, e.Key()),
+		ID:     strings.Concat(e.SpaceID.String(), "E", e.Name, e.Key()),
 		Name:   e.Name,
 		EnteID: e.ID.String(),
 	}
@@ -104,6 +110,12 @@ func TestEnteEnteProp_RelKey(t *testing.T) {
 func TestEnteEnteProp_ParentKey(t *testing.T) {
 	e := NewProp()
 	e.EnteID = xid.New()
+	assert.Equal(t, e.EnteID.String(), e.ParentKey())
+}
+
+func TestEnteEnteProp_SetParentKey(t *testing.T) {
+	e := NewProp()
+	_ = e.SetParentKey(xid.New().String())
 	assert.Equal(t, e.EnteID.String(), e.ParentKey())
 }
 

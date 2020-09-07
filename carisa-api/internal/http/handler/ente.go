@@ -45,7 +45,7 @@ func NewEnteHandle(srv ente.Service, cnt *runtime.Container) Ente {
 	}
 }
 
-// Create creates the ente domain
+// Create creates the ente
 func (e *Ente) Create(c httpc.Context) error {
 	ente := ente.Ente{}
 	if err := bind(c, locEnte, e.cnt.Log, &ente); err != nil {
@@ -60,7 +60,7 @@ func (e *Ente) Create(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), ente)
 }
 
-// Put creates or update the ente domain
+// Put creates or update the ente
 func (e *Ente) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
@@ -131,7 +131,7 @@ func (e *Ente) CreateProp(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), prop)
 }
 
-// PutProp creates or update the property of ente domain
+// PutProp creates or update the property of ente category
 func (e *Ente) PutProp(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {

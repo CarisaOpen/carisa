@@ -18,7 +18,7 @@ package relation
 
 import "github.com/carisa/pkg/strings"
 
-// Link represents the link between instance and space
+// InstSpace represents the link between instance and space
 type InstSpace struct {
 	ID      string `json:"-"`
 	Name    string `json:"name"`
@@ -33,7 +33,7 @@ func (l *InstSpace) Key() string {
 	return l.ID
 }
 
-// Link represents the link between space and ente
+// SpaceEnte represents the link between space and ente
 type SpaceEnte struct {
 	ID     string `json:"-"`
 	Name   string `json:"name"`
@@ -48,7 +48,7 @@ func (s *SpaceEnte) Key() string {
 	return s.ID
 }
 
-// Link represents the link between ente and properties
+// EnteEnteProp represents the link between ente and properties
 type EnteEnteProp struct {
 	ID         string `json:"-"`
 	Name       string `json:"name"`
@@ -61,4 +61,35 @@ func (s *EnteEnteProp) ToString() string {
 
 func (s *EnteEnteProp) Key() string {
 	return s.ID
+}
+
+// SpaceCategory represents the link between space and category
+type SpaceCategory struct {
+	ID      string `json:"-"`
+	Name    string `json:"name"`
+	SpaceID string `json:"spaceId"`
+}
+
+func (s *SpaceCategory) ToString() string {
+	return strings.Concat("space-category-link: ID:", s.Key(), ", Name:", s.Name)
+}
+
+func (s *SpaceCategory) Key() string {
+	return s.ID
+}
+
+// Hierarchy represents the link between category and others category or ente
+type Hierarchy struct {
+	ID       string `json:"-"`
+	Name     string `json:"name"`
+	LinkID   string `json:"linkId"`
+	Category bool   `json:"category"` // Category=false the hierarchy link to a ente
+}
+
+func (h *Hierarchy) ToString() string {
+	return strings.Concat("hierarchy-link: ID:", h.Key(), ", Name:", h.Name)
+}
+
+func (h *Hierarchy) Key() string {
+	return h.ID
 }

@@ -22,6 +22,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	catsmpl "github.com/carisa/api/internal/category/samples"
+
 	entesmpl "github.com/carisa/api/internal/ente/samples"
 
 	"github.com/carisa/api/internal/service"
@@ -309,6 +311,53 @@ func TestSpaceHandler_GetListEntesError(t *testing.T) {
 		}
 		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/spaces/:id/entes", "", tt.Param, tt.QParam)
 		err := handlers.SpaceHandler.ListEntes(ctx)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
+	}
+}
+
+func TestSpaceHandler_ListCategories(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, _, mng := newSpcHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	_, ente, err := catsmpl.CreateRootLink(mng, xid.NilID())
+
+	if assert.NoError(t, err) {
+		rec, ctx := h.NewHTTP(
+			nethttp.MethodGet,
+			"/api/categories/:id/categories",
+			"",
+			map[string]string{"id": xid.NilID().String()},
+			map[string]string{"sname": "name"})
+
+		err := handlers.SpaceHandler.ListCategories(ctx)
+		if assert.NoError(t, err) {
+			assert.Contains(
+				t,
+				rec.Body.String(),
+				fmt.Sprintf(`[{"name":"name","spaceId":"%s"}]`, ente.Key()),
+				"List categories")
+			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
+		}
+	}
+}
+
+func TestSpaceHandler_GetListCategoriesError(t *testing.T) {
+	tests := tsamples.TestListError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newSpcHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/categories/:id/categories", "", tt.Param, tt.QParam)
+		err := handlers.SpaceHandler.ListCategories(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
 		assert.Error(t, err, tt.Name)

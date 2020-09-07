@@ -26,7 +26,7 @@ import (
 
 const locService = "ente.service"
 
-// Service implements CRUD operations for the ente domain
+// Service implements CRUD operations for the ente
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension

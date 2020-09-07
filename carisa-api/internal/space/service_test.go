@@ -28,7 +28,8 @@ import (
 	"github.com/carisa/api/internal/entity"
 	"github.com/rs/xid"
 
-	instsamples "github.com/carisa/api/internal/instance/samples"
+	catsmpl "github.com/carisa/api/internal/category/samples"
+	instsmpl "github.com/carisa/api/internal/instance/samples"
 
 	"github.com/carisa/api/internal/mock"
 	"github.com/carisa/pkg/storage"
@@ -57,7 +58,7 @@ func TestSpaceService_Create(t *testing.T) {
 func TestSpaceService_Put(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
-	inst, err := instsamples.CreateInstance(mng)
+	inst, err := instsmpl.CreateInstance(mng)
 	if err != nil {
 		assert.Error(t, err, "Creating instance")
 	}
@@ -149,8 +150,27 @@ func TestSpaceService_ListEntes(t *testing.T) {
 	}
 }
 
+func TestSpaceService_ListCategories(t *testing.T) {
+	tests := samples.TestList()
+
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+	link, _, err := catsmpl.CreateRootLink(mng, id)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListCategories(id, "name", tt.Ranges, 1)
+			if assert.NoError(t, err) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
+			}
+		}
+	}
+}
+
 func space(mng storage.Integration) (*Space, error) {
-	inst, err := instsamples.CreateInstance(mng)
+	inst, err := instsmpl.CreateInstance(mng)
 	if err == nil {
 		space := New()
 		space.Name = "name"

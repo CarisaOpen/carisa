@@ -52,6 +52,11 @@ func (o Object) ParentKey() string {
 	return o.Parent
 }
 
+func (o *Object) SetParentKey(value string) error {
+	o.Parent = value
+	return nil
+}
+
 func (o Object) RelName() string {
 	return o.Name
 }
@@ -182,7 +187,7 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 				continue
 			}
 		}
-		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, e)
+		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, &e)
 		if assert.NoError(t, err) {
 			assert.Equal(t, tt.parent, foundParent, strings.Concat(tt.name, "Finding parent"))
 			assert.Equal(t, tt.created, ok, strings.Concat(tt.name, "Created"))
@@ -225,7 +230,7 @@ func TestCRUDOperation_CreateWithRelError(t *testing.T) {
 		if tt.mockS != nil {
 			tt.mockS(store)
 		}
-		_, _, err := oper.CreateWithRel("loc", storeTimeout, e)
+		_, _, err := oper.CreateWithRel("loc", storeTimeout, &e)
 		if assert.Error(t, err, tt.name) {
 			assert.Equal(t, tt.err, err.Error())
 		}
@@ -353,6 +358,18 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			},
 		},
 		{
+			name:    "Updating value. Replace parent.",
+			parent:  true,
+			updated: true,
+			e: &Object{
+				ID:     "key",
+				Name:   "name1",
+				Value:  3,
+				Parent: "parentKey4",
+			},
+		},
+		{
+			name:    "Creating. Parent not found.",
 			parent:  false,
 			updated: false,
 			e: &Object{
@@ -433,7 +450,7 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 		if tt.mockS != nil {
 			tt.mockS(store)
 		}
-		_, _, err := oper.PutWithRel("loc", storeTimeout, e)
+		_, _, err := oper.PutWithRel("loc", storeTimeout, &e)
 		if assert.Error(t, err, tt.name) {
 			assert.Equal(t, tt.err, err.Error())
 		}

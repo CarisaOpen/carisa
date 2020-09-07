@@ -97,8 +97,9 @@ func services(cnt *runtime.Container, store storage.CRUD) service {
 func handlers(srv service, cnt *runtime.Container) handler.Handlers {
 	cnt.Log.Info("configuring http handlers", locBuild)
 	return handler.Handlers{
-		InstHandler:  handler.NewInstanceHandle(srv.instanceSrv, cnt),
-		SpaceHandler: handler.NewSpaceHandle(srv.spaceSrv, cnt),
-		EnteHandler:  handler.NewEnteHandle(srv.enteSrv, cnt),
+		InstHandler:     handler.NewInstanceHandle(srv.instanceSrv, cnt),
+		SpaceHandler:    handler.NewSpaceHandle(srv.spaceSrv, cnt),
+		EnteHandler:     handler.NewEnteHandle(srv.enteSrv, cnt),
+		CategoryHandler: handler.NewCatHandle(srv.catSrv, cnt),
 	}
 }

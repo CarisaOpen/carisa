@@ -62,6 +62,15 @@ func (s *Space) ParentKey() string {
 	return s.InstID.String()
 }
 
+func (s *Space) SetParentKey(value string) error {
+	id, err := xid.FromString(value)
+	if err != nil {
+		return err
+	}
+	s.InstID = id
+	return nil
+}
+
 // Link gets the link between instance and space
 func (s *Space) Link() storage.Entity {
 	return &relation.InstSpace{

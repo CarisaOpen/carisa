@@ -44,7 +44,7 @@ func NewInstanceHandle(srv instance.Service, cnt *runtime.Container) Instance {
 	}
 }
 
-// Create creates the instance domain
+// Create creates the instance category
 func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
 	if err := bind(c, locInstance, i.cnt.Log, &inst); err != nil {
@@ -59,7 +59,7 @@ func (i *Instance) Create(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), inst)
 }
 
-// Put creates or update the instance domain
+// Put creates or update the instance category
 func (i *Instance) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {

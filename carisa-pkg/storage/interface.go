@@ -37,6 +37,9 @@ type (
 		// ParentKey gets the key of the parent entity that contains this child entity
 		ParentKey() string
 
+		// SetParentKey sets the key of the parent entity that contains this child entity
+		SetParentKey(value string) error
+
 		// Name gets the relation Name
 		RelName() string
 
@@ -58,6 +61,7 @@ type (
 	// CRUD defines the CRUD operations
 	CRUD interface {
 		// Put creates or updates the entity depending of transaction. This context is added to the transaction.
+		// The relation key cannot be changed
 		// See Txn interface
 		Put(entity Entity) (OpeWrap, error)
 

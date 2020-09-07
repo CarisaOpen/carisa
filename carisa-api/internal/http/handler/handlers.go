@@ -23,9 +23,10 @@ import (
 
 // Handlers is a handlers container
 type Handlers struct {
-	InstHandler  Instance
-	SpaceHandler Space
-	EnteHandler  Ente
+	InstHandler     Instance
+	SpaceHandler    Space
+	EnteHandler     Ente
+	CategoryHandler Category
 }
 
 // Instance
@@ -62,6 +63,10 @@ func (h *Handlers) SpcListEntes(ctx echo.Context) error {
 	return h.SpaceHandler.ListEntes(echoc.NewContext(ctx))
 }
 
+func (h *Handlers) SpcListCategories(ctx echo.Context) error {
+	return h.SpaceHandler.ListCategories(echoc.NewContext(ctx))
+}
+
 // Ente
 func (h *Handlers) EnteCreate(ctx echo.Context) error {
 	return h.EnteHandler.Create(echoc.NewContext(ctx))
@@ -89,4 +94,21 @@ func (h *Handlers) EntePutProp(ctx echo.Context) error {
 
 func (h *Handlers) EnteGetProp(ctx echo.Context) error {
 	return h.EnteHandler.GetProp(echoc.NewContext(ctx))
+}
+
+// Category
+func (h *Handlers) CatCreate(ctx echo.Context) error {
+	return h.CategoryHandler.Create(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatPut(ctx echo.Context) error {
+	return h.CategoryHandler.Put(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatGet(ctx echo.Context) error {
+	return h.CategoryHandler.Get(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatListCategories(ctx echo.Context) error {
+	return h.CategoryHandler.ListCategories(echoc.NewContext(ctx))
 }

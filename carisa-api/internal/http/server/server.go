@@ -68,6 +68,7 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.POST("/api/spaces", h.SpaceCreate)
 	e.PUT("/api/spaces/:id", h.SpacePut)
 	e.GET("/api/spaces/:id/entes", h.SpcListEntes)
+	e.GET("/api/spaces/:id/categories", h.SpcListCategories)
 
 	// Ente
 	e.GET("/api/entes/:id", h.EnteGet)
@@ -77,4 +78,10 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/entesprop/:id", h.EnteGetProp)
 	e.POST("/api/entesprop", h.EnteCreateProp)
 	e.PUT("/api/entesprop/:id", h.EntePutProp)
+
+	// Category
+	e.GET("/api/categories/:id", h.CatGet)
+	e.POST("/api/categories", h.CatCreate)
+	e.PUT("/api/categories/:id", h.CatPut)
+	e.GET("/api/categories/:id/categories", h.CatListCategories)
 }

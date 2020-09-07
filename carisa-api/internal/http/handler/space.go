@@ -45,7 +45,7 @@ func NewSpaceHandle(srv space.Service, cnt *runtime.Container) Space {
 	}
 }
 
-// Create creates the space domain
+// Create creates the space category
 func (s *Space) Create(c httpc.Context) error {
 	spc := space.Space{}
 	if err := bind(c, locSpace, s.cnt.Log, &spc); err != nil {
@@ -61,7 +61,7 @@ func (s *Space) Create(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), spc)
 }
 
-// Put creates or update the space domain
+// Put creates or update the space category
 func (s *Space) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
@@ -115,4 +115,21 @@ func (s *Space) ListEntes(c httpc.Context) error {
 	}
 
 	return c.JSON(nethttp.StatusOK, entes)
+}
+
+// ListCategories list categories by space ID and return top categories.
+// If sname query param is not empty, is filtered by categories which name starts by name parameter
+// If gtname query param is not empty, is filtered by categories which name is greater than name parameter
+func (s *Space) ListCategories(c httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(c)
+	if err != nil {
+		return err
+	}
+
+	categories, err := s.srv.ListCategories(id, name, ranges, top)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the categories")
+	}
+
+	return c.JSON(nethttp.StatusOK, categories)
 }

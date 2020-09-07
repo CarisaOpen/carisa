@@ -24,6 +24,22 @@ import (
 	"github.com/rs/xid"
 )
 
+// TypeProp is the field type of the property
+type TypeProp uint8
+
+const (
+	// None is not defined
+	None TypeProp = iota
+	// Integer is a integer value
+	Integer
+	// Decimal is a decimal value (default)
+	Decimal
+	// Boolean is un logic value
+	Boolean
+	// DateTime is a value with date and time
+	DateTime
+)
+
 // The thinks of spaces.
 // The ente are the items of spaces to trace, count, measure, etc.
 type Ente struct {
@@ -50,7 +66,7 @@ func (e *Ente) Nominative() entity.Descriptor {
 }
 
 func (e *Ente) RelKey() string {
-	return strings.Concat(e.SpaceID.String(), e.Name, e.Key())
+	return strings.Concat(e.SpaceID.String(), "E", e.Name, e.Key())
 }
 
 func (e *Ente) RelName() string {
@@ -60,6 +76,15 @@ func (e *Ente) RelName() string {
 // ParentKey gets the Space ID
 func (e *Ente) ParentKey() string {
 	return e.SpaceID.String()
+}
+
+func (e *Ente) SetParentKey(value string) error {
+	id, err := xid.FromString(value)
+	if err != nil {
+		return err
+	}
+	e.SpaceID = id
+	return nil
 }
 
 // Link gets the link between instance and ente
@@ -74,22 +99,6 @@ func (e *Ente) Link() storage.Entity {
 func (e *Ente) Empty() storage.EntityRelation {
 	return &Ente{}
 }
-
-// TypeProp is the field type of the property
-type TypeProp uint8
-
-const (
-	// None is not defined
-	None TypeProp = iota
-	// Integer is a integer value
-	Integer
-	// Decimal is a decimal value (default)
-	Decimal
-	// Boolean is un logic value
-	Boolean
-	// DateTime is a value with date and time
-	DateTime
-)
 
 // The ente properties contains the fields
 type Prop struct {
@@ -128,6 +137,15 @@ func (e *Prop) RelName() string {
 // ParentKey gets the Ente ID
 func (e *Prop) ParentKey() string {
 	return e.EnteID.String()
+}
+
+func (e *Prop) SetParentKey(value string) error {
+	id, err := xid.FromString(value)
+	if err != nil {
+		return err
+	}
+	e.EnteID = id
+	return nil
 }
 
 // Link gets the link between Ente and properties
