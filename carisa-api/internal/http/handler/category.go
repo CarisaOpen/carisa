@@ -19,6 +19,8 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/carisa/api/internal/ente"
+
 	"github.com/carisa/api/internal/category"
 
 	"github.com/carisa/api/internal/http/convert"
@@ -121,4 +123,93 @@ func (c *Category) ListCategories(ctx httpc.Context) error {
 	}
 
 	return ctx.JSON(nethttp.StatusOK, props)
+}
+
+// ListProps list properties by category ID and return top properties.
+// If sname query param is not empty, is filtered by properties which name starts by name parameter
+// If gtname query param is not empty, is filtered by properties which name is greater than name parameter
+func (c *Category) ListProps(ctx httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(ctx)
+	if err != nil {
+		return err
+	}
+
+	props, err := c.srv.ListProps(id, name, ranges, top)
+	if err != nil {
+		return ctx.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the properties of the category")
+	}
+
+	return ctx.JSON(nethttp.StatusOK, props)
+}
+
+// CreateProp creates the property of the category
+func (c *Category) CreateProp(ctx httpc.Context) error {
+	prop := category.Prop{}
+	if err := bind(ctx, locCat, c.cnt.Log, &prop); err != nil {
+		return err
+	}
+	if err := validType(ctx, prop); err != nil {
+		return err
+	}
+
+	created, found, err := c.srv.CreateProp(&prop)
+	if err = errService(
+		ctx,
+		err,
+		"it was impossible to create the property of the category",
+		"category not found",
+		found); err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.CreateStatus(created), prop)
+}
+
+// PutProp creates or update the property of the category
+func (c *Category) PutProp(ctx httpc.Context) error {
+	id, err := convert.ParamID(ctx)
+	if err != nil {
+		return err
+	}
+
+	prop := category.Prop{}
+	if err := bind(ctx, locCat, c.cnt.Log, &prop); err != nil {
+		return err
+	}
+	if err := validType(ctx, prop); err != nil {
+		return err
+	}
+
+	prop.ID = id
+	updated, found, err := c.srv.PutProp(&prop)
+	if err = errService(
+		ctx, err, "it was impossible to create or update the property of the category", "category not found", found); err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.PutStatus(updated), prop)
+}
+
+// GetProp gets the property of the category by ID
+func (c *Category) GetProp(ctx httpc.Context) error {
+	var prop category.Prop
+
+	id, err := convert.ParamID(ctx)
+	if err != nil {
+		return err
+	}
+
+	found, err := c.srv.GetProp(id, &prop)
+	if err != nil {
+		return ctx.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the property of the category")
+	}
+
+	return ctx.JSON(http.GetStatus(found), prop)
+}
+
+func validType(ctx httpc.Context, prop category.Prop) error {
+	if prop.Type != ente.None {
+		return ctx.HTTPError(nethttp.StatusBadRequest, "The 'type' property can be changed")
+	}
+	return nil
 }

@@ -17,6 +17,7 @@
 package category
 
 import (
+	"github.com/carisa/api/internal/ente"
 	"github.com/carisa/api/internal/entity"
 	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/pkg/storage"
@@ -30,7 +31,7 @@ import (
 type Category struct {
 	entity.Descriptor
 	ParentID xid.ID `json:"parentId,omitempty"` // Space or category container
-	Root     bool   `json:"root,omitempty"`
+	Root     bool   `json:"root"`
 }
 
 func New() Category {
@@ -55,7 +56,7 @@ func (c *Category) RelKey() string {
 	if c.Root {
 		return strings.Concat(c.ParentID.String(), "S", c.Name, c.Key())
 	}
-	return strings.Concat(c.ParentID.String(), c.Name, c.Key())
+	return strings.Concat(c.ParentID.String(), "C", c.Name, c.Key())
 }
 
 func (c *Category) RelName() string {
@@ -80,9 +81,9 @@ func (c *Category) SetParentKey(value string) error {
 func (c *Category) Link() storage.Entity {
 	if c.Root {
 		return &relation.SpaceCategory{
-			ID:      c.RelKey(),
-			Name:    c.Name,
-			SpaceID: c.ID.String(),
+			ID:    c.RelKey(),
+			Name:  c.Name,
+			CatID: c.ID.String(),
 		}
 	}
 	return &relation.Hierarchy{
@@ -95,4 +96,67 @@ func (c *Category) Link() storage.Entity {
 
 func (c *Category) Empty() storage.EntityRelation {
 	return &Category{}
+}
+
+// Prop are the properties of category. Each property represents a generalization
+// of the properties of the entes or of the properties of the categories
+// All of them have the same type. The type is assigned when is linked the first property so ente as the category
+type Prop struct {
+	entity.Descriptor
+	CatID xid.ID        `json:"categoryId"` // Category container
+	Type  ente.TypeProp `json:"type"`
+}
+
+func NewProp() Prop {
+	return Prop{
+		Descriptor: entity.NewDescriptor(),
+		Type:       ente.None,
+	}
+}
+
+func (c *Prop) ToString() string {
+	return strings.Concat("category-property: ID:", c.Key(), ", name:", c.Name)
+}
+
+func (c *Prop) Key() string {
+	return c.ID.String()
+}
+
+func (c *Prop) Nominative() entity.Descriptor {
+	return c.Descriptor
+}
+
+func (c *Prop) RelKey() string {
+	return strings.Concat(c.CatID.String(), "P", c.Name, c.Key())
+}
+
+func (c *Prop) RelName() string {
+	return c.Name
+}
+
+// ParentKey gets the Ente ID
+func (c *Prop) ParentKey() string {
+	return c.CatID.String()
+}
+
+func (c *Prop) SetParentKey(value string) error {
+	id, err := xid.FromString(value)
+	if err != nil {
+		return err
+	}
+	c.CatID = id
+	return nil
+}
+
+// Link gets the link between Category and her properties
+func (c *Prop) Link() storage.Entity {
+	return &relation.CategoryProp{
+		ID:        c.RelKey(),
+		Name:      c.Name,
+		CatPropID: c.ID.String(),
+	}
+}
+
+func (c *Prop) Empty() storage.EntityRelation {
+	return &Prop{}
 }

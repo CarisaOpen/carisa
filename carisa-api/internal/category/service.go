@@ -21,6 +21,7 @@ import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
@@ -68,5 +69,34 @@ func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 // ListCategories lists categories depending ranges parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
+	return s.ext.List(id, strings.Concat("C", name), ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
+}
+
+// ListProps lists properties depending ranges parameter.
+// Look at service.List
+func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
+	return s.ext.List(id, strings.Concat("P", name), ranges, top, func() storage.Entity { return &relation.CategoryProp{} })
+}
+
+// CreateProp creates a property into of the repository and links category property and category.
+// If the property exists return false in the first param returned.
+// If the category doesn't exist return false in the second param returned.
+func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
+	prop.AutoID()
+	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
+}
+
+// PutProp creates or updates a peroperty into of the repository.
+// If the property exists return true in the first param returned otherwise return false.
+// If the category doesn't exist return false in the second param returned.
+func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
+	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, prop)
+}
+
+// GetProp gets the property from storage
+func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	ok, err := s.crud.Store().Get(ctx, id.String(), prop)
+	cancel()
+	return ok, err
 }

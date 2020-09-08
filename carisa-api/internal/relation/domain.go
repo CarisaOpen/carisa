@@ -48,7 +48,7 @@ func (s *SpaceEnte) Key() string {
 	return s.ID
 }
 
-// EnteEnteProp represents the link between ente and properties
+// EnteEnteProp represents the link between ente and her properties
 type EnteEnteProp struct {
 	ID         string `json:"-"`
 	Name       string `json:"name"`
@@ -65,9 +65,9 @@ func (s *EnteEnteProp) Key() string {
 
 // SpaceCategory represents the link between space and category
 type SpaceCategory struct {
-	ID      string `json:"-"`
-	Name    string `json:"name"`
-	SpaceID string `json:"spaceId"`
+	ID    string `json:"-"`
+	Name  string `json:"name"`
+	CatID string `json:"categoryId"`
 }
 
 func (s *SpaceCategory) ToString() string {
@@ -92,4 +92,19 @@ func (h *Hierarchy) ToString() string {
 
 func (h *Hierarchy) Key() string {
 	return h.ID
+}
+
+// CategoryProp represents the link between category and her properties
+type CategoryProp struct {
+	ID        string `json:"-"`
+	Name      string `json:"name"`
+	CatPropID string `json:"categoryPropId"`
+}
+
+func (c *CategoryProp) ToString() string {
+	return strings.Concat("category-catprop-link: ID:", c.Key(), ", Name:", c.Name)
+}
+
+func (c *CategoryProp) Key() string {
+	return c.ID
 }

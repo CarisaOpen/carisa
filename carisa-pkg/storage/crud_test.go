@@ -433,11 +433,6 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 		err   string
 	}{
 		{
-			name:  "Error finding parent",
-			mockS: func(s *ErrMockCRUD) { s.Activate("Exists") },
-			err:   "finding parent. Parent key: parentKey: exists",
-		},
-		{
 			name:  "Error finding entity to see change",
 			mockS: func(s *ErrMockCRUD) { s.Activate("Get") },
 			err:   "getting the entity: get",

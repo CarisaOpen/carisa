@@ -124,24 +124,16 @@ func (c *crudOperation) create(loc string, storeTimeout StoreWithTimeout, entity
 
 // Put implements CrudOperation.Put
 func (c *crudOperation) Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error) {
-	updated, err := c.put(loc, storeTimeout, entity, false)
+	updated, _, err := c.put(loc, storeTimeout, entity, false)
 	return updated, err
 }
 
 // PutWithRel implements CrudOperation.PutWithRel
 func (c *crudOperation) PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error) {
-	found, err := c.existsParent(loc, storeTimeout, entity)
-	if err != nil {
-		return false, false, err
-	}
-	if !found {
-		return false, false, nil
-	}
-	updated, err := c.put(loc, storeTimeout, entity, true)
-	return updated, true, err
+	return c.put(loc, storeTimeout, entity, true)
 }
 
-func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity Entity, isRel bool) (bool, error) {
+func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity Entity, isRel bool) (bool, bool, error) {
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
@@ -149,15 +141,25 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 
 	// If the relation is passed by param and the entity exists is updated in the same transaction
 	if isRel {
-		if err := c.updateRelation(ctx, loc, entity, txn); err != nil {
-			return false, err
+		found, err := c.updateRelation(ctx, loc, entity, txn)
+		if err != nil {
+			return false, false, err
+		}
+		if !found { // If is new the entity, checks the parent
+			found, err = c.existsParent(loc, storeTimeout, entity.(EntityRelation))
+			if err != nil {
+				return false, false, err
+			}
+			if !found { // The parent must exist
+				return false, false, nil
+			}
 		}
 	}
 
 	put, err := c.store.Put(entity)
 	if err != nil {
 		c.log.ErrorE(err, loc)
-		return false, err
+		return false, false, err
 	}
 	// Update entity
 	txn.DoFound(put)
@@ -169,7 +171,7 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 		rel, _ := entity.(EntityRelation)
 		create, err := c.store.Put(rel.Link())
 		if err != nil {
-			return false, c.log.ErrWrap(err, "creating relation", loc)
+			return false, false, c.log.ErrWrap(err, "creating relation", loc)
 		}
 		txn.DoNotFound(create)
 	}
@@ -177,37 +179,38 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	updated, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
-		return false, c.log.ErrWrap1(err, "commit putting", loc, logging.String(reflect.TypeOf(entity).Name(), entity.ToString()))
+		return false, false, c.log.ErrWrap1(err, "commit putting", loc, logging.String(reflect.TypeOf(entity).Name(), entity.ToString()))
 	}
 
-	return updated, nil
+	return updated, true, nil
 }
 
-func (c *crudOperation) updateRelation(ctx context.Context, loc string, entity Entity, txn Txn) error {
+func (c *crudOperation) updateRelation(ctx context.Context, loc string, entity Entity, txn Txn) (bool, error) {
 	rel, _ := entity.(EntityRelation)
 	oldEntity := rel.Empty()
 	found, err := c.store.Get(ctx, entity.Key(), oldEntity)
 	if err != nil {
-		return c.log.ErrWrap(err, "getting the entity", loc)
+		return false, c.log.ErrWrap(err, "getting the entity", loc)
 	}
 	// Even if the entity is not found later it will be created with with DoNotFound
 	if found {
 		name := rel.RelName()
 		// The parentID cannot be changed. To change remove before
 		if err := rel.SetParentKey(oldEntity.ParentKey()); err != nil {
-			return c.log.ErrWrap(err, "Setting parent old key", loc)
+			return true, c.log.ErrWrap(err, "Setting parent old key", loc)
 		}
 		if len(name) != 0 && name != oldEntity.RelName() {
 			// it removes old relation and creating new relation when change Name. Name is part of key
 			txn.DoFound(c.store.Remove(oldEntity.RelKey()))
 			updRel, err := c.store.Put(rel.Link())
 			if err != nil {
-				return c.log.ErrWrap(err, "updating relation", loc)
+				return true, c.log.ErrWrap(err, "updating relation", loc)
 			}
 			txn.DoFound(updRel)
 		}
+		return true, nil
 	}
-	return nil
+	return false, nil
 }
 
 func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, error) {

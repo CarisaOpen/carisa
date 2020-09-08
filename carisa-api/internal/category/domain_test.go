@@ -19,6 +19,8 @@ package category
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/ente"
+
 	"github.com/carisa/pkg/storage"
 
 	"github.com/carisa/api/internal/entity"
@@ -67,13 +69,13 @@ func TestCategory_SetParentKey(t *testing.T) {
 }
 
 func TestCategory_Empty(t *testing.T) {
-	e := New()
-	assert.Equal(t, &Category{}, e.Empty())
+	c := New()
+	assert.Equal(t, &Category{}, c.Empty())
 }
 
 func TestCategory_Link(t *testing.T) {
-	e := New()
-	e.ParentID = xid.New()
+	c := New()
+	c.ParentID = xid.New()
 
 	tests := []struct {
 		name string
@@ -84,25 +86,81 @@ func TestCategory_Link(t *testing.T) {
 			name: "Category with space",
 			root: true,
 			link: &relation.SpaceCategory{
-				ID:      strings.Concat(e.ParentID.String(), "S", e.Name, e.Key()),
-				Name:    e.Name,
-				SpaceID: e.ID.String(),
+				ID:    strings.Concat(c.ParentID.String(), "S", c.Name, c.Key()),
+				Name:  c.Name,
+				CatID: c.ID.String(),
 			},
 		},
 		{
 			name: "Category with others Category",
 			root: false,
 			link: &relation.Hierarchy{
-				ID:       strings.Concat(e.ParentID.String(), e.Name, e.Key()),
-				Name:     e.Name,
+				ID:       strings.Concat(c.ParentID.String(), "C", c.Name, c.Key()),
+				Name:     c.Name,
 				Category: true,
-				LinkID:   e.ID.String(),
+				LinkID:   c.ID.String(),
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		e.Root = tt.root
-		assert.Equal(t, tt.link, e.Link(), tt.name)
+		c.Root = tt.root
+		assert.Equal(t, tt.link, c.Link(), tt.name)
 	}
+}
+
+func TestCategoryCatProp_Field(t *testing.T) {
+	c := NewProp()
+	assert.Equal(t, c.Type, ente.None)
+}
+
+func TestCategoryCatProp_ToString(t *testing.T) {
+	c := NewProp()
+	assert.Equal(t, strings.Concat("category-property: ID:", c.Key(), ", name:", c.Name), c.ToString())
+}
+
+func TestCategoryCatProp_Key(t *testing.T) {
+	c := NewProp()
+	assert.Equal(t, c.ID.String(), c.Key())
+}
+
+func TestCategoryCatProp_Nominative(t *testing.T) {
+	c := Prop{}
+	assert.Equal(t, entity.Descriptor{}, c.Nominative())
+}
+
+func TestCategoryCatProp_RelKey(t *testing.T) {
+	c := Prop{}
+	c.Name = "namecp"
+	assert.Equal(t, "00000000000000000000Pnamecp00000000000000000000", c.RelKey())
+}
+
+func TestCategoryCatProp_ParentKey(t *testing.T) {
+	c := NewProp()
+	c.CatID = xid.New()
+	assert.Equal(t, c.CatID.String(), c.ParentKey())
+}
+
+func TestCategoryCatProp_SetParentKey(t *testing.T) {
+	c := NewProp()
+	_ = c.SetParentKey(xid.New().String())
+	assert.Equal(t, c.CatID.String(), c.ParentKey())
+}
+
+func TestCategoryCatProp_Empty(t *testing.T) {
+	c := NewProp()
+	assert.Equal(t, &Prop{}, c.Empty())
+}
+
+func TestCategoryCatProp_Link(t *testing.T) {
+	c := NewProp()
+	c.CatID = xid.New()
+
+	link := relation.CategoryProp{
+		ID:        strings.Concat(c.CatID.String(), "P", c.Name, c.Key()),
+		Name:      c.Name,
+		CatPropID: c.ID.String(),
+	}
+
+	assert.Equal(t, &link, c.Link())
 }

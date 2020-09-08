@@ -19,6 +19,10 @@ tags:
     description: "The ente are the items of spaces to trace, count, measure, etc."
   - name: "enteprop"
     description: "The ente property are the fields of the ente."
+  - name: "category"
+    description: "The category represents a hierarchy to organize the entes and how the information spreads between the different categories"
+  - name: "categoryprop"
+    description: "The category property are the fields of the category. This properties link to other child category properties or the child ente properties."
 schemes:
   - "https"
   - "http"
@@ -279,6 +283,47 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
+  /spaces/{id}/categories:
+    get:
+      tags:
+        - "space"
+      summary: "List categories of the space by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Space identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List categories that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List categories greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of categories"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/CategoryLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
   /entes:
     post:
       tags:
@@ -496,6 +541,264 @@ paths:
           description: "Ente property not found"
         "500":
           description: "Internal server error"
+  /categories:
+    post:
+      tags:
+        - "category"
+      summary: "Add a new category to the space or other category hierarchily depending of 'root' field"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Category object that needs to be added to the space or other category"
+          required: true
+          schema:
+            $ref: "#/definitions/CategoryReq"
+      responses:
+        "201":
+          description: "Category created"
+          schema:
+            $ref: "#/definitions/Category"
+        "302":
+          description: "Category found"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Space or category not found"
+        "500":
+          description: "Internal server error"
+  /categories/{id}:
+    put:
+      tags:
+        - "category"
+      summary: "If the category ID exists is updated otherwise is added. Use the field 'root' to indicate if the category belongs to a space or other category"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "CAtegory object that needs to be added or updated to the space or other category"
+          required: true
+          schema:
+            $ref: "#/definitions/CategoryReq"
+      responses:
+        "200":
+          description: "Category updated"
+          schema:
+            $ref: "#/definitions/Category"
+        "201":
+          description: "Category created"
+          schema:
+            $ref: "#/definitions/Category"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "category"
+      summary: "Find category by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Category found"
+          schema:
+            $ref: "#/definitions/Category"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Category not found"
+        "500":
+          description: "Internal server error"
+  /categories/{id}/child:
+    get:
+      tags:
+        - "category"
+      summary: "List categories or entes of the category by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List categories that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List categories greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of the categories"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/HierarchyLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /categories/{id}/properties:
+    get:
+      tags:
+        - "category"
+      summary: "List properties of the category by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List category properties that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List category properties greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of properties"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/CategoryPropLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /categoriesprop:
+    post:
+      tags:
+        - "categoryprop"
+      summary: "Add a new property to the category"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "The property object that needs to be added to the category"
+          required: true
+          schema:
+            $ref: "#/definitions/CategoryPropReq"
+      responses:
+        "201":
+          description: "CAtegory property created"
+          schema:
+            $ref: "#/definitions/CategoryProp"
+        "302":
+          description: "Category property found"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Ente not found"
+        "500":
+          description: "Internal server error"
+  /categoriesprop/{id}:
+    put:
+      tags:
+        - "categoryprop"
+      summary: "If the category property ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category property identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Category property object that needs to be added or updated to the category"
+          required: true
+          schema:
+            $ref: "#/definitions/CategoryPropReq"
+      responses:
+        "200":
+          description: "Category property updated"
+          schema:
+            $ref: "#/definitions/EnteProp"
+        "201":
+          description: "Category property created"
+          schema:
+            $ref: "#/definitions/CategoryProp"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "categoryprop"
+      summary: "Find category property by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category property identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Category property found"
+          schema:
+            $ref: "#/definitions/CategoryProp"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Category property not found"
+        "500":
+          description: "Internal server error"
 definitions:
   Instance:
     type: "object"
@@ -622,7 +925,7 @@ definitions:
         description: "Ente identifier where the ente property has been added"
       type:
         type: "integer"
-        description: "Type of field: (Integer=0, Decimal=1, Boolean=2, DateTime=3)"
+        description: "Type of field: (Integer=1, Decimal=2, Boolean=3, DateTime=4)"
   EntePropReq:
     type: "object"
     required:
@@ -652,3 +955,110 @@ definitions:
       entePropId:
         type: "string"
         description: "Ente property identifier"
+  Category:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Category identifier"
+      name:
+        type: "string"
+        description: "Category name"
+      description:
+        type: "string"
+        description: "Category description"
+      root:
+        type: "boolean"
+        description: "If the category is root, the container is a space, otherwise the container is other parent container"
+      parentId:
+        type: "string"
+        description: "Parent identifier where the category where is added. If the 'root' is true, parentId contains the space identifier, otherwise parentId contains the parent category identifier"
+  CategoryReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+      - "root"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Ente name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Ente description"
+      root:
+        type: "boolean"
+        description: "If the category is root, the container will be a space, otherwise the container will be a parent container"
+      parentId:
+        type: "string"
+        description: "Parent identifier where the category is added. If the 'root' is true, parentId contains the space identifier, otherwise parentId contains the parent category identifier"
+  CategoryLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Space name"
+      categoryId:
+        type: "string"
+        description: "Root category identifier"
+  HierarchyLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Space name"
+      category:
+        type: "boolean"
+        description: "If category is true, the linkId links a category otherwise it links a ente"
+      linkId:
+        type: "string"
+        description: "Link identifier where the category or ente is added. If the 'category' is true, linkId contains the category identifier, otherwise linkId contains the ente identifier"
+  CategoryProp:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Category property identifier"
+      name:
+        type: "string"
+        description: "Category property name"
+      description:
+        type: "string"
+        description: "Category property description"
+      categoryId:
+        type: "string"
+        description: "Category identifier where the category property has been added"
+      type:
+        type: "integer"
+        description: "Type of field: (None=0, Integer=1, Decimal=2, Boolean=3, DateTime=4)"
+  CategoryPropReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Category property name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Category property description"
+      categoryId:
+        type: "string"
+        description: "Category identifier where the category property is added"
+      type:
+        type: "integer"
+        description: "Type of field. See the description in CategoryProp"
+  CategoryPropLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Category property name"
+      categoryPropId:
+        type: "string"
+        description: "Category property identifier"

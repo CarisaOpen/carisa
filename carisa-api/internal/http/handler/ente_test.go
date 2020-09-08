@@ -134,6 +134,11 @@ func TestEnteHandler_Put(t *testing.T) {
 		status int
 	}{
 		{
+			name:   "Creating ente. Space not found",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","spaceId":"%s"`, xid.New().String()),
+			status: nethttp.StatusNotFound,
+		},
+		{
 			name:   "Creating ente.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","spaceId":"%s"`, space.ID.String()),
 			status: nethttp.StatusCreated,
@@ -142,11 +147,6 @@ func TestEnteHandler_Put(t *testing.T) {
 			name:   "Updating ente.",
 			body:   fmt.Sprintf(`"name":"name1","description":"desc","spaceId":"%s"`, space.ID.String()),
 			status: nethttp.StatusOK,
-		},
-		{
-			name:   "Creating ente. Space not found",
-			body:   fmt.Sprintf(`"name":"name","description":"desc","spaceId":"%s"`, xid.New().String()),
-			status: nethttp.StatusNotFound,
 		},
 	}
 
@@ -403,6 +403,11 @@ func TestEnteHandler_PutProp(t *testing.T) {
 		status int
 	}{
 		{
+			name:   "Creating ente property. Ente not found",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, xid.New().String()),
+			status: nethttp.StatusNotFound,
+		},
+		{
 			name:   "Creating ente property.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, ente.ID.String()),
 			status: nethttp.StatusCreated,
@@ -411,11 +416,6 @@ func TestEnteHandler_PutProp(t *testing.T) {
 			name:   "Updating ente property.",
 			body:   fmt.Sprintf(`"name":"name1","description":"desc","enteId":"%s","type":3`, ente.ID.String()),
 			status: nethttp.StatusOK,
-		},
-		{
-			name:   "Creating ente property. Ente not found",
-			body:   fmt.Sprintf(`"name":"name","description":"desc","enteId":"%s","type":2`, xid.New().String()),
-			status: nethttp.StatusNotFound,
 		},
 	}
 

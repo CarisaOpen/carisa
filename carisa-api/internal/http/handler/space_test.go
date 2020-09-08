@@ -137,6 +137,11 @@ func TestSpaceHandler_Put(t *testing.T) {
 		status int
 	}{
 		{
+			name:   "Creating space. Instance not found",
+			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.New().String()),
+			status: nethttp.StatusNotFound,
+		},
+		{
 			name:   "Creating space.",
 			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, inst.ID.String()),
 			status: nethttp.StatusCreated,
@@ -145,11 +150,6 @@ func TestSpaceHandler_Put(t *testing.T) {
 			name:   "Updating space.",
 			body:   fmt.Sprintf(`"name":"name1","description":"desc","instanceId":"%s"`, inst.ID.String()),
 			status: nethttp.StatusOK,
-		},
-		{
-			name:   "Creating space. Instance not found",
-			body:   fmt.Sprintf(`"name":"name","description":"desc","instanceId":"%s"`, xid.New().String()),
-			status: nethttp.StatusNotFound,
 		},
 	}
 
@@ -338,7 +338,7 @@ func TestSpaceHandler_ListCategories(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","spaceId":"%s"}]`, ente.Key()),
+				fmt.Sprintf(`[{"name":"name","categoryId":"%s"}]`, ente.Key()),
 				"List categories")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}

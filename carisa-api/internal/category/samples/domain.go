@@ -23,6 +23,16 @@ import (
 	"github.com/rs/xid"
 )
 
+func CreateCat(mng storage.Integration) (category.Category, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	cat := category.New()
+	cat.Name = "Name"
+	cat.Desc = "desc"
+	cat.Root = true
+	_, err := crudOper.Put("loc", cnt.StoreWithTimeout, &cat)
+	return cat, err
+}
+
 func CreateLink(mng storage.Integration, catID xid.ID) (storage.Entity, category.Category, error) {
 	return createLink(mng, catID, false)
 }
@@ -41,4 +51,15 @@ func createLink(mng storage.Integration, catID xid.ID, root bool) (storage.Entit
 	link := s.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
 	return link, s, err
+}
+
+func CreateLinkProp(mng storage.Integration, catID xid.ID) (storage.Entity, category.Prop, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	prop := category.NewProp()
+	prop.Name = "namep"
+	prop.Desc = "descp"
+	prop.CatID = catID
+	link := prop.Link()
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
+	return link, prop, err
 }

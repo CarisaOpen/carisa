@@ -19,6 +19,8 @@ package category
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/ente"
+
 	"github.com/carisa/api/internal/samples"
 
 	"github.com/carisa/api/internal/entity"
@@ -173,6 +175,124 @@ func TestCatService_ListCategories(t *testing.T) {
 	}
 }
 
+func TestCatService_ListProps(t *testing.T) {
+	tests := samples.TestList()
+
+	s, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	id := xid.New()
+	cat := NewProp()
+	cat.CatID = id
+	cat.Name = "namep"
+	link := cat.Link()
+
+	_, err := s.crud.Create("", s.cnt.StoreWithTimeout, link)
+
+	if assert.NoError(t, err) {
+		for _, tt := range tests {
+			list, err := s.ListProps(id, "namep", tt.Ranges, 1)
+			if assert.NoError(t, err, tt.Name) {
+				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
+			}
+		}
+	}
+}
+
+func TestCatService_CreateProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	prop, err := prop(srv.cnt, srv.crud)
+
+	if assert.NoError(t, err) {
+		ok, found, err := srv.CreateProp(prop)
+
+		if assert.NoError(t, err) {
+			assert.True(t, ok, "Created")
+			assert.True(t, found, "Category found")
+			checkProp(t, srv, *prop)
+		}
+	}
+}
+
+func TestCatService_PutProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+	cat, err := createCat(srv.cnt, srv.crud)
+	if err != nil {
+		assert.Error(t, err, "Creating category")
+	}
+
+	tests := []struct {
+		name    string
+		updated bool
+		prop    *Prop
+	}{
+		{
+			name:    "Creating property",
+			updated: false,
+			prop: &Prop{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				CatID: cat.ID,
+			},
+		},
+		{
+			name:    "Updating property",
+			updated: true,
+			prop: &Prop{
+				Descriptor: entity.Descriptor{
+					ID:   xid.NilID(),
+					Name: "name",
+					Desc: "desc",
+				},
+				Type:  ente.Boolean,
+				CatID: cat.ID,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		updated, found, err := srv.PutProp(tt.prop)
+		if assert.NoError(t, err) {
+			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Property updated"))
+			assert.True(t, found, strings.Concat(tt.name, "Category found"))
+			checkProp(t, srv, *tt.prop)
+		}
+	}
+}
+
+func TestCatService_GetProp(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	prop, err := prop(srv.cnt, srv.crud)
+
+	if assert.NoError(t, err) {
+		_, _, err := srv.CreateProp(prop)
+		if assert.NoError(t, err) {
+			var get Prop
+			ok, err := srv.GetProp(prop.ID, &get)
+			if assert.NoError(t, err) {
+				assert.True(t, ok, "Get ok")
+				assert.Equal(t, prop, &get, "Property returned")
+			}
+		}
+	}
+}
+
+func checkProp(t *testing.T, srv Service, p Prop) {
+	var prop Prop
+	_, err := srv.GetProp(p.ID, &prop)
+	if assert.NoError(t, err) {
+		assert.Equal(t, p, prop, "Getting property")
+	}
+}
+
 func category(mng storage.Integration, srv *Service, root bool) (*Category, error) {
 	var id xid.ID
 	if root {
@@ -194,6 +314,19 @@ func category(mng storage.Integration, srv *Service, root bool) (*Category, erro
 	categ.ParentID = id
 	categ.Root = root
 	return &categ, nil
+}
+
+func prop(cnt *runtime.Container, crud storage.CrudOperation) (*Prop, error) {
+	cat, err := createCat(cnt, crud)
+	if err == nil {
+		prop := NewProp()
+		prop.Name = "name"
+		prop.Desc = "desc"
+		prop.Type = ente.Decimal
+		prop.CatID = cat.ID
+		return &prop, nil
+	}
+	return nil, err
 }
 
 func createCat(cnt *runtime.Container, crud storage.CrudOperation) (Category, error) {

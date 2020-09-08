@@ -75,34 +75,51 @@ func TestEnteEnteProp_Key(t *testing.T) {
 
 func TestSpaceCategory_ToString(t *testing.T) {
 	s := SpaceCategory{
-		ID:      "key",
-		Name:    "name",
-		SpaceID: "1",
+		ID:    "key",
+		Name:  "name",
+		CatID: "1",
 	}
 	assert.Equal(t, "space-category-link: ID:key, Name:name", s.ToString())
 }
 
 func TestSpaceCategory_Key(t *testing.T) {
 	s := SpaceCategory{
-		ID:      "key",
-		SpaceID: "1",
+		ID:    "key",
+		CatID: "1",
 	}
 	assert.Equal(t, s.ID, s.Key())
 }
 
 func TestHierarchy_ToString(t *testing.T) {
-	e := Hierarchy{
+	h := Hierarchy{
 		ID:     "key",
 		Name:   "name",
 		LinkID: "1",
 	}
-	assert.Equal(t, "hierarchy-link: ID:key, Name:name", e.ToString())
+	assert.Equal(t, "hierarchy-link: ID:key, Name:name", h.ToString())
 }
 
 func TestHierarchy_Key(t *testing.T) {
-	e := Hierarchy{
+	h := Hierarchy{
 		ID:     "key",
 		LinkID: "1",
 	}
-	assert.Equal(t, e.ID, e.Key())
+	assert.Equal(t, h.ID, h.Key())
+}
+
+func TestCategoryProp_ToString(t *testing.T) {
+	c := CategoryProp{
+		ID:        "key",
+		Name:      "name",
+		CatPropID: "1",
+	}
+	assert.Equal(t, "category-catprop-link: ID:key, Name:name", c.ToString())
+}
+
+func TestCategoryProp_Key(t *testing.T) {
+	c := Hierarchy{
+		ID:     "key",
+		LinkID: "1",
+	}
+	assert.Equal(t, c.ID, c.Key())
 }

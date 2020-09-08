@@ -112,3 +112,19 @@ func (h *Handlers) CatGet(ctx echo.Context) error {
 func (h *Handlers) CatListCategories(ctx echo.Context) error {
 	return h.CategoryHandler.ListCategories(echoc.NewContext(ctx))
 }
+
+func (h *Handlers) CatListProps(ctx echo.Context) error {
+	return h.CategoryHandler.ListProps(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatGetProp(ctx echo.Context) error {
+	return h.CategoryHandler.GetProp(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatCreateProp(ctx echo.Context) error {
+	return h.CategoryHandler.CreateProp(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatPutProp(ctx echo.Context) error {
+	return h.CategoryHandler.PutProp(echoc.NewContext(ctx))
+}

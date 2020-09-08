@@ -83,5 +83,9 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/categories/:id", h.CatGet)
 	e.POST("/api/categories", h.CatCreate)
 	e.PUT("/api/categories/:id", h.CatPut)
-	e.GET("/api/categories/:id/categories", h.CatListCategories)
+	e.GET("/api/categories/:id/child", h.CatListCategories)
+	e.GET("/api/categories/:id/properties", h.CatListProps)
+	e.GET("/api/categoriesprop/:id", h.CatGetProp)
+	e.POST("/api/categoriesprop", h.CatCreateProp)
+	e.PUT("/api/categoriesprop/:id", h.CatPutProp)
 }
