@@ -49,6 +49,17 @@ type CrudOperation interface {
 	// If the entity was updated returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
 	PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
+
+	// ConnectTo creates relation entity connects source to target
+	// If the source entity exist returns true in the first param returned otherwise return false.
+	// If the target entity exist returns true in the second param returned otherwise return false.
+	ConnectTo(
+		loc string,
+		storeTimeout StoreWithTimeout,
+		txn Txn,
+		sourceID string,
+		targetID string,
+		rel Entity) (bool, bool, error)
 }
 
 // crudOperation defines the CRUD operations
@@ -133,6 +144,67 @@ func (c *crudOperation) PutWithRel(loc string, storeTimeout StoreWithTimeout, en
 	return c.put(loc, storeTimeout, entity, true)
 }
 
+// ConnectTo implements CrudOperation.ConnectTo
+func (c *crudOperation) ConnectTo(
+	loc string,
+	storeTimeout StoreWithTimeout,
+	txn Txn,
+	sourceID string,
+	targetID string,
+	rel Entity) (bool, bool, error) {
+	//
+	found, err := c.exists(loc, storeTimeout, sourceID)
+	if err != nil {
+		return false, false, err
+	}
+	if !found {
+		return false, false, nil
+	}
+	found, err = c.exists(loc, storeTimeout, targetID)
+	if err != nil {
+		return false, false, err
+	}
+	if !found {
+		return true, false, nil
+	}
+
+	prevTxn := true
+	if txn == nil {
+		txn = c.buildTxn(c.store)
+		prevTxn = false
+	}
+
+	if !prevTxn {
+		txn.Find(rel.Key())
+	}
+	create, err := c.store.Put(rel)
+	if err != nil {
+		return true, true, err
+	}
+	txn.DoNotFound(create)
+
+	if !prevTxn {
+		ctx, cancel := storeTimeout()
+		_, err := txn.Commit(ctx)
+		cancel()
+		if err != nil {
+			return true, true, err
+		}
+	}
+
+	return true, true, nil
+}
+
+func (c *crudOperation) exists(loc string, storeTimeout StoreWithTimeout, id string) (bool, error) {
+	ctx, cancel := storeTimeout()
+	found, err := c.store.Exists(ctx, id)
+	cancel()
+	if err != nil {
+		return false, c.log.ErrWrap1(err, "finding entity", loc, logging.String("key", id))
+	}
+	return found, nil
+}
+
 func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity Entity, isRel bool) (bool, bool, error) {
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
@@ -179,7 +251,8 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	updated, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
-		return false, false, c.log.ErrWrap1(err, "commit putting", loc, logging.String(reflect.TypeOf(entity).Name(), entity.ToString()))
+		return false, false,
+			c.log.ErrWrap1(err, "commit putting", loc, logging.String(reflect.TypeOf(entity).Name(), entity.ToString()))
 	}
 
 	return updated, true, nil

@@ -452,6 +452,122 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 	}
 }
 
+func TestCRUDOperation_ConnectTo(t *testing.T) {
+	tests := []struct {
+		name     string
+		ksource  string
+		ktarget  string
+		sfound   bool
+		tfound   bool
+		relfound bool
+	}{
+		{
+			name:     "Source not found.",
+			ksource:  "key1",
+			sfound:   false,
+			tfound:   false,
+			relfound: false,
+		},
+		{
+			name:     "Target not found.",
+			ksource:  "key",
+			ktarget:  "key2",
+			sfound:   true,
+			tfound:   false,
+			relfound: false,
+		},
+		{
+			name:     "Connected.",
+			ksource:  "key",
+			ktarget:  "key",
+			sfound:   true,
+			tfound:   true,
+			relfound: true,
+		},
+	}
+
+	storef := NewEctdIntegra(t)
+	defer storef.Close()
+
+	rel, o := sampleConnectTo()
+
+	oper := newCRUDOper(storef)
+	_, err := oper.Put("loc", storeTimeout, o)
+	if assert.NoError(t, err, "Put link") {
+		for _, tt := range tests {
+			sfound, tfound, err := oper.ConnectTo("loc", storeTimeout, nil, tt.ksource, tt.ktarget, rel)
+			if assert.NoError(t, err, tt.name) {
+				assert.Equal(t, sfound, tt.sfound, "Source")
+				assert.Equal(t, tfound, tt.tfound, "Target")
+				found, err := storef.Store().Exists(context.TODO(), rel.ID)
+				if assert.NoError(t, err, tt.name) {
+					assert.Equal(t, found, tt.relfound, strings.Concat(tt.name, "Exists rel"))
+				}
+			}
+		}
+	}
+}
+
+func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
+	storef := NewEctdIntegra(t)
+	defer storef.Close()
+
+	rel, o := sampleConnectTo()
+
+	ot := &Object{
+		ID:   "keyt",
+		Name: "name",
+	}
+
+	oper := newCRUDOper(storef)
+	txn := NewTxn(oper.Store())
+	txn.Find(rel.ID)
+
+	put, err := oper.Store().Put(ot)
+	if err != nil {
+		assert.Error(t, err, "Put txn")
+		return
+	}
+	txn.DoNotFound(put)
+
+	_, err = oper.Put("loc", storeTimeout, o)
+	if err != nil {
+		assert.Error(t, err, "Put link")
+		return
+	}
+
+	_, _, err = oper.ConnectTo("loc", storeTimeout, txn, "key", "key", rel)
+	if assert.NoError(t, err, "ConnectTo") {
+		ctx, cancel := storeTimeout()
+		_, err := txn.Commit(ctx)
+		cancel()
+		if err != nil {
+			assert.Error(t, err, "Commit")
+			return
+		}
+		found, err := storef.Store().Exists(context.TODO(), rel.ID)
+		if assert.NoError(t, err, "Relation") {
+			assert.True(t, found, "Exists rel")
+			found, err = storef.Store().Exists(context.TODO(), ot.ID)
+			if assert.NoError(t, err, "Transaction entity") {
+				assert.True(t, found, "Exists transaction entity")
+			}
+		}
+	}
+}
+
+func sampleConnectTo() (*Object, *Object) {
+	rel := &Object{
+		ID:   "relkey",
+		Name: "name",
+	}
+	o := &Object{
+		ID:   "key",
+		Name: "name",
+	}
+	return rel, o
+}
+
 func entity() Object {
 	return Object{
 		ID:     "key",
@@ -482,9 +598,5 @@ func newCRUDOperMock() (CrudOperation, *ErrMockCRUD, *ErrMockTxn) {
 	store := &ErrMockCRUD{}
 	txn := &ErrMockTxn{}
 
-	return &crudOperation{
-		store:    store,
-		log:      log,
-		buildTxn: func(s CRUD) Txn { return txn },
-	}, store, txn
+	return NewCrudOperation(store, log, func(s CRUD) Txn { return txn }), store, txn
 }
