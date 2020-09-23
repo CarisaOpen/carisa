@@ -21,6 +21,7 @@ import (
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
@@ -66,5 +67,5 @@ func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 // ListSpaces lists spaces depending ranges parameter.
 // Look at service.List
 func (s *Service) ListSpaces(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.InstSpace{} })
+	return s.ext.List(id, strings.Concat(relation.InstSpaceLn, name), ranges, top, func() storage.Entity { return &relation.InstSpace{} })
 }

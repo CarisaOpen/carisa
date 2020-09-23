@@ -44,17 +44,8 @@ func (o Object) Key() string {
 	return o.ID
 }
 
-func (o Object) RelKey() string {
-	return strings.Concat(o.ParentKey(), o.Name, o.Key())
-}
-
 func (o Object) ParentKey() string {
 	return o.Parent
-}
-
-func (o *Object) SetParentKey(value string) error {
-	o.Parent = value
-	return nil
 }
 
 func (o Object) RelName() string {
@@ -63,10 +54,18 @@ func (o Object) RelName() string {
 
 func (o Object) Link() Entity {
 	return &Link{
-		ID:   o.RelKey(),
+		ID:   strings.Concat(o.ParentKey(), o.Name, o.Key()),
 		Name: o.Name,
 		Rel:  o.ID,
 	}
+}
+
+func (o Object) LinkName() string {
+	return "linkname"
+}
+
+func (o Object) ReLink(dlr DLRel) Entity {
+	return o.Link()
 }
 
 func (o Object) Empty() EntityRelation {
@@ -159,12 +158,12 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 		created bool
 	}{
 		{
-			name:    "Creating.",
+			name:    "Creating. Parent not found",
 			parent:  false,
 			created: false,
 		},
 		{
-			name:    "Updating.",
+			name:    "Creating.",
 			parent:  true,
 			created: true,
 		},
@@ -187,23 +186,42 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 				continue
 			}
 		}
+
 		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, &e)
-		if assert.NoError(t, err) {
-			assert.Equal(t, tt.parent, foundParent, strings.Concat(tt.name, "Finding parent"))
-			assert.Equal(t, tt.created, ok, strings.Concat(tt.name, "Created"))
-			if tt.parent {
-				var entityr Object
-				found, err := oper.Store().Get(context.TODO(), e.Key(), &entityr)
-				if assert.NoError(t, err) {
-					assert.True(t, found, strings.Concat(tt.name, "Entity found"))
-					assert.Equal(t, e, entityr, strings.Concat(tt.name, "Entity saved"))
-				}
-				var link Link
-				found, err = oper.Store().Get(context.TODO(), e.RelKey(), &link)
-				if assert.NoError(t, err) {
-					assert.True(t, found, strings.Concat(tt.name, "Link found"))
-					assert.Equal(t, e.Link(), &link, strings.Concat(tt.name, "Link saved"))
-				}
+		if err != nil {
+			assert.Error(t, err)
+			continue
+		}
+
+		assert.Equal(t, tt.parent, foundParent, strings.Concat(tt.name, "Finding parent"))
+		assert.Equal(t, tt.created, ok, strings.Concat(tt.name, "Created"))
+
+		if tt.parent {
+			var entityr Object
+			found, err := oper.Store().Get(context.TODO(), e.Key(), &entityr)
+			if assert.NoError(t, err) {
+				assert.True(t, found, strings.Concat(tt.name, "Entity found"))
+				assert.Equal(t, e, entityr, strings.Concat(tt.name, "Entity saved"))
+			}
+
+			lnk := e.Link()
+			var link Link
+			found, err = oper.Store().Get(context.TODO(), lnk.Key(), &link)
+			if assert.NoError(t, err) {
+				assert.True(t, found, strings.Concat(tt.name, "Link found"))
+				assert.Equal(t, lnk, &link, strings.Concat(tt.name, "Link saved"))
+			}
+
+			var dlr DLRel
+			found, err = oper.Store().Get(context.TODO(), strings.Concat(entityr.ID, dlrSep, entityr.Parent), &dlr)
+			if assert.NoError(t, err) {
+				assert.True(t, found, strings.Concat(tt.name, "DlR found"))
+				assert.Equal(t, DLRel{
+					ChildID:  entityr.ID,
+					ParentID: entityr.Parent,
+					Type:     entityr.LinkName(),
+					Pointer:  link.Key(),
+				}, dlr, strings.Concat(tt.name, "DLR saved"))
 			}
 		}
 	}
@@ -269,9 +287,10 @@ func TestCRUDOperation_Put(t *testing.T) {
 		updated, err := oper.Put("loc", storeTimeout, tt.e)
 		if assert.NoError(t, err, strings.Concat(tt.name, "Put failed")) {
 			assert.Equal(t, updated, tt.updated, "Updated")
+
 			var entityr Object
 			found, err := storef.Store().Get(context.TODO(), tt.e.ID, &entityr)
-			if assert.NoError(t, err, strings.Concat(tt.name, "Commit failed")) {
+			if assert.NoError(t, err, strings.Concat(tt.name, "Get entity")) {
 				assert.True(t, found, strings.Concat(tt.name, "Get entity"))
 				assert.Equal(t, tt.e, &entityr, strings.Concat(tt.name, "Entity saved"))
 			}
@@ -358,17 +377,6 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			},
 		},
 		{
-			name:    "Updating value. Replace parent.",
-			parent:  true,
-			updated: true,
-			e: &Object{
-				ID:     "key",
-				Name:   "name1",
-				Value:  3,
-				Parent: "parentKey4",
-			},
-		},
-		{
 			name:    "Creating. Parent not found.",
 			parent:  false,
 			updated: false,
@@ -404,20 +412,35 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			var entityr Object
 			found, err := storef.Store().Get(context.TODO(), tt.e.ID, &entityr)
 			if err != nil {
-				assert.Error(t, err, strings.Concat(tt.name, "Commit failed"))
+				assert.Error(t, err, strings.Concat(tt.name, "Error getting entity"))
 				continue
 			}
 			assert.True(t, found, strings.Concat(tt.name, "Get entity"))
 			assert.Equal(t, tt.e, &entityr, strings.Concat(tt.name, "Entity saved"))
+
+			lnk := tt.e.Link()
 			var link Link
-			found, err = storef.Store().Get(context.TODO(), tt.e.RelKey(), &link)
-			if assert.NoError(t, err, strings.Concat(tt.name, "Commit failed")) {
+			found, err = storef.Store().Get(context.TODO(), lnk.Key(), &link)
+			if assert.NoError(t, err, strings.Concat(tt.name, "Error getting link")) {
 				assert.True(t, found, strings.Concat(tt.name, "Get link"))
-				assert.Equal(t, tt.e.Link(), &link, strings.Concat(tt.name, "Link saved"))
+				assert.Equal(t, lnk, &link, strings.Concat(tt.name, "Link saved"))
+			}
+
+			var dlr DLRel
+			found, err = oper.Store().Get(context.TODO(), strings.Concat(entityr.ID, dlrSep, entityr.Parent), &dlr)
+			if assert.NoError(t, err, strings.Concat(tt.name, "Error getting DLR")) {
+				assert.True(t, found, strings.Concat(tt.name, "DlR found"))
+				assert.Equal(t, DLRel{
+					ChildID:  entityr.ID,
+					ParentID: entityr.Parent,
+					Type:     entityr.LinkName(),
+					Pointer:  link.Key(),
+				}, dlr, strings.Concat(tt.name, "DLR saved"))
 			}
 		}
 	}
-	ok, err := storef.Store().Exists(context.TODO(), tests[0].e.RelKey())
+	lnk := tests[0].e.Link()
+	ok, err := storef.Store().Exists(context.TODO(), lnk.Key())
 	if assert.NoError(t, err, "Obsolete relation removed") {
 		assert.False(t, ok, "Obsolete relation removed")
 	}
@@ -454,54 +477,70 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 
 func TestCRUDOperation_ConnectTo(t *testing.T) {
 	tests := []struct {
-		name     string
-		ksource  string
-		ktarget  string
-		sfound   bool
-		tfound   bool
-		relfound bool
+		name      string
+		kchild    Object
+		kparentID string
+		pfound    bool
+		cfound    bool
 	}{
 		{
-			name:     "Source not found.",
-			ksource:  "key1",
-			sfound:   false,
-			tfound:   false,
-			relfound: false,
+			name:   "Parent not found.",
+			kchild: Object{ID: "k"},
+			pfound: false,
+			cfound: false,
 		},
 		{
-			name:     "Target not found.",
-			ksource:  "key",
-			ktarget:  "key2",
-			sfound:   true,
-			tfound:   false,
-			relfound: false,
+			name:      "Child not found.",
+			kchild:    Object{ID: "key"},
+			kparentID: "key1",
+			pfound:    true,
+			cfound:    false,
 		},
 		{
-			name:     "Connected.",
-			ksource:  "key",
-			ktarget:  "key",
-			sfound:   true,
-			tfound:   true,
-			relfound: true,
+			name:      "Connected.",
+			kchild:    Object{ID: "key"},
+			kparentID: "key",
+			pfound:    true,
+			cfound:    true,
 		},
 	}
 
 	storef := NewEctdIntegra(t)
 	defer storef.Close()
 
-	rel, o := sampleConnectTo()
-
 	oper := newCRUDOper(storef)
-	_, err := oper.Put("loc", storeTimeout, o)
-	if assert.NoError(t, err, "Put link") {
-		for _, tt := range tests {
-			sfound, tfound, err := oper.ConnectTo("loc", storeTimeout, nil, tt.ksource, tt.ktarget, rel)
-			if assert.NoError(t, err, tt.name) {
-				assert.Equal(t, sfound, tt.sfound, "Source")
-				assert.Equal(t, tfound, tt.tfound, "Target")
-				found, err := storef.Store().Exists(context.TODO(), rel.ID)
+	_, err := sampleConnectTo(t, oper)
+	if err != nil {
+		assert.Error(t, err, "Inserting sample")
+	}
+
+	for _, tt := range tests {
+		sfound, tfound, link, err := oper.ConnectTo("loc", storeTimeout, nil, &tt.kchild, tt.kparentID, func(child Entity) {
+			child.(*Object).Parent = tt.kparentID
+		})
+		if assert.NoError(t, err, tt.name) {
+			assert.Equal(t, tt.pfound, sfound, "Source")
+			assert.Equal(t, tt.cfound, tfound, "Target")
+			if tt.cfound && tt.pfound {
+				ttlink := tt.kchild.Link()
+				assert.Equal(t, ttlink, link, "Relation")
+
+				var rel Link
+				_, err := storef.Store().Get(context.TODO(), ttlink.Key(), &rel)
 				if assert.NoError(t, err, tt.name) {
-					assert.Equal(t, found, tt.relfound, strings.Concat(tt.name, "Exists rel"))
+					assert.Equal(t, ttlink, &rel, strings.Concat(tt.name, "Relation created"))
+				}
+
+				var dlr DLRel
+				found, err := oper.Store().Get(context.TODO(), strings.Concat(tt.kchild.ID, dlrSep, tt.kparentID), &dlr)
+				if assert.NoError(t, err, strings.Concat(tt.name, "Error getting DLR")) {
+					assert.True(t, found, strings.Concat(tt.name, "DlR found"))
+					assert.Equal(t, DLRel{
+						ChildID:  tt.kchild.ID,
+						ParentID: tt.kparentID,
+						Type:     tt.kchild.LinkName(),
+						Pointer:  link.Key(),
+					}, dlr, strings.Concat(tt.name, "DLR saved"))
 				}
 			}
 		}
@@ -512,16 +551,18 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 	storef := NewEctdIntegra(t)
 	defer storef.Close()
 
-	rel, o := sampleConnectTo()
-
 	ot := &Object{
 		ID:   "keyt",
 		Name: "name",
 	}
 
 	oper := newCRUDOper(storef)
+	o, err := sampleConnectTo(t, oper)
+	if err != nil {
+		assert.Error(t, err, "Inserting sample")
+	}
+
 	txn := NewTxn(oper.Store())
-	txn.Find(rel.ID)
 
 	put, err := oper.Store().Put(ot)
 	if err != nil {
@@ -530,13 +571,9 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 	}
 	txn.DoNotFound(put)
 
-	_, err = oper.Put("loc", storeTimeout, o)
-	if err != nil {
-		assert.Error(t, err, "Put link")
-		return
-	}
-
-	_, _, err = oper.ConnectTo("loc", storeTimeout, txn, "key", "key", rel)
+	_, _, _, err = oper.ConnectTo("loc", storeTimeout, txn, o, o.ID, func(child Entity) {
+		child.(*Object).Parent = o.ID
+	})
 	if assert.NoError(t, err, "ConnectTo") {
 		ctx, cancel := storeTimeout()
 		_, err := txn.Commit(ctx)
@@ -545,7 +582,7 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 			assert.Error(t, err, "Commit")
 			return
 		}
-		found, err := storef.Store().Exists(context.TODO(), rel.ID)
+		found, err := storef.Store().Exists(context.TODO(), o.Link().Key())
 		if assert.NoError(t, err, "Relation") {
 			assert.True(t, found, "Exists rel")
 			found, err = storef.Store().Exists(context.TODO(), ot.ID)
@@ -556,21 +593,25 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 	}
 }
 
-func sampleConnectTo() (*Object, *Object) {
-	rel := &Object{
-		ID:   "relkey",
-		Name: "name",
-	}
+func sampleConnectTo(t *testing.T, oper CrudOperation) (*Object, error) {
 	o := &Object{
 		ID:   "key",
 		Name: "name",
 	}
-	return rel, o
+
+	_, err := oper.Put("loc", storeTimeout, o)
+	if err != nil {
+		assert.Error(t, err, "Put parent")
+		return nil, err
+	}
+
+	return o, nil
 }
 
 func entity() Object {
 	return Object{
 		ID:     "key",
+		Name:   "name",
 		Value:  1,
 		Parent: "parentKey",
 	}

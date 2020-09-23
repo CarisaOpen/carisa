@@ -25,15 +25,23 @@ import (
 
 func TestErrMockCRUD_Activate(t *testing.T) {
 	m := ErrMockCRUD{}
-	m.Activate("Put", "Remove", "Get", "Exists", "Close")
+	m.Activate("Put", "Remove", "Get", "Exists", "StartKey", "Range", "RangeRaw", "Close")
 	_, err := m.Put(nil)
 	assert.Error(t, err, "Put")
+	opew := m.PutRaw("", "")
+	assert.Equal(t, opew, OpeWrap{}, "PutRaw")
 	_ = m.Remove("")
 	assert.Error(t, err, "Remove")
 	_, err = m.Get(context.TODO(), "", nil)
 	assert.Error(t, err, "Get")
 	_, err = m.Exists(context.TODO(), "")
 	assert.Error(t, err, "Exists")
+	_, err = m.StartKey(context.TODO(), "", 0, nil)
+	assert.Error(t, err, "StartKey")
+	_, err = m.Range(context.TODO(), "", "", 0, nil)
+	assert.Error(t, err, "Range")
+	_, err = m.RangeRaw(context.TODO(), "", "", 0)
+	assert.Error(t, err, "RangeRaw")
 	err = m.Close()
 	assert.Error(t, err, "Close")
 }
@@ -47,9 +55,12 @@ func TestErrMockCRUD_Clear(t *testing.T) {
 	m := ErrMockCRUD{}
 	m.Clear()
 	assert.False(t, m.put, "Put")
-	assert.False(t, m.put, "Remove")
+	assert.False(t, m.remove, "Remove")
 	assert.False(t, m.get, "Get")
 	assert.False(t, m.exists, "Exists")
+	assert.False(t, m.startKey, "StartKey")
+	assert.False(t, m.rang, "Range")
+	assert.False(t, m.rangRaw, "RangeRaw")
 	assert.False(t, m.close, "Close")
 }
 
@@ -73,7 +84,7 @@ func TestErrMockTxn_Clear(t *testing.T) {
 
 func TestErrMockOper_Activate(t *testing.T) {
 	m := NewErrMockCRUDOper()
-	m.Activate("Create", "Put", "CreateWithRel", "PutWithRel")
+	m.Activate("Create", "Put", "CreateWithRel", "PutWithRel", "ConnectTo")
 	_, err := m.Create("", nil, nil)
 	assert.Error(t, err, "Create")
 	_, err = m.Put("", nil, nil)
@@ -82,6 +93,8 @@ func TestErrMockOper_Activate(t *testing.T) {
 	assert.Error(t, err, "CreateWithError")
 	_, _, err = m.PutWithRel("", nil, nil)
 	assert.Error(t, err, "PutWithError")
+	_, _, _, err = m.ConnectTo("", nil, nil, nil, "", nil)
+	assert.Error(t, err, "ConnectTo")
 }
 
 func TestErrMockOper_ActivateMethodNotFound(t *testing.T) {
@@ -96,4 +109,5 @@ func TestErrMockOper_Clear(t *testing.T) {
 	assert.False(t, m.put, "Put")
 	assert.False(t, m.createWithRel, "CreateWithError")
 	assert.False(t, m.putWithRel, "PutWithError")
+	assert.False(t, m.connectTo, "PutWithError")
 }

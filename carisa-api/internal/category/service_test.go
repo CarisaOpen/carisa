@@ -164,13 +164,15 @@ func TestCatService_ListCategories(t *testing.T) {
 	link := cat.Link()
 
 	_, err := s.crud.Create("", s.cnt.StoreWithTimeout, link)
+	if err != nil {
+		assert.Error(t, err, "Create category link to category")
+		return
+	}
 
-	if assert.NoError(t, err) {
-		for _, tt := range tests {
-			list, err := s.ListCategories(id, "namep", tt.Ranges, 1)
-			if assert.NoError(t, err, tt.Name) {
-				assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
-			}
+	for _, tt := range tests {
+		list, err := s.ListCategories(id, "namep", tt.Ranges, 2)
+		if assert.NoError(t, err, tt.Name) {
+			assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
 		}
 	}
 }
@@ -250,7 +252,7 @@ func TestCatService_PutProp(t *testing.T) {
 					Name: "name",
 					Desc: "desc",
 				},
-				Type:  ente.Boolean,
+				Type:  entity.Boolean,
 				CatID: cat.ID,
 			},
 		},
@@ -322,7 +324,7 @@ func prop(cnt *runtime.Container, crud storage.CrudOperation) (*Prop, error) {
 		prop := NewProp()
 		prop.Name = "name"
 		prop.Desc = "desc"
-		prop.Type = ente.Decimal
+		prop.Type = entity.Decimal
 		prop.CatID = cat.ID
 		return &prop, nil
 	}
@@ -338,5 +340,6 @@ func createCat(cnt *runtime.Container, crud storage.CrudOperation) (Category, er
 func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng, cnt, crudOper := mock.NewFullCrudOperFaked(t)
 	ext := service.NewExt(cnt, crudOper.Store())
-	return NewService(cnt, ext, crudOper), mng
+	entesrv := ente.NewService(cnt, ext, crudOper)
+	return NewService(cnt, ext, crudOper, &entesrv), mng
 }

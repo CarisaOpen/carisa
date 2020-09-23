@@ -27,8 +27,8 @@ import (
 	httpc "github.com/carisa/pkg/http"
 )
 
-// errService checks the service errors
-func errService(c httpc.Context, err error, msg string, msgNotFound string, found bool) error {
+// errCRUDSrv checks the service errors
+func errCRUDSrv(c httpc.Context, err error, msg string, msgNotFound string, found bool) error {
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, msg)
 	}

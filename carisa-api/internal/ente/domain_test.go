@@ -19,6 +19,8 @@ package ente
 import (
 	"testing"
 
+	"github.com/carisa/pkg/storage"
+
 	"github.com/carisa/api/internal/entity"
 
 	"github.com/carisa/api/internal/relation"
@@ -45,21 +47,9 @@ func TestEnte_Nominative(t *testing.T) {
 	assert.Equal(t, entity.Descriptor{}, e.Nominative())
 }
 
-func TestEnte_RelKey(t *testing.T) {
-	e := Ente{}
-	e.Name = "namee"
-	assert.Equal(t, "00000000000000000000Enamee00000000000000000000", e.RelKey())
-}
-
 func TestEnte_ParentKey(t *testing.T) {
 	e := New()
 	e.SpaceID = xid.New()
-	assert.Equal(t, e.SpaceID.String(), e.ParentKey())
-}
-
-func TestEnte_SetParentKey(t *testing.T) {
-	e := New()
-	_ = e.SetParentKey(xid.New().String())
 	assert.Equal(t, e.SpaceID.String(), e.ParentKey())
 }
 
@@ -69,21 +59,122 @@ func TestEnte_Empty(t *testing.T) {
 }
 
 func TestEnte_Link(t *testing.T) {
-	e := New()
-	e.SpaceID = xid.New()
+	enteID := xid.New()
+	parentID := xid.New()
+	name := "name"
 
-	link := relation.SpaceEnte{
-		ID:     strings.Concat(e.SpaceID.String(), "E", e.Name, e.Key()),
-		Name:   e.Name,
-		EnteID: e.ID.String(),
+	tests := []struct {
+		name  string
+		ente  Ente
+		catId string
+		link  storage.Entity
+	}{
+		{
+			name: "Space with ente",
+			ente: Ente{
+				Descriptor: entity.Descriptor{
+					ID:   enteID,
+					Name: "name",
+				},
+				SpaceID: parentID,
+				catID:   "",
+			},
+			link: &relation.SpaceEnte{
+				ID:     strings.Concat(parentID.String(), relation.SpaceEnteLn, name, enteID.String()),
+				Name:   name,
+				EnteID: enteID.String(),
+			},
+		},
+		{
+			name: "Category with ente",
+			ente: Ente{
+				Descriptor: entity.Descriptor{
+					ID:   enteID,
+					Name: "name",
+				},
+				catID: parentID.String(),
+			},
+			link: &relation.Hierarchy{
+				ID:       strings.Concat(parentID.String(), name, enteID.String()),
+				Name:     name,
+				LinkID:   enteID.String(),
+				Category: false,
+			},
+		},
 	}
 
-	assert.Equal(t, &link, e.Link())
+	for _, tt := range tests {
+		assert.Equal(t, tt.link, tt.ente.Link(), tt.name)
+	}
+}
+
+func TestCategory_LinkName(t *testing.T) {
+	c := New()
+
+	tests := []struct {
+		name  string
+		catID string
+		typen string
+	}{
+		{
+			name:  "Category -> Ente",
+			typen: relation.SpaceEnteLn,
+		},
+		{
+			name:  "Space -> Ente",
+			catID: "1",
+			typen: relation.CatEnteLn,
+		},
+	}
+
+	for _, tt := range tests {
+		c.catID = tt.catID
+		assert.Equal(t, tt.typen, c.LinkName(), tt.name)
+	}
+}
+
+func TestEnte_ReLink(t *testing.T) {
+	c := New()
+	parentID := xid.New().String()
+
+	tests := []struct {
+		name string
+		tn   string
+		link storage.Entity
+	}{
+		{
+			name: "Space with ente",
+			tn:   relation.SpaceEnteLn,
+			link: &relation.SpaceEnte{
+				ID:     strings.Concat(parentID, relation.SpaceEnteLn, c.Name, c.Key()),
+				Name:   c.Name,
+				EnteID: c.ID.String(),
+			},
+		},
+		{
+			name: "Category with ente",
+			tn:   relation.CatEnteLn,
+			link: &relation.Hierarchy{
+				ID:       strings.Concat(parentID, c.Name, c.Key()),
+				Name:     c.Name,
+				Category: false,
+				LinkID:   c.ID.String(),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		dlr := storage.DLRel{
+			ParentID: parentID,
+			Type:     tt.tn,
+		}
+		assert.Equal(t, tt.link, c.ReLink(dlr), tt.name)
+	}
 }
 
 func TestEnteEnteProp_Field(t *testing.T) {
 	e := NewProp()
-	assert.Equal(t, e.Type, Integer)
+	assert.Equal(t, e.Type, entity.Integer)
 }
 
 func TestEnteEnteProp_ToString(t *testing.T) {
@@ -101,21 +192,9 @@ func TestEnteEnteProp_Nominative(t *testing.T) {
 	assert.Equal(t, entity.Descriptor{}, e.Nominative())
 }
 
-func TestEnteEnteProp_RelKey(t *testing.T) {
-	e := Prop{}
-	e.Name = "namep"
-	assert.Equal(t, "00000000000000000000namep00000000000000000000", e.RelKey())
-}
-
 func TestEnteEnteProp_ParentKey(t *testing.T) {
 	e := NewProp()
 	e.EnteID = xid.New()
-	assert.Equal(t, e.EnteID.String(), e.ParentKey())
-}
-
-func TestEnteEnteProp_SetParentKey(t *testing.T) {
-	e := NewProp()
-	_ = e.SetParentKey(xid.New().String())
 	assert.Equal(t, e.EnteID.String(), e.ParentKey())
 }
 
@@ -129,10 +208,32 @@ func TestEnteEnteProp_Link(t *testing.T) {
 	e.EnteID = xid.New()
 
 	link := relation.EnteEnteProp{
-		ID:         strings.Concat(e.EnteID.String(), e.Name, e.Key()),
+		ID:         strings.Concat(e.EnteID.String(), relation.EntePropLn, e.Name, e.Key()),
 		Name:       e.Name,
 		EntePropID: e.ID.String(),
 	}
 
 	assert.Equal(t, &link, e.Link())
+}
+
+func TestEnteEnteProp_LinkName(t *testing.T) {
+	c := NewProp()
+	assert.Equal(t, relation.EntePropLn, c.LinkName())
+}
+
+func TestEnteEnteProp_ReLink(t *testing.T) {
+	c := NewProp()
+	parentID := xid.New().String()
+
+	link := relation.EnteEnteProp{
+		ID:         strings.Concat(parentID, relation.EntePropLn, c.Name, c.Key()),
+		Name:       c.Name,
+		EntePropID: c.ID.String(),
+	}
+
+	dlr := storage.DLRel{
+		ParentID: parentID,
+		Type:     relation.EntePropLn,
+	}
+	assert.Equal(t, &link, c.ReLink(dlr))
 }

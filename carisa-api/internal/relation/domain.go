@@ -18,6 +18,17 @@ package relation
 
 import "github.com/carisa/pkg/strings"
 
+// Link name. Must be unique
+const (
+	InstSpaceLn = "IS"
+	SpaceCatLn  = "SC"
+	EntePropLn  = "EP"
+	CatCatLn    = "CC"
+	CatEnteLn   = "CE"
+	CatPropLn   = "CP"
+	SpaceEnteLn = "SE"
+)
+
 // InstSpace represents the link between instance and space
 type InstSpace struct {
 	ID      string `json:"-"`

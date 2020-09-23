@@ -36,6 +36,8 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
+const operTrans = 4
+
 // EtcdConfig defines the configuration for store framework
 type EtcdConfig struct {
 	// DialTimeout is the timeout for failing to establish a connection in seconds. Default value: 2 seconds.
@@ -137,6 +139,11 @@ func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 	return OpeWrap{clientv3.OpPut(entity.Key(), encode)}, err
 }
 
+// PutRaw implements storage.interface.CRUD.PutRaw
+func (s *etcdStore) PutRaw(key string, value string) OpeWrap {
+	return OpeWrap{clientv3.OpPut(key, value)}
+}
+
 // Remove implements storage.interface.CRUD.Remove
 func (s *etcdStore) Remove(key string) OpeWrap {
 	return OpeWrap{clientv3.OpDelete(key)}
@@ -183,6 +190,7 @@ func (s *etcdStore) StartKey(ctx context.Context, key string, top int, empty fun
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 }
 
+// Range implements storage.interface.CRUD.Range
 func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
 	return s.list(
 		ctx,
@@ -195,22 +203,43 @@ func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 }
 
+// RangeRaw implements storage.interface.CRUD.RangeRaw
+func (s *etcdStore) RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error) {
+	res, err := s.client.Get(
+		ctx,
+		skey,
+		clientv3.WithLimit(int64(top)),
+		clientv3.WithFromKey(),
+		clientv3.WithRange(clientv3.GetPrefixRangeEnd(ekey)),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+	if err != nil {
+		return nil, errWithKey(err, skey, "unexpected error listing value of the keys from etcd store")
+	}
+
+	list := make(map[string]string, len(res.Kvs))
+	for _, r := range res.Kvs {
+		list[string(r.Key)] = string(r.Value)
+	}
+	return list, nil
+}
+
 func (s *etcdStore) list(
 	ctx context.Context,
 	key string, top int,
 	empty func() Entity,
 	opts ...clientv3.OpOption) ([]Entity, error) {
-	if top == 0 {
-		return make([]Entity, 0), nil
-	}
-
+	//
 	res, err := s.client.Get(ctx, key, opts...)
 
 	if err != nil {
 		return nil, errWithKey(err, key, "unexpected error listing entities from etcd store")
 	}
 
-	list := make([]Entity, len(res.Kvs))
+	var list []Entity
+
+	if top > 0 {
+		list = make([]Entity, len(res.Kvs))
+	}
 
 	for i, r := range res.Kvs {
 		e := empty()
@@ -218,7 +247,11 @@ func (s *etcdStore) list(
 		if err != nil {
 			return nil, errWithKey(err, string(r.Key), "unexpected decode error listing entity into etcd store")
 		}
-		list[i] = e
+		if top > 0 {
+			list[i] = e
+		} else {
+			list = append(list, e)
+		}
 	}
 	return list, nil
 }
@@ -233,8 +266,6 @@ func errWithKey(err error, key string, msg string) error {
 func (s *etcdStore) Close() error {
 	return s.client.Close()
 }
-
-const operTrans = 3
 
 // etcdStore defines the operations of a transaction
 type etcdTxn struct {
@@ -289,6 +320,12 @@ func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 			tx = tx.Else(txn.opeNoFound[0].opeEtcd, txn.opeNoFound[1].opeEtcd)
 		case 3:
 			tx = tx.Else(txn.opeNoFound[0].opeEtcd, txn.opeNoFound[1].opeEtcd, txn.opeNoFound[2].opeEtcd)
+		case 4:
+			tx = tx.Else(
+				txn.opeNoFound[0].opeEtcd,
+				txn.opeNoFound[1].opeEtcd,
+				txn.opeNoFound[2].opeEtcd,
+				txn.opeNoFound[3].opeEtcd)
 		}
 	} else {
 		if txn.indexF > 0 {
@@ -316,8 +353,10 @@ func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [operTrans]OpeW
 		return tx.Then(opes[0].opeEtcd)
 	case 2:
 		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd)
-	default:
+	case 3:
 		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd, opes[2].opeEtcd)
+	default:
+		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd, opes[2].opeEtcd, opes[3].opeEtcd)
 	}
 }
 

@@ -22,3 +22,19 @@ type Domain interface {
 	storage.Entity
 	Descriptors
 }
+
+// TypeProp is the field type of the property
+type TypeProp uint8
+
+const (
+	// None is not defined
+	None TypeProp = iota
+	// Integer is a integer value
+	Integer
+	// Decimal is a decimal value (default)
+	Decimal
+	// Boolean is un logic value
+	Boolean
+	// DateTime is a value with date and time
+	DateTime
+)

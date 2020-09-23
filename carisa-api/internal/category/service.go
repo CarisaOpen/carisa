@@ -17,6 +17,7 @@
 package category
 
 import (
+	"github.com/carisa/api/internal/ente"
 	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
@@ -29,17 +30,19 @@ const locService = "category.service"
 
 // Service implements CRUD operations for the category
 type Service struct {
-	cnt  *runtime.Container
-	ext  *service.Extension
-	crud storage.CrudOperation
+	cnt     *runtime.Container
+	ext     *service.Extension
+	crud    storage.CrudOperation
+	entesrv *ente.Service
 }
 
 // NewService builds a category service
-func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
+func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation, entesrv *ente.Service) Service {
 	return Service{
-		cnt:  cnt,
-		ext:  ext,
-		crud: crud,
+		cnt:     cnt,
+		ext:     ext,
+		crud:    crud,
+		entesrv: entesrv,
 	}
 }
 
@@ -69,13 +72,13 @@ func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 // ListCategories lists categories depending ranges parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat("C", name), ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
+	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
 }
 
 // ListProps lists properties depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat("P", name), ranges, top, func() storage.Entity { return &relation.CategoryProp{} })
+	return s.ext.List(id, strings.Concat(relation.CatPropLn, name), ranges, top, func() storage.Entity { return &relation.CategoryProp{} })
 }
 
 // CreateProp creates a property into of the repository and links category property and category.
@@ -86,7 +89,7 @@ func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
 
-// PutProp creates or updates a peroperty into of the repository.
+// PutProp creates or updates a property into of the repository.
 // If the property exists return true in the first param returned otherwise return false.
 // If the category doesn't exist return false in the second param returned.
 func (s *Service) PutProp(prop *Prop) (bool, bool, error) {

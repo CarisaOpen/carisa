@@ -138,7 +138,7 @@ func TestSpaceService_ListEntes(t *testing.T) {
 	defer mng.Close()
 
 	id := xid.New()
-	link, _, err := entesmpl.CreateLink(mng, id)
+	link, _, err := entesmpl.CreateLinkForSpace(mng, id)
 
 	if assert.NoError(t, err) {
 		for _, tt := range tests {

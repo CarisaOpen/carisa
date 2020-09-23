@@ -38,10 +38,11 @@ type service struct {
 func configService(cnt *runtime.Container, store storage.CRUD) service {
 	crud := storage.NewCrudOperation(store, cnt.Log, storage.NewTxn)
 	ext := srv.NewExt(cnt, store)
-	return service{
+	srv := service{
 		instanceSrv: instance.NewService(cnt, ext, crud),
 		spaceSrv:    space.NewService(cnt, ext, crud),
 		enteSrv:     ente.NewService(cnt, ext, crud),
-		catSrv:      category.NewService(cnt, ext, crud),
 	}
+	srv.catSrv = category.NewService(cnt, ext, crud, &srv.enteSrv)
+	return srv
 }

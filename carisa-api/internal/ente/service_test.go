@@ -17,6 +17,7 @@
 package ente
 
 import (
+	"context"
 	"testing"
 
 	"github.com/carisa/api/internal/service"
@@ -132,6 +133,33 @@ func TestEnteService_Get(t *testing.T) {
 	}
 }
 
+func TestEnteService_ConnectToCat(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	ente, err := createEnte(srv.cnt, srv.crud)
+	if err != nil {
+		assert.Error(t, err, "Creating ente")
+	}
+
+	cat, err := samples.CreateEntityMock(mng)
+	if err != nil {
+		assert.Error(t, err, "Creating category")
+	}
+
+	sfound, tfound, rel, err := srv.ConnectToCat(ente.ID, cat.ID)
+
+	if assert.NoError(t, err) {
+		assert.True(t, sfound, "Ente found")
+		assert.True(t, tfound, "Category found")
+
+		found, err := srv.crud.Store().Exists(context.TODO(), rel.Key())
+		if assert.NoError(t, err) {
+			assert.True(t, found, "Getting relation")
+		}
+	}
+}
+
 func TestEnteService_ListProps(t *testing.T) {
 	tests := samples.TestList()
 
@@ -207,7 +235,7 @@ func TestEnteService_PutProp(t *testing.T) {
 					Name: "name",
 					Desc: "desc",
 				},
-				Type:   Boolean,
+				Type:   entity.Boolean,
 				EnteID: ente.ID,
 			},
 		},
@@ -268,7 +296,7 @@ func prop(cnt *runtime.Container, crud storage.CrudOperation) (*Prop, error) {
 		prop := NewProp()
 		prop.Name = "name"
 		prop.Desc = "desc"
-		prop.Type = Decimal
+		prop.Type = entity.Decimal
 		prop.EnteID = ente.ID
 		return &prop, nil
 	}

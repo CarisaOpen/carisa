@@ -19,7 +19,7 @@ package handler
 import (
 	nethttp "net/http"
 
-	"github.com/carisa/api/internal/ente"
+	"github.com/carisa/api/internal/entity"
 
 	"github.com/carisa/api/internal/category"
 
@@ -55,7 +55,7 @@ func (c *Category) Create(ctx httpc.Context) error {
 	}
 
 	created, found, err := c.srv.Create(&cat)
-	if err = errService(
+	if err = errCRUDSrv(
 		ctx,
 		err,
 		"it was impossible to create the category",
@@ -80,7 +80,7 @@ func (c *Category) Put(ctx httpc.Context) error {
 
 	cat.ID = id
 	updated, found, err := c.srv.Put(&cat)
-	if err = errService(
+	if err = errCRUDSrv(
 		ctx,
 		err,
 		"it was impossible to create or update the category",
@@ -153,7 +153,7 @@ func (c *Category) CreateProp(ctx httpc.Context) error {
 	}
 
 	created, found, err := c.srv.CreateProp(&prop)
-	if err = errService(
+	if err = errCRUDSrv(
 		ctx,
 		err,
 		"it was impossible to create the property of the category",
@@ -182,7 +182,7 @@ func (c *Category) PutProp(ctx httpc.Context) error {
 
 	prop.ID = id
 	updated, found, err := c.srv.PutProp(&prop)
-	if err = errService(
+	if err = errCRUDSrv(
 		ctx, err, "it was impossible to create or update the property of the category", "category not found", found); err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (c *Category) GetProp(ctx httpc.Context) error {
 }
 
 func validType(ctx httpc.Context, prop category.Prop) error {
-	if prop.Type != ente.None {
+	if prop.Type != entity.None {
 		return ctx.HTTPError(nethttp.StatusBadRequest, "The 'type' property can be changed")
 	}
 	return nil

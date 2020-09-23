@@ -69,11 +69,11 @@ func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 // ListEntes lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat("E", name), ranges, top, func() storage.Entity { return &relation.SpaceEnte{} })
+	return s.ext.List(id, strings.Concat(relation.SpaceEnteLn, name), ranges, top, func() storage.Entity { return &relation.SpaceEnte{} })
 }
 
 // ListCategories lists categories depending ranges parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat("S", name), ranges, top, func() storage.Entity { return &relation.SpaceCategory{} })
+	return s.ext.List(id, strings.Concat(relation.SpaceCatLn, name), ranges, top, func() storage.Entity { return &relation.SpaceCategory{} })
 }

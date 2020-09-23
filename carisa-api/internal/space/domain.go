@@ -49,10 +49,6 @@ func (s *Space) Nominative() entity.Descriptor {
 	return s.Descriptor
 }
 
-func (s *Space) RelKey() string {
-	return strings.Concat(s.InstID.String(), s.Name, s.Key())
-}
-
 func (s *Space) RelName() string {
 	return s.Name
 }
@@ -62,19 +58,22 @@ func (s *Space) ParentKey() string {
 	return s.InstID.String()
 }
 
-func (s *Space) SetParentKey(value string) error {
-	id, err := xid.FromString(value)
-	if err != nil {
-		return err
-	}
-	s.InstID = id
-	return nil
-}
-
 // Link gets the link between instance and space
 func (s *Space) Link() storage.Entity {
+	return s.link(s.InstID.String())
+}
+
+func (s *Space) LinkName() string {
+	return relation.InstSpaceLn
+}
+
+func (s *Space) ReLink(dlr storage.DLRel) storage.Entity {
+	return s.link(dlr.ParentID)
+}
+
+func (s *Space) link(parentID string) storage.Entity {
 	return &relation.InstSpace{
-		ID:      s.RelKey(),
+		ID:      strings.Concat(parentID, relation.InstSpaceLn, s.Name, s.Key()),
 		Name:    s.Name,
 		SpaceID: s.ID.String(),
 	}

@@ -276,7 +276,7 @@ func TestSpaceHandler_ListEntes(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	_, ente, err := entesmpl.CreateLink(mng, xid.NilID())
+	_, ente, err := entesmpl.CreateLinkForSpace(mng, xid.NilID())
 
 	if assert.NoError(t, err) {
 		rec, ctx := h.NewHTTP(

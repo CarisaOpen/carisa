@@ -20,7 +20,9 @@ import (
 	"github.com/carisa/api/internal/relation"
 	"github.com/carisa/api/internal/runtime"
 	"github.com/carisa/api/internal/service"
+	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
@@ -65,10 +67,43 @@ func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	return ok, err
 }
 
+// ConnectToCat connect ente to category
+// If the ente exists return true in the first param returned otherwise return false.
+// If the category exists return true in the second param returned otherwise return false.
+func (s *Service) ConnectToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relation.Hierarchy, error) {
+	category := categoryID.String()
+	ente := New()
+	ente.ID = enteID
+
+	sfound, tfound, link, err := s.crud.ConnectTo(
+		locService,
+		s.cnt.StoreWithTimeout,
+		nil,
+		&ente,
+		category,
+		func(e storage.Entity) {
+			e.(*Ente).catID = categoryID.String()
+		})
+	if err != nil {
+		return sfound, tfound, relation.Hierarchy{},
+			s.cnt.Log.ErrWrap2(
+				err,
+				"ente cannot be connected to category",
+				locService,
+				logging.String("CategoryId", category),
+				logging.String("EnteId", ente.Key()))
+	}
+
+	if !sfound || !tfound {
+		return sfound, tfound, relation.Hierarchy{}, nil
+	}
+	return sfound, tfound, *link.(*relation.Hierarchy), nil
+}
+
 // ListProps lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.EnteEnteProp{} })
+	return s.ext.List(id, strings.Concat(relation.EntePropLn, name), ranges, top, func() storage.Entity { return &relation.EnteEnteProp{} })
 }
 
 // CreateProp creates a property into of the repository and links ente property and ente.

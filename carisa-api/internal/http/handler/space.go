@@ -53,7 +53,7 @@ func (s *Space) Create(c httpc.Context) error {
 	}
 
 	created, found, err := s.srv.Create(&spc)
-	if err := errService(
+	if err := errCRUDSrv(
 		c, err, "it was impossible to create the space", "instance not found", found); err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (s *Space) Put(c httpc.Context) error {
 
 	spc.ID = id
 	updated, found, err := s.srv.Put(&spc)
-	if err := errService(
+	if err := errCRUDSrv(
 		c, err, "it was impossible to create or update the space", "instance not found", found); err != nil {
 		return err
 	}

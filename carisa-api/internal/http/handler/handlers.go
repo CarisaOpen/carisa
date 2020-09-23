@@ -84,6 +84,10 @@ func (h *Handlers) EnteListProps(ctx echo.Context) error {
 	return h.EnteHandler.ListProps(echoc.NewContext(ctx))
 }
 
+func (h *Handlers) EnteConnectToCat(ctx echo.Context) error {
+	return h.EnteHandler.ConnectToCat(echoc.NewContext(ctx))
+}
+
 func (h *Handlers) EnteCreateProp(ctx echo.Context) error {
 	return h.EnteHandler.CreateProp(echoc.NewContext(ctx))
 }

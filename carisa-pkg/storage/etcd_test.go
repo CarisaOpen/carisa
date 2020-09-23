@@ -121,7 +121,7 @@ func TestEtcd_Create(t *testing.T) {
 		e    []*EntityTest
 	}{
 		{
-			name: "Creating.",
+			name: "Creating 1 key.",
 			e: []*EntityTest{
 				{
 					Prop1: "key",
@@ -130,7 +130,7 @@ func TestEtcd_Create(t *testing.T) {
 			},
 		},
 		{
-			name: "Creating many keys.",
+			name: "Creating 2 keys.",
 			e: []*EntityTest{
 				{
 					Prop1: "key1",
@@ -138,11 +138,45 @@ func TestEtcd_Create(t *testing.T) {
 				},
 				{
 					Prop1: "key2",
+					Prop2: 1,
+				},
+			},
+		},
+		{
+			name: "Creating 3 keys.",
+			e: []*EntityTest{
+				{
+					Prop1: "key3",
+					Prop2: 1,
+				},
+				{
+					Prop1: "key4",
+					Prop2: 1,
+				},
+				{
+					Prop1: "key5",
+					Prop2: 1,
+				},
+			},
+		},
+		{
+			name: "Creating 4 keys.",
+			e: []*EntityTest{
+				{
+					Prop1: "key6",
+					Prop2: 1,
+				},
+				{
+					Prop1: "key7",
 					Prop2: 2,
 				},
 				{
-					Prop1: "key3",
+					Prop1: "key8",
 					Prop2: 3,
+				},
+				{
+					Prop1: "key9",
+					Prop2: 4,
 				},
 			},
 		},
@@ -154,7 +188,7 @@ func TestEtcd_Create(t *testing.T) {
 
 		for _, e := range tt.e {
 			create, err := store.Put(e)
-			if assert.NoErrorf(t, err, "%s Put failed: %v. Entity: %s", tt.name, err, e.Prop1) {
+			if assert.NoErrorf(t, err, "%s Put failed: %v. Entity: %v", tt.name, err, e.Prop1) {
 				txn.DoNotFound(create)
 			}
 		}
@@ -166,7 +200,7 @@ func TestEtcd_Create(t *testing.T) {
 				var er EntityTest
 				_, errG := store.Get(ctx, e.Prop1, &er)
 				if assert.NoErrorf(t, errC, "%s Get failed: %v. Entity: $s", tt.name, errG, e.Prop1) {
-					assert.Equalf(t, e, &er, e.Prop1, "%s Entity '%s' not created", tt.name, e.Prop1)
+					assert.Equalf(t, e, &er, "%v Entity '%v' not created", tt.name, e.Prop1)
 				}
 			}
 		}
@@ -205,6 +239,10 @@ func TestEtcd_Update(t *testing.T) {
 				{
 					Prop1: "key3",
 					Prop2: 3,
+				},
+				{
+					Prop1: "key4",
+					Prop2: 4,
 				},
 			},
 		},
@@ -286,6 +324,27 @@ func TestEtcd_Put(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+func TestEtcd_PutRaw(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	key := "key"
+	value := "value"
+
+	txn := NewTxn(store)
+	txn.Find(key)
+	txn.DoNotFound(store.PutRaw(key, value))
+	_, err := txn.Commit(ctx)
+	if assert.NoError(t, err) {
+		res, err := client.Get(ctx, key)
+		if assert.NoError(t, err) {
+			assert.Equal(t, key, string(res.Kvs[0].Key), "Key")
+			assert.Equal(t, value, string(res.Kvs[0].Value), "Value")
 		}
 	}
 }
@@ -444,9 +503,14 @@ func TestEtcd_StartKey(t *testing.T) {
 	}{
 		{
 			name: "Top 0.",
-			key:  "",
+			key:  "ky",
 			top:  0,
-			res:  []EntityTest{},
+			res: []EntityTest{
+				{
+					Prop1: "ky1",
+					Prop2: 1,
+				},
+			},
 		},
 		{
 			name: "Not found.",
@@ -594,6 +658,18 @@ func TestEtcd_Range(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Top 0.",
+			skey: "key2",
+			ekey: "key",
+			top:  0,
+			res: []EntityTest{
+				{
+					Prop1: "key2",
+					Prop2: 2,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -603,6 +679,81 @@ func TestEtcd_Range(t *testing.T) {
 			for i, r := range res {
 				assert.Equal(t, &tt.res[i], r, strings.Concat(tt.name, "Range result"))
 			}
+		}
+	}
+}
+
+func TestEtcd_RangeRaw(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	samples := map[string]string{
+		"key1": "1",
+		"key0": "0",
+		"key2": "2",
+		"ky1":  "1",
+	}
+
+	for k, v := range samples {
+		_, err := client.Put(ctx, k, v)
+		if err != nil {
+			assert.Error(t, err, "Putting samples")
+			return
+		}
+	}
+
+	tests := []struct {
+		name string
+		skey string
+		ekey string
+		top  int
+		res  map[string]string
+	}{
+		{
+			name: "Not found.",
+			skey: "y1",
+			ekey: "y",
+			top:  5,
+			res:  map[string]string{},
+		},
+		{
+			name: "Found. < 10. Top 10.",
+			skey: "key1",
+			ekey: "key",
+			top:  10,
+			res: map[string]string{
+				"key1": "1",
+				"key2": "2",
+			},
+		},
+		{
+			name: "Found. < 10. Top 3.",
+			skey: "key",
+			ekey: "key",
+			top:  3,
+			res: map[string]string{
+				"key0": "0",
+				"key1": "1",
+				"key2": "2",
+			},
+		},
+		{
+			name: "Other key.",
+			skey: "key1",
+			ekey: "key",
+			top:  1,
+			res: map[string]string{
+				"key1": "1",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		res, err := store.RangeRaw(ctx, tt.skey, tt.ekey, tt.top)
+		if assert.NoErrorf(t, err, "RangeRaw") {
+			assert.Equal(t, len(tt.res), len(res), strings.Concat(tt.name, "Count"))
+			assert.Equal(t, tt.res, res, strings.Concat(tt.name, "Range result"))
 		}
 	}
 }

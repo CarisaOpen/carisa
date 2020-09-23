@@ -14,6 +14,7 @@ type ErrMockCRUD struct {
 	exists   bool
 	startKey bool
 	rang     bool
+	rangRaw  bool
 	close    bool
 }
 
@@ -29,6 +30,10 @@ func (e *ErrMockCRUD) Put(entity Entity) (OpeWrap, error) {
 		return OpeWrap{}, errors.New("put")
 	}
 	return OpeWrap{}, nil
+}
+
+func (e *ErrMockCRUD) PutRaw(key string, value string) OpeWrap {
+	return OpeWrap{}
 }
 
 func (e *ErrMockCRUD) Get(ctx context.Context, key string, entity Entity) (bool, error) {
@@ -65,6 +70,14 @@ func (e *ErrMockCRUD) Range(ctx context.Context, skey string, ekey string, top i
 	return list, nil
 }
 
+func (e *ErrMockCRUD) RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error) {
+	if e.startKey {
+		return nil, errors.New("rangeraw")
+	}
+	list := make(map[string]string, top)
+	return list, nil
+}
+
 // Activate activates the methods to throw a error
 func (e *ErrMockCRUD) Activate(methods ...string) {
 	e.Clear()
@@ -83,6 +96,8 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 			e.startKey = true
 		case "Range":
 			e.rang = true
+		case "RangeRaw":
+			e.rangRaw = true
 		case "Close":
 			e.close = true
 		default:
@@ -99,6 +114,7 @@ func (e *ErrMockCRUD) Clear() {
 	e.exists = false
 	e.startKey = false
 	e.rang = false
+	e.rangRaw = false
 	e.close = false
 }
 
@@ -149,6 +165,7 @@ type ErrMockCRUDOper struct {
 	put           bool
 	createWithRel bool
 	putWithRel    bool
+	connectTo     bool
 	store         CRUD
 }
 
@@ -172,6 +189,8 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 			e.createWithRel = true
 		case "PutWithRel":
 			e.putWithRel = true
+		case "ConnectTo":
+			e.connectTo = true
 		default:
 			panic("method not found")
 		}
@@ -184,6 +203,7 @@ func (e *ErrMockCRUDOper) Clear() {
 	e.put = false
 	e.createWithRel = false
 	e.putWithRel = false
+	e.connectTo = false
 }
 
 func (e *ErrMockCRUDOper) Store() CRUD {
@@ -216,4 +236,18 @@ func (e *ErrMockCRUDOper) PutWithRel(loc string, storeTimeout StoreWithTimeout, 
 		return false, false, errors.New("putWithRel")
 	}
 	return true, true, nil
+}
+
+func (e *ErrMockCRUDOper) ConnectTo(
+	loc string,
+	storeTimeout StoreWithTimeout,
+	txn Txn,
+	child EntityRelation,
+	parentID string,
+	fill func(child Entity)) (bool, bool, Entity, error) {
+	//
+	if e.connectTo {
+		return false, false, nil, errors.New("ConnecTo")
+	}
+	return true, true, nil, nil
 }

@@ -453,6 +453,37 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
+  /entes/{enteid}/linktocategory/{categoryid}:
+    put:
+      tags:
+        - "ente"
+      summary: "Connect a ente with a category."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "enteid"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "path"
+          name: "categoryid"
+          description: "Category identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Ente connected"
+          schema:
+            $ref: "#/definitions/HierarchyLink"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Ente or category not found"
+        "500":
+          description: "Internal server error"
   /entesprop:
     post:
       tags:
@@ -1008,7 +1039,7 @@ definitions:
     properties:
       name:
         type: "string"
-        description: "Space name"
+        description: "If the category is true the name is the space name otherwise the name is the ente name"
       category:
         type: "boolean"
         description: "If category is true, the linkId links a category otherwise it links a ente"

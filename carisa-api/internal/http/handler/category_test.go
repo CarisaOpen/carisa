@@ -24,6 +24,8 @@ import (
 
 	"github.com/carisa/api/internal/ente"
 
+	"github.com/carisa/api/internal/entity"
+
 	"github.com/carisa/api/internal/category"
 
 	"github.com/carisa/api/internal/service"
@@ -535,7 +537,7 @@ func TestCategoryHandler_GetProp(t *testing.T) {
 	prop.Name = "namep"
 	prop.Desc = "descp"
 	prop.CatID = cat.ID
-	prop.Type = ente.Integer
+	prop.Type = entity.Integer
 	created, _, err := srv.CreateProp(&prop)
 
 	if assert.NoError(t, err) {
@@ -600,7 +602,8 @@ func TestCategoryHandler_GetPropWithError(t *testing.T) {
 func newCategoryHandlerFaked(t *testing.T) (*runtime.Container, Handlers, category.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
 	ext := service.NewExt(cnt, crud.Store())
-	srv := category.NewService(cnt, ext, crud)
+	entesrv := ente.NewService(cnt, ext, crud)
+	srv := category.NewService(cnt, ext, crud, &entesrv)
 	hands := Handlers{CategoryHandler: NewCatHandle(srv, cnt)}
 	return cnt, hands, srv, mng
 }
@@ -609,7 +612,8 @@ func newCategoryHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockC
 	cnt := mock.NewContainerFake()
 	crud := storage.NewErrMockCRUDOper()
 	ext := service.NewExt(cnt, crud.Store())
-	srv := category.NewService(cnt, ext, crud)
+	entesrv := ente.NewService(cnt, ext, crud)
+	srv := category.NewService(cnt, ext, crud, &entesrv)
 	hands := Handlers{CategoryHandler: NewCatHandle(srv, cnt)}
 	return cnt, hands, crud
 }

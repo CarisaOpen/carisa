@@ -29,22 +29,26 @@ type (
 		Key() string
 	}
 
-	// Relation defines relation context
+	// Relation defines relation context to generate the link
+	// A -> B. The relation is defined in B. When it's create B entity
+	// is linked with her parent depending the relation information that's provide B
 	Relation interface {
-		// Key gets the key of the relation
-		RelKey() string
-
 		// ParentKey gets the key of the parent entity that contains this child entity
 		ParentKey() string
-
-		// SetParentKey sets the key of the parent entity that contains this child entity
-		SetParentKey(value string) error
 
 		// Name gets the relation Name
 		RelName() string
 
-		// Link gets the relation entity that joins the parent and child
+		// Link gets the relation entity that joins the parent and child. This link is used when is created the relation
 		Link() Entity
+
+		// LinkName gets the name which differentiates to the link. This name is used when is created
+		// the doubly linked inverse relation
+		LinkName() string
+
+		// ReLink regenerates the link when change the relation name. When is called ReLink this entity
+		// has the new information to change. 'dlr' parameter provides the relation information with old values
+		ReLink(dlr DLRel) Entity
 
 		// Empty builds empty relation entity
 		Empty() EntityRelation
@@ -65,6 +69,9 @@ type (
 		// See Txn interface
 		Put(entity Entity) (OpeWrap, error)
 
+		// PutRaw puts the key and value depending of transaction. This context is added to the transaction.
+		PutRaw(key string, value string) OpeWrap
+
 		// Remove deletes the entity by key. This context is added to the transaction.
 		// See Txn interface
 		Remove(key string) OpeWrap
@@ -76,10 +83,14 @@ type (
 		Exists(ctx context.Context, key string) (bool, error)
 
 		// StartKey lists all entities that start by key with the limit of the top parameter.
+		// Top = 0 is configured as unlimited
 		StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
 
 		// Range lists all entities that is greater than skey and ended by eKey with the limit of the top parameter.
 		Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error)
+
+		// RangeRaw lists all keys and values that is greater than skey and ended by eKey with the limit of the top parameter.
+		RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error)
 
 		// Close closes resources
 		Close() error

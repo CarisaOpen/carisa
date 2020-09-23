@@ -19,6 +19,8 @@ package space
 import (
 	"testing"
 
+	"github.com/carisa/pkg/storage"
+
 	"github.com/carisa/api/internal/entity"
 
 	"github.com/carisa/api/internal/relation"
@@ -45,22 +47,10 @@ func TestEnte_Nominative(t *testing.T) {
 	assert.Equal(t, entity.Descriptor{}, s.Nominative())
 }
 
-func TestSpace_RelKey(t *testing.T) {
-	s := Space{}
-	s.Name = "name"
-	assert.Equal(t, "00000000000000000000name00000000000000000000", s.RelKey())
-}
-
 func TestSpace_ParentKey(t *testing.T) {
 	s := New()
 	s.InstID = xid.New()
 	assert.Equal(t, s.InstID.String(), s.ParentKey())
-}
-
-func TestSpace_SetParentKey(t *testing.T) {
-	e := New()
-	_ = e.SetParentKey(xid.New().String())
-	assert.Equal(t, e.InstID.String(), e.ParentKey())
 }
 
 func TestSpace_Empty(t *testing.T) {
@@ -73,10 +63,32 @@ func TestSpace_Link(t *testing.T) {
 	s.InstID = xid.New()
 
 	link := relation.InstSpace{
-		ID:      strings.Concat(s.InstID.String(), s.Name, s.Key()),
+		ID:      strings.Concat(s.InstID.String(), relation.InstSpaceLn, s.Name, s.Key()),
 		Name:    s.Name,
 		SpaceID: s.ID.String(),
 	}
 
 	assert.Equal(t, &link, s.Link())
+}
+
+func TestSpace_LinkName(t *testing.T) {
+	c := New()
+	assert.Equal(t, relation.InstSpaceLn, c.LinkName())
+}
+
+func TestSpace_ReLink(t *testing.T) {
+	c := New()
+	parentID := xid.New().String()
+
+	link := relation.InstSpace{
+		ID:      strings.Concat(parentID, relation.InstSpaceLn, c.Name, c.Key()),
+		Name:    c.Name,
+		SpaceID: c.ID.String(),
+	}
+
+	dlr := storage.DLRel{
+		ParentID: parentID,
+		Type:     relation.InstSpaceLn,
+	}
+	assert.Equal(t, &link, c.ReLink(dlr))
 }

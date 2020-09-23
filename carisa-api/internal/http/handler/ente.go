@@ -53,7 +53,7 @@ func (e *Ente) Create(c httpc.Context) error {
 	}
 
 	created, found, err := e.srv.Create(&ente)
-	if err = errService(c, err, "it was impossible to create the ente", "space not found", found); err != nil {
+	if err = errCRUDSrv(c, err, "it was impossible to create the ente", "space not found", found); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (e *Ente) Put(c httpc.Context) error {
 
 	ente.ID = id
 	updated, found, err := e.srv.Put(&ente)
-	if err = errService(
+	if err = errCRUDSrv(
 		c, err, "it was impossible to create or update the ente", "space not found", found); err != nil {
 		return err
 	}
@@ -97,6 +97,32 @@ func (e *Ente) Get(c httpc.Context) error {
 	}
 
 	return c.JSON(http.GetStatus(found), ente)
+}
+
+// ConnectToCat connects ente to category in the tree
+func (e *Ente) ConnectToCat(c httpc.Context) error {
+	enteID, err := convert.ParamXID(c, "enteId")
+	if err != nil {
+		return err
+	}
+	catID, err := convert.ParamXID(c, "categoryId")
+	if err != nil {
+		return err
+	}
+
+	efound, cfound, rel, err := e.srv.ConnectToCat(enteID, catID)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, err)
+	}
+
+	if !efound {
+		return c.HTTPError(nethttp.StatusNotFound, "Ente not found")
+	}
+	if !cfound {
+		return c.HTTPError(nethttp.StatusNotFound, "Category not found")
+	}
+
+	return c.JSON(nethttp.StatusOK, rel)
 }
 
 // ListProps list properties by ente ID and return top properties.
@@ -124,7 +150,7 @@ func (e *Ente) CreateProp(c httpc.Context) error {
 	}
 
 	created, found, err := e.srv.CreateProp(&prop)
-	if err = errService(c, err, "it was impossible to create the property of the ente", "ente not found", found); err != nil {
+	if err = errCRUDSrv(c, err, "it was impossible to create the property of the ente", "ente not found", found); err != nil {
 		return err
 	}
 
@@ -145,7 +171,7 @@ func (e *Ente) PutProp(c httpc.Context) error {
 
 	prop.ID = id
 	updated, found, err := e.srv.PutProp(&prop)
-	if err = errService(
+	if err = errCRUDSrv(
 		c, err, "it was impossible to create or update the property of the ente", "ente not found", found); err != nil {
 		return err
 	}

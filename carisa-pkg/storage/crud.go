@@ -20,8 +20,12 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/carisa/pkg/strings"
+
 	"github.com/carisa/pkg/logging"
 )
+
+const dlrSep = "#R#"
 
 type StoreWithTimeout func() (context.Context, context.CancelFunc)
 
@@ -37,6 +41,8 @@ type CrudOperation interface {
 	Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
 	// CreateWithRel creates the entity and the relation entity that joins the parent and child
+	// In addition to the relation it creates a doubled linked relation (dlr) between the child
+	// the relation and the parent. This can useful to navigate in inverse order
 	// If the entity was created returns true in the first param returned.
 	// If the parent exists into store returns true in the second param returned.
 	CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
@@ -46,20 +52,26 @@ type CrudOperation interface {
 
 	// PutWithRel creates or updates the entity and the relation entity that joins the parent and child
 	// The relation is updated if the relation Name has changed
+	// In addition to the relation it creates a doubled linked relation (dlr) between the child
+	// the relation and the parent. This can be useful to navigate in inverse order
 	// If the entity was updated returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
 	PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
 
-	// ConnectTo creates relation entity connects source to target
-	// If the source entity exist returns true in the first param returned otherwise return false.
-	// If the target entity exist returns true in the second param returned otherwise return false.
+	// ConnectTo creates relation that connects parent and child
+	// The child parameter must be filled the ID.
+	// The 'fill' parameter is a function to complete the fields. This function receive as parameter
+	// the child entity of the DB
+	// If the transaction is sent as parameter just can be configured in DoNotFound
+	// If the child entity exist returns true in the first param returned otherwise return false.
+	// If the parent entity exist returns true in the second param returned otherwise return false.
 	ConnectTo(
 		loc string,
 		storeTimeout StoreWithTimeout,
 		txn Txn,
-		sourceID string,
-		targetID string,
-		rel Entity) (bool, bool, error)
+		child EntityRelation,
+		parentID string,
+		fill func(child Entity)) (bool, bool, Entity, error)
 }
 
 // crudOperation defines the CRUD operations
@@ -114,13 +126,10 @@ func (c *crudOperation) create(loc string, storeTimeout StoreWithTimeout, entity
 	txn.DoNotFound(create)
 	// If the entity is a relation is inserted in the same transaction
 	if isRel {
-		rel, _ := entity.(EntityRelation)
-		link := rel.Link()
-		create, err := c.store.Put(link)
+		err := c.createRel(loc, txn, entity.(EntityRelation))
 		if err != nil {
-			return false, c.log.ErrWrap(err, "creating relation", loc)
+			return false, err
 		}
-		txn.DoNotFound(create)
 	}
 
 	ctx, cancel := storeTimeout()
@@ -149,50 +158,50 @@ func (c *crudOperation) ConnectTo(
 	loc string,
 	storeTimeout StoreWithTimeout,
 	txn Txn,
-	sourceID string,
-	targetID string,
-	rel Entity) (bool, bool, error) {
+	child EntityRelation,
+	parentID string,
+	fill func(child Entity)) (bool, bool, Entity, error) {
 	//
-	found, err := c.exists(loc, storeTimeout, sourceID)
+	ctx, cancel := storeTimeout()
+	found, err := c.Store().Get(ctx, child.Key(), child)
+	cancel()
 	if err != nil {
-		return false, false, err
+		return false, false, nil, c.log.ErrWrap1(err, "finding child entity to connect", loc, logging.String("key", child.Key()))
 	}
 	if !found {
-		return false, false, nil
-	}
-	found, err = c.exists(loc, storeTimeout, targetID)
-	if err != nil {
-		return false, false, err
-	}
-	if !found {
-		return true, false, nil
+		return false, false, nil, nil
 	}
 
-	prevTxn := true
+	found, err = c.exists(loc, storeTimeout, parentID)
+	if err != nil {
+		return false, false, nil, c.log.ErrWrap1(err, "finding parent entity to connect", loc, logging.String("key", parentID))
+	}
+	if !found {
+		return true, false, nil, nil
+	}
+
 	if txn == nil {
 		txn = c.buildTxn(c.store)
-		prevTxn = false
 	}
 
-	if !prevTxn {
-		txn.Find(rel.Key())
-	}
-	create, err := c.store.Put(rel)
+	fill(child)
+	link := child.Link()
+
+	txn.Find(link.Key())
+
+	err = c.createRel(loc, txn, child)
 	if err != nil {
-		return true, true, err
-	}
-	txn.DoNotFound(create)
-
-	if !prevTxn {
-		ctx, cancel := storeTimeout()
-		_, err := txn.Commit(ctx)
-		cancel()
-		if err != nil {
-			return true, true, err
-		}
+		return true, true, nil, err
 	}
 
-	return true, true, nil
+	ctx, cancel = storeTimeout()
+	_, err = txn.Commit(ctx)
+	cancel()
+	if err != nil {
+		return true, true, nil, err
+	}
+
+	return true, true, link, nil
 }
 
 func (c *crudOperation) exists(loc string, storeTimeout StoreWithTimeout, id string) (bool, error) {
@@ -209,15 +218,13 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
-	ctx, cancel := storeTimeout()
-
 	// If the relation is passed by param and the entity exists is updated in the same transaction
 	if isRel {
-		found, err := c.updateRelation(ctx, loc, entity, txn)
+		found, err := c.updateRel(storeTimeout, loc, entity, txn)
 		if err != nil {
 			return false, false, err
 		}
-		if !found { // If is new the entity, checks the parent
+		if !found { // If the entity is new, checks the parent
 			found, err = c.existsParent(loc, storeTimeout, entity.(EntityRelation))
 			if err != nil {
 				return false, false, err
@@ -240,14 +247,13 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	txn.DoNotFound(put)
 	// If the relation is passed by param is inserted in the same transaction
 	if isRel {
-		rel, _ := entity.(EntityRelation)
-		create, err := c.store.Put(rel.Link())
+		err := c.createRel(loc, txn, entity.(EntityRelation))
 		if err != nil {
-			return false, false, c.log.ErrWrap(err, "creating relation", loc)
+			return false, false, err
 		}
-		txn.DoNotFound(create)
 	}
 
+	ctx, cancel := storeTimeout()
 	updated, err := txn.Commit(ctx)
 	cancel()
 	if err != nil {
@@ -258,32 +264,86 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	return updated, true, nil
 }
 
-func (c *crudOperation) updateRelation(ctx context.Context, loc string, entity Entity, txn Txn) (bool, error) {
+// createRel creates the relation between the parent and child and adds a doubly linked relation from child to the relation
+// and to the parent
+func (c *crudOperation) createRel(loc string, txn Txn, relation EntityRelation) error {
+	rel := relation.Link()
+
+	putRel, err := c.store.Put(rel)
+	if err != nil {
+		return c.log.ErrWrap(err, "creating relation", loc)
+	}
+	txn.DoNotFound(putRel)
+
+	idx := &DLRel{
+		ChildID:  relation.Key(),
+		ParentID: relation.ParentKey(),
+		Type:     relation.LinkName(),
+		Pointer:  rel.Key(),
+	}
+	putIdx, err := c.store.Put(idx)
+	if err != nil {
+		return c.log.ErrWrap(err, "creating doubly linked relation", loc)
+	}
+	txn.DoNotFound(putIdx)
+
+	return nil
+}
+
+func (c *crudOperation) updateRel(storeTimeout StoreWithTimeout, loc string, entity Entity, txn Txn) (bool, error) {
 	rel, _ := entity.(EntityRelation)
 	oldEntity := rel.Empty()
+	ctx, cancel := storeTimeout()
 	found, err := c.store.Get(ctx, entity.Key(), oldEntity)
+	cancel()
 	if err != nil {
 		return false, c.log.ErrWrap(err, "getting the entity", loc)
 	}
-	// Even if the entity is not found later it will be created with with DoNotFound
-	if found {
-		name := rel.RelName()
-		// The parentID cannot be changed. To change remove before
-		if err := rel.SetParentKey(oldEntity.ParentKey()); err != nil {
-			return true, c.log.ErrWrap(err, "Setting parent old key", loc)
-		}
-		if len(name) != 0 && name != oldEntity.RelName() {
-			// it removes old relation and creating new relation when change Name. Name is part of key
-			txn.DoFound(c.store.Remove(oldEntity.RelKey()))
-			updRel, err := c.store.Put(rel.Link())
-			if err != nil {
-				return true, c.log.ErrWrap(err, "updating relation", loc)
-			}
-			txn.DoFound(updRel)
-		}
-		return true, nil
+	if !found {
+		return false, nil
 	}
-	return false, nil
+
+	// Even if the entity is not found later it will be created with with DoNotFound
+	name := rel.RelName()
+	if len(name) != 0 && name != oldEntity.RelName() {
+		// it removes old relation and creating new relation when change Name. Name is part of key
+		ctx, cancel := storeTimeout()
+		dlrs, err := c.store.Range(
+			ctx,
+			strings.Concat(entity.Key(), dlrSep),
+			entity.Key(),
+			0,
+			func() Entity { return &DLRel{} })
+		cancel()
+		if err != nil {
+			return false, c.log.ErrWrap(err, "finding dlr", loc)
+		}
+
+		// Iterates all doubly linked relation (dlr) to change the relations
+		for _, dlre := range dlrs {
+			dlr := dlre.(*DLRel)
+
+			// Remove old relation
+			txn.DoFound(c.store.Remove(dlr.Pointer))
+
+			// Create the new relation with tne new name
+			linkr := rel.ReLink(*dlr)
+			updlink, err := c.store.Put(linkr)
+			if err != nil {
+				return true, c.log.ErrWrap(err, "updating changed relation", loc)
+			}
+			txn.DoFound(updlink)
+
+			// Change the pointer to the new relation
+			dlr.Pointer = linkr.Key()
+			putDlr, err := c.store.Put(dlr)
+			if err != nil {
+				return true, c.log.ErrWrap(err, "updating doubly linked relation", loc)
+			}
+			txn.DoFound(putDlr)
+		}
+	}
+	return true, nil
 }
 
 func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, error) {
@@ -294,4 +354,21 @@ func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, 
 		return false, c.log.ErrWrap1(err, "finding parent", loc, logging.String("Parent key", entity.ParentKey()))
 	}
 	return found, nil
+}
+
+// DLRel defines the information to point to the relation from source.
+// It works as a doubly linked relation
+type DLRel struct {
+	ChildID  string
+	ParentID string
+	Type     string
+	Pointer  string
+}
+
+func (r *DLRel) ToString() string {
+	return strings.Concat("Relation index. ChildID: (", r.ChildID, ", ParentID:", r.ParentID, ")")
+}
+
+func (r *DLRel) Key() string {
+	return strings.Concat(r.ChildID, dlrSep, r.ParentID)
 }
