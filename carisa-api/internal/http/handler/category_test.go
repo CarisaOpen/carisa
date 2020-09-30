@@ -22,6 +22,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	esamples "github.com/carisa/api/internal/ente/samples"
+
 	"github.com/carisa/api/internal/ente"
 
 	"github.com/carisa/api/internal/entity"
@@ -51,7 +53,7 @@ import (
 
 func TestCategoryHandler_Create(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -120,7 +122,7 @@ func TestCategoryHandler_CreateWithError(t *testing.T) {
 
 func TestCategoryHandler_Put(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -197,7 +199,7 @@ func TestCategoryHandler_PutWithError(t *testing.T) {
 
 func TestCategoryHandler_Get(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, srv, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, srv, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -274,7 +276,7 @@ func TestCategoryHandler_GetWithError(t *testing.T) {
 
 func TestCategoryHandler_ListCategories(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -321,7 +323,7 @@ func TestCategoryHandler_GetListCategoriesError(t *testing.T) {
 
 func TestCategoryHandler_ListProps(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -366,9 +368,147 @@ func TestCategoryHandler_GetListPropsError(t *testing.T) {
 	}
 }
 
+func TestCategoryHandler_LinkToProp(t *testing.T) {
+	h := mock.HTTP()
+	cnt, handlers, srv, srve, mng := newCategoryHandlerFaked(t)
+	defer mng.Close()
+	defer h.Close(cnt.Log)
+
+	catRoot, err := csamples.CreateCat(mng)
+	if err != nil {
+		assert.Error(t, err, "Creating root category")
+		return
+	}
+	catPropRoot := category.NewProp()
+	catPropRoot.CatID = catRoot.ID
+	_, _, err = srv.CreateProp(&catPropRoot)
+	if err != nil {
+		assert.Error(t, err, "Creating root category property")
+		return
+	}
+
+	ok, catChild, catChildProp1 := createCat(t, srv, catRoot, entity.Integer)
+	if !ok {
+		return
+	}
+	catChildProp2 := category.NewProp()
+	catChildProp2.CatID = catChild.ID
+	catChildProp2.Type = entity.Boolean
+	_, _, err = srv.CreateProp(&catChildProp2)
+	if err != nil {
+		assert.Error(t, err, "Creating a second property in the child category")
+		return
+	}
+
+	ok, _, catccProp := createCat(t, srv, catChild, entity.Integer)
+	if !ok {
+		return
+	}
+
+	enteChild, err := esamples.CreateEnte(mng)
+	if err != nil {
+		assert.Error(t, err, "Creating child ente")
+		return
+	}
+	enteChildProp := ente.NewProp()
+	enteChildProp.Type = entity.Integer
+	enteChildProp.EnteID = enteChild.ID
+	enteChildProp.Name = "nameep"
+	_, _, err = srve.CreateProp(&enteChildProp)
+	if err != nil {
+		assert.Error(t, err, "Creating child ente property")
+		return
+	}
+	_, _, _, err = srve.LinkToCat(enteChild.ID, catRoot.ID)
+	if err != nil {
+		assert.Error(t, err, "Creating linking between category root and ente")
+		return
+	}
+
+	tests := []struct {
+		name    string
+		params  map[string]string
+		status  int
+		resBody string
+		typep   entity.TypeProp
+	}{
+		{
+			name:   "Category property not found",
+			params: map[string]string{"catPropId": xid.NilID().String(), "propId": xid.NilID().String()},
+			status: nethttp.StatusNotFound,
+		},
+		{
+			name:   "Target property not found",
+			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": xid.NilID().String()},
+			status: nethttp.StatusNotFound,
+		},
+		{
+			name:   "The category or ente of the property is not child of the category of the property",
+			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catccProp.ID.String()},
+			status: nethttp.StatusBadRequest,
+		},
+		{
+			name:    "The category property is linked successfully with other category property",
+			params:  map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catChildProp1.ID.String()},
+			status:  nethttp.StatusOK,
+			resBody: fmt.Sprintf(`{"name":"namecp","propertyId":"%s","category":true}`, catChildProp1.ID.String()),
+			typep:   entity.Integer,
+		},
+		{
+			name:   "The category property is not the same type than the target property",
+			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catChildProp2.ID.String()},
+			status: nethttp.StatusConflict,
+		},
+		{
+			name:    "The category property is linked successfully with a ente property",
+			params:  map[string]string{"catPropId": catPropRoot.ID.String(), "propId": enteChildProp.ID.String()},
+			status:  nethttp.StatusOK,
+			resBody: fmt.Sprintf(`{"name":"nameep","propertyId":"%s","category":false}`, enteChildProp.ID.String()),
+			typep:   entity.Integer,
+		},
+	}
+
+	for _, tt := range tests {
+		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesProp/:catPropId/linkto/:propId", "", tt.params, nil)
+		err := handlers.CategoryHandler.LinkToProp(ctx)
+
+		if err != nil && tt.status == err.(*echo.HTTPError).Code {
+			continue
+		}
+		if assert.NoError(t, err) {
+			assert.Contains(t, rec.Body.String(), tt.resBody, tt.name)
+			var catp category.Prop
+			_, err := srv.GetProp(catPropRoot.ID, &catp)
+			if assert.NoError(t, err) {
+				assert.Equal(t, tt.typep, catp.Type, tt.name)
+			}
+		}
+	}
+}
+
+func createCat(t *testing.T, service category.Service, catParent category.Category, typep entity.TypeProp) (bool, category.Category, category.Prop) {
+	catChild := category.New()
+	catChild.ParentID = catParent.ID
+	_, _, err := service.Create(&catChild)
+	if err != nil {
+		assert.Error(t, err, "Creating child category")
+		return false, category.Category{}, category.Prop{}
+	}
+	catChildProp := category.NewProp()
+	catChildProp.CatID = catChild.ID
+	catChildProp.Name = "namecp"
+	catChildProp.Type = typep
+	_, _, err = service.CreateProp(&catChildProp)
+	if err != nil {
+		assert.Error(t, err, "Creating child category property")
+		return false, category.Category{}, category.Prop{}
+	}
+	return true, catChild, catChildProp
+}
+
 func TestCategoryHandler_CreateProp(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -442,7 +582,7 @@ func TestCategoryHandler_CreatePropWithError(t *testing.T) {
 
 func TestCategoryHandler_PutProp(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, _, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, _, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -524,7 +664,7 @@ func TestCategoryHandler_PutPropWithError(t *testing.T) {
 
 func TestCategoryHandler_GetProp(t *testing.T) {
 	h := mock.HTTP()
-	cnt, handlers, srv, mng := newCategoryHandlerFaked(t)
+	cnt, handlers, srv, _, mng := newCategoryHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
@@ -599,13 +739,13 @@ func TestCategoryHandler_GetPropWithError(t *testing.T) {
 	}
 }
 
-func newCategoryHandlerFaked(t *testing.T) (*runtime.Container, Handlers, category.Service, storage.Integration) {
+func newCategoryHandlerFaked(t *testing.T) (*runtime.Container, Handlers, category.Service, ente.Service, storage.Integration) {
 	mng, cnt, crud := mock.NewFullCrudOperFaked(t)
 	ext := service.NewExt(cnt, crud.Store())
 	entesrv := ente.NewService(cnt, ext, crud)
 	srv := category.NewService(cnt, ext, crud, &entesrv)
 	hands := Handlers{CategoryHandler: NewCatHandle(srv, cnt)}
-	return cnt, hands, srv, mng
+	return cnt, hands, srv, entesrv, mng
 }
 
 func newCategoryHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRUDOper) {

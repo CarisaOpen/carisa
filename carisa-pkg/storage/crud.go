@@ -43,6 +43,7 @@ type CrudOperation interface {
 	// CreateWithRel creates the entity and the relation entity that joins the parent and child
 	// In addition to the relation it creates a doubled linked relation (dlr) between the child
 	// the relation and the parent. This can useful to navigate in inverse order
+	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
 	// If the entity was created returns true in the first param returned.
 	// If the parent exists into store returns true in the second param returned.
 	CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
@@ -50,28 +51,36 @@ type CrudOperation interface {
 	// Put creates if exist the entity or updates if not exists the entity into storage
 	Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
+	// Update updates the entity fields through of the 'upd' parameter
+	// The entity is searched using entity.Key(). The entity parameter will be replaced with the entity stored in the DB.
+	Update(loc string, storeTimeout StoreWithTimeout, entity Entity, upd func(entity Entity)) (bool, error)
+
 	// PutWithRel creates or updates the entity and the relation entity that joins the parent and child
-	// The relation is updated if the relation Name has changed
+	// The relation is found if the relation 'name' has changed
 	// In addition to the relation it creates a doubled linked relation (dlr) between the child
 	// the relation and the parent. This can be useful to navigate in inverse order
-	// If the entity was updated returns true in the first param returned otherwise it is created.
+	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
+	// If the entity was found returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
 	PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
 
-	// ConnectTo creates relation that connects parent and child
+	// LinkTo creates relation that links parent and child
 	// The child parameter must be filled the ID.
-	// The 'fill' parameter is a function to complete the fields. This function receive as parameter
+	// The 'fill' parameter is a function to complete the fields of the child. This function receive as parameter
 	// the child entity of the DB
 	// If the transaction is sent as parameter just can be configured in DoNotFound
 	// If the child entity exist returns true in the first param returned otherwise return false.
 	// If the parent entity exist returns true in the second param returned otherwise return false.
-	ConnectTo(
+	LinkTo(
 		loc string,
 		storeTimeout StoreWithTimeout,
 		txn Txn,
 		child EntityRelation,
 		parentID string,
 		fill func(child Entity)) (bool, bool, Entity, error)
+
+	// Return a DLR slice from child identifier
+	ListDLR(storeTimeout StoreWithTimeout, childID string) ([]Entity, error)
 }
 
 // crudOperation defines the CRUD operations
@@ -153,8 +162,31 @@ func (c *crudOperation) PutWithRel(loc string, storeTimeout StoreWithTimeout, en
 	return c.put(loc, storeTimeout, entity, true)
 }
 
+// Update implements CrudOperation.Update
+func (c *crudOperation) Update(
+	loc string,
+	storeTimeout StoreWithTimeout,
+	entity Entity,
+	upd func(entity Entity)) (bool, error) {
+	//
+	ctx, cancel := storeTimeout()
+	found, err := c.store.Get(ctx, entity.Key(), entity)
+	cancel()
+	if err != nil {
+		return false, err
+	}
+	if !found {
+		return false, nil
+	}
+
+	// Update the fields
+	upd(entity)
+
+	return c.Put(loc, storeTimeout, entity)
+}
+
 // ConnectTo implements CrudOperation.ConnectTo
-func (c *crudOperation) ConnectTo(
+func (c *crudOperation) LinkTo(
 	loc string,
 	storeTimeout StoreWithTimeout,
 	txn Txn,
@@ -166,7 +198,7 @@ func (c *crudOperation) ConnectTo(
 	found, err := c.Store().Get(ctx, child.Key(), child)
 	cancel()
 	if err != nil {
-		return false, false, nil, c.log.ErrWrap1(err, "finding child entity to connect", loc, logging.String("key", child.Key()))
+		return false, false, nil, c.log.ErrWrap1(err, "finding child entity to link", loc, logging.String("key", child.Key()))
 	}
 	if !found {
 		return false, false, nil, nil
@@ -174,7 +206,7 @@ func (c *crudOperation) ConnectTo(
 
 	found, err = c.exists(loc, storeTimeout, parentID)
 	if err != nil {
-		return false, false, nil, c.log.ErrWrap1(err, "finding parent entity to connect", loc, logging.String("key", parentID))
+		return false, false, nil, c.log.ErrWrap1(err, "finding parent entity to link", loc, logging.String("key", parentID))
 	}
 	if !found {
 		return true, false, nil, nil
@@ -204,6 +236,15 @@ func (c *crudOperation) ConnectTo(
 	return true, true, link, nil
 }
 
+func (c *crudOperation) ListDLR(storeTimeout StoreWithTimeout, childID string) ([]Entity, error) {
+	ctx, cancel := storeTimeout()
+	es, err := c.store.Range(ctx, strings.Concat(childID, dlrSep), childID, 0, func() Entity {
+		return &DLRel{}
+	})
+	cancel()
+	return es, err
+}
+
 func (c *crudOperation) exists(loc string, storeTimeout StoreWithTimeout, id string) (bool, error) {
 	ctx, cancel := storeTimeout()
 	found, err := c.store.Exists(ctx, id)
@@ -218,7 +259,7 @@ func (c *crudOperation) put(loc string, storeTimeout StoreWithTimeout, entity En
 	txn := c.buildTxn(c.store)
 	txn.Find(entity.Key())
 
-	// If the relation is passed by param and the entity exists is updated in the same transaction
+	// If the relation is passed by param and the entity exists is found in the same transaction
 	if isRel {
 		found, err := c.updateRel(storeTimeout, loc, entity, txn)
 		if err != nil {
@@ -356,8 +397,10 @@ func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, 
 	return found, nil
 }
 
-// DLRel defines the information to point to the relation from source.
-// It works as a doubly linked relation
+// DLRel is a doubly linked relation
+// P -> R -> C, where P: Parent entity, R: Relation, C: Child
+// C -> DLR -> R where C: Child, DLR: Doubly linked relation, R: Relation
+// It allows navigate from child to parent
 type DLRel struct {
 	ChildID  string
 	ParentID string
@@ -370,5 +413,10 @@ func (r *DLRel) ToString() string {
 }
 
 func (r *DLRel) Key() string {
-	return strings.Concat(r.ChildID, dlrSep, r.ParentID)
+	return DLRKey(r.ChildID, r.ParentID)
+}
+
+// DLRKey gets DLR key
+func DLRKey(childID string, parentID string) string {
+	return strings.Concat(childID, dlrSep, parentID)
 }

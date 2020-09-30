@@ -207,6 +207,42 @@ func (c *Category) GetProp(ctx httpc.Context) error {
 	return ctx.JSON(http.GetStatus(found), prop)
 }
 
+// LinkToProp connects a category property or with other or with a ente property
+func (c *Category) LinkToProp(ctx httpc.Context) error {
+	catPropId, err := convert.ParamXID(ctx, "catPropId")
+	if err != nil {
+		return err
+	}
+	propId, err := convert.ParamXID(ctx, "propId")
+	if err != nil {
+		return err
+	}
+
+	pfound, cfound, isChild, equalType, rel, err := c.srv.LinkToProp(catPropId, propId)
+	if err != nil {
+		return ctx.HTTPError(nethttp.StatusInternalServerError, err)
+	}
+
+	if !pfound {
+		return ctx.HTTPError(nethttp.StatusNotFound, "Category property not found")
+	}
+	if !cfound {
+		return ctx.HTTPError(nethttp.StatusNotFound, "Target property (category or ente property) not found")
+	}
+	if !isChild {
+		return ctx.HTTPError(
+			nethttp.StatusBadRequest,
+			"The category of the target property (category or ente property) must be child of the category of the property for linking")
+	}
+	if !equalType {
+		return ctx.HTTPError(
+			nethttp.StatusConflict,
+			"The target property (category or ente property) must be of the same type than the category property for linking")
+	}
+
+	return ctx.JSON(nethttp.StatusOK, rel)
+}
+
 func validType(ctx httpc.Context, prop category.Prop) error {
 	if prop.Type != entity.None {
 		return ctx.HTTPError(nethttp.StatusBadRequest, "The 'type' property can be changed")

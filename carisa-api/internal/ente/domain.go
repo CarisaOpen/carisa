@@ -25,11 +25,11 @@ import (
 )
 
 // The thinks of spaces.
-// The ente are the items of spaces to trace, count, measure, etc.
+// The prop are the items of spaces to trace, count, measure, etc.
 type Ente struct {
 	entity.Descriptor
 	SpaceID xid.ID `json:"spaceId"` // Space container
-	catID   string // Is used temporarily to connect the entity and the category. It is not necessary to store it
+	CatID   string // Is used temporarily to connect the entity and the category.
 }
 
 func New() Ente {
@@ -39,7 +39,7 @@ func New() Ente {
 }
 
 func (e *Ente) ToString() string {
-	return strings.Concat("ente: ID:", e.Key(), ", name:", e.Name)
+	return strings.Concat("prop: ID:", e.Key(), ", name:", e.Name)
 }
 
 func (e *Ente) Key() string {
@@ -50,34 +50,34 @@ func (e *Ente) Nominative() entity.Descriptor {
 	return e.Descriptor
 }
 
-func (e *Ente) parentID() string {
-	parentID := e.catID
-	if len(e.catID) == 0 {
-		parentID = e.SpaceID.String()
-	}
-	return parentID
-}
-
 func (e *Ente) RelName() string {
 	return e.Name
 }
 
 // ParentKey gets the Space ID
 func (e *Ente) ParentKey() string {
-	return e.SpaceID.String()
+	return e.parentID()
 }
 
-// Link gets the link between instance and ente
+// Link gets the link between instance and prop
 func (e *Ente) Link() storage.Entity {
 	cat := true
-	if len(e.catID) == 0 {
+	if len(e.CatID) == 0 {
 		cat = false
 	}
 	return e.link(cat, e.parentID())
 }
 
+func (e *Ente) parentID() string {
+	parentID := e.CatID
+	if len(e.CatID) == 0 {
+		parentID = e.SpaceID.String()
+	}
+	return parentID
+}
+
 func (e *Ente) LinkName() string {
-	if len(e.catID) == 0 {
+	if len(e.CatID) == 0 {
 		return relation.SpaceEnteLn
 	}
 	return relation.CatEnteLn
@@ -111,11 +111,12 @@ func (e *Ente) Empty() storage.EntityRelation {
 	return &Ente{}
 }
 
-// The ente properties contains the fields
+// The prop properties contains the fields
 type Prop struct {
 	entity.Descriptor
-	EnteID xid.ID          `json:"enteId"` // Ente container
-	Type   entity.TypeProp `json:"type"`
+	EnteID    xid.ID          `json:"enteId"` // Ente container
+	Type      entity.TypeProp `json:"type"`
+	CatPropID string          // Is used temporarily to connect the property and the category property.
 }
 
 func NewProp() Prop {
@@ -125,8 +126,12 @@ func NewProp() Prop {
 	}
 }
 
+func (e *Prop) GetType() entity.TypeProp {
+	return e.Type
+}
+
 func (e *Prop) ToString() string {
-	return strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name)
+	return strings.Concat("prop-property: ID:", e.Key(), ", name:", e.Name)
 }
 
 func (e *Prop) Key() string {
@@ -143,24 +148,51 @@ func (e *Prop) RelName() string {
 
 // ParentKey gets the Ente ID
 func (e *Prop) ParentKey() string {
-	return e.EnteID.String()
+	return e.parentID()
 }
 
-// Link gets the link between Ente and properties
+// Link gets the link between Ente and properties or category property
 func (e *Prop) Link() storage.Entity {
-	return e.link(e.EnteID.String())
+	cat := true
+	if len(e.CatPropID) == 0 {
+		cat = false
+	}
+	return e.link(cat, e.parentID())
+}
+
+func (e *Prop) parentID() string {
+	parentID := e.CatPropID
+	if len(e.CatPropID) == 0 {
+		parentID = e.EnteID.String()
+	}
+	return parentID
 }
 
 func (e *Prop) LinkName() string {
-	return relation.EntePropLn
+	if len(e.CatPropID) == 0 {
+		return relation.EntePropLn
+	}
+	return relation.CatPropPropLn
 }
 
 func (e *Prop) ReLink(dlr storage.DLRel) storage.Entity {
-	return e.link(dlr.ParentID)
+	cat := true
+	if dlr.Type == relation.EntePropLn {
+		cat = false
+	}
+	return e.link(cat, dlr.ParentID)
 }
 
-func (e *Prop) link(parentID string) storage.Entity {
-	return &relation.EnteEnteProp{
+func (e *Prop) link(cat bool, parentID string) storage.Entity {
+	if cat {
+		return &relation.CatPropProp{
+			ID:       strings.Concat(parentID, e.Name, e.Key()),
+			Name:     e.Name,
+			PropID:   e.Key(),
+			Category: false,
+		}
+	}
+	return &relation.EnteProp{
 		ID:         strings.Concat(parentID, relation.EntePropLn, e.Name, e.Key()),
 		Name:       e.Name,
 		EntePropID: e.ID.String(),

@@ -161,7 +161,7 @@ func TestCategory_ReLink(t *testing.T) {
 
 func TestCategoryCatProp_Field(t *testing.T) {
 	c := NewProp()
-	assert.Equal(t, c.Type, entity.None)
+	assert.Equal(t, c.GetType(), entity.None)
 }
 
 func TestCategoryCatProp_ToString(t *testing.T) {
@@ -191,36 +191,113 @@ func TestCategoryCatProp_Empty(t *testing.T) {
 }
 
 func TestCategoryCatProp_Link(t *testing.T) {
-	c := NewProp()
-	c.CatID = xid.New()
+	propID := xid.New()
+	parentID := xid.New()
+	name := "name"
 
-	link := relation.CategoryProp{
-		ID:        strings.Concat(c.CatID.String(), relation.CatPropLn, c.Name, c.Key()),
-		Name:      c.Name,
-		CatPropID: c.ID.String(),
+	tests := []struct {
+		name string
+		prop Prop
+		link storage.Entity
+	}{
+		{
+			name: "Category -> Property",
+			prop: Prop{
+				Descriptor: entity.Descriptor{
+					ID:   propID,
+					Name: "name",
+				},
+				CatID: parentID,
+			},
+			link: &relation.CategoryProp{
+				ID:        strings.Concat(parentID.String(), relation.CatPropLn, name, propID.String()),
+				Name:      name,
+				CatPropID: propID.String(),
+			},
+		},
+		{
+			name: "Category property -> Category property",
+			prop: Prop{
+				Descriptor: entity.Descriptor{
+					ID:   propID,
+					Name: "name",
+				},
+				catPropID: parentID.String(),
+			},
+			link: &relation.CatPropProp{
+				ID:       strings.Concat(parentID.String(), name, propID.String()),
+				Name:     name,
+				PropID:   propID.String(),
+				Category: true,
+			},
+		},
 	}
 
-	assert.Equal(t, &link, c.Link())
+	for _, tt := range tests {
+		assert.Equal(t, tt.link, tt.prop.Link(), tt.name)
+	}
 }
 
 func TestCategoryCatProp_LinkName(t *testing.T) {
-	c := NewProp()
-	assert.Equal(t, relation.CatPropLn, c.LinkName())
+	p := NewProp()
+
+	tests := []struct {
+		name      string
+		catPropID string
+		typen     string
+	}{
+		{
+			name:  "Category -> Property",
+			typen: relation.CatPropLn,
+		},
+		{
+			name:      "Category property -> Category Property",
+			catPropID: "1",
+			typen:     relation.CatPropPropLn,
+		},
+	}
+
+	for _, tt := range tests {
+		p.catPropID = tt.catPropID
+		assert.Equal(t, tt.typen, p.LinkName(), tt.name)
+	}
 }
 
 func TestCategoryCatProp_ReLink(t *testing.T) {
-	c := NewProp()
+	p := NewProp()
 	parentID := xid.New().String()
 
-	link := relation.CategoryProp{
-		ID:        strings.Concat(parentID, relation.CatPropLn, c.Name, c.Key()),
-		Name:      c.Name,
-		CatPropID: c.ID.String(),
+	tests := []struct {
+		name string
+		tn   string
+		link storage.Entity
+	}{
+		{
+			name: "Category -> Property",
+			tn:   relation.CatPropLn,
+			link: &relation.CategoryProp{
+				ID:        strings.Concat(parentID, relation.CatPropLn, p.Name, p.Key()),
+				Name:      p.Name,
+				CatPropID: p.ID.String(),
+			},
+		},
+		{
+			name: "Category property -> Category Property",
+			tn:   relation.CatPropPropLn,
+			link: &relation.CatPropProp{
+				ID:       strings.Concat(parentID, p.Name, p.Key()),
+				Name:     p.Name,
+				Category: true,
+				PropID:   p.ID.String(),
+			},
+		},
 	}
 
-	dlr := storage.DLRel{
-		ParentID: parentID,
-		Type:     relation.CatPropLn,
+	for _, tt := range tests {
+		dlr := storage.DLRel{
+			ParentID: parentID,
+			Type:     tt.tn,
+		}
+		assert.Equal(t, tt.link, p.ReLink(dlr), tt.name)
 	}
-	assert.Equal(t, &link, c.ReLink(dlr))
 }

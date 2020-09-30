@@ -316,7 +316,7 @@ func TestEnteHandler_GetListPropsError(t *testing.T) {
 	}
 }
 
-func TestEnteHandler_ConnectToCategory(t *testing.T) {
+func TestEnteHandler_LinkToCategory(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, _, mng := newEnteHandlerFaked(t)
 	defer mng.Close()
@@ -363,8 +363,8 @@ func TestEnteHandler_ConnectToCategory(t *testing.T) {
 	}
 
 	for _, tt := range test {
-		rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entes/:enteId/linktocategory:categoryId", "", tt.params, nil)
-		err := handlers.EnteHandler.ConnectToCat(ctx)
+		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entes/:enteId/linktocategory:categoryId", "", tt.params, nil)
+		err := handlers.EnteHandler.LinkToCat(ctx)
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
 			continue
 		}
@@ -374,7 +374,7 @@ func TestEnteHandler_ConnectToCategory(t *testing.T) {
 	}
 }
 
-func TestEnteHandler_ConnectToCategoryError(t *testing.T) {
+func TestEnteHandler_LinkToCategoryError(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, crud := newEnteHandlerMocked()
 	defer h.Close(cnt.Log)
@@ -396,9 +396,9 @@ func TestEnteHandler_ConnectToCategoryError(t *testing.T) {
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:     "ConnectTo. Internal server error",
+			name:     "LinkTo. Internal server error",
 			param:    map[string]string{"enteId": xid.New().String(), "categoryId": xid.New().String()},
-			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("ConnectTo") },
+			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("LinkTo") },
 			status:   nethttp.StatusInternalServerError,
 		},
 	}
@@ -409,7 +409,7 @@ func TestEnteHandler_ConnectToCategoryError(t *testing.T) {
 		}
 
 		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entes/:enteId/linktocategory:categoryId", "", tt.param, nil)
-		err := handlers.EnteHandler.ConnectToCat(ctx)
+		err := handlers.EnteHandler.LinkToCat(ctx)
 		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
 	}

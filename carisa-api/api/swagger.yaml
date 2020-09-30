@@ -453,29 +453,29 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /entes/{enteid}/linktocategory/{categoryid}:
+  /entes/{enteId}/linkToCategory/{categoryId}:
     put:
       tags:
         - "ente"
-      summary: "Connect a ente with a category."
+      summary: "Links a ente with a category."
       consumes:
         - "application/json"
       produces:
         - "application/json"
       parameters:
         - in: "path"
-          name: "enteid"
+          name: "enteId"
           description: "Ente identifier"
           type: string
           required: true
         - in: "path"
-          name: "categoryid"
+          name: "categoryId"
           description: "Category identifier"
           type: string
           required: true
       responses:
         "200":
-          description: "Ente connected"
+          description: "Ente linked"
           schema:
             $ref: "#/definitions/HierarchyLink"
         "400":
@@ -484,7 +484,7 @@ paths:
           description: "Ente or category not found"
         "500":
           description: "Internal server error"
-  /entesprop:
+  /entesProp:
     post:
       tags:
         - "enteprop"
@@ -513,7 +513,7 @@ paths:
           description: "Ente not found"
         "500":
           description: "Internal server error"
-  /entesprop/{id}:
+  /entesProp/{id}:
     put:
       tags:
         - "enteprop"
@@ -742,7 +742,7 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /categoriesprop:
+  /categoriesProp:
     post:
       tags:
         - "categoryprop"
@@ -771,7 +771,7 @@ paths:
           description: "Ente not found"
         "500":
           description: "Internal server error"
-  /categoriesprop/{id}:
+  /categoriesProp/{id}:
     put:
       tags:
         - "categoryprop"
@@ -828,6 +828,37 @@ paths:
           description: "Invalid input"
         "404":
           description: "Category property not found"
+        "500":
+          description: "Internal server error"
+  /categoriesProp/{catPropId}/linkTo/{propId}:
+    put:
+      tags:
+        - "categoryprop"
+      summary: "Links a category property with other category or ente property."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "catPropId"
+          description: "Category property identifier"
+          type: string
+          required: true
+        - in: "path"
+          name: "propId"
+          description: "Category or ente property identifier for linking"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Property linked"
+          schema:
+            $ref: "#/definitions/PropertyLink"
+        "400":
+          description: "Invalid input or the category of the target property (category or ente property) must be child of the category of the property for linking"
+        "409":
+          description: "The target property (category or ente property) must be of the same type than the category property for linking"
         "500":
           description: "Internal server error"
 definitions:
@@ -1039,7 +1070,7 @@ definitions:
     properties:
       name:
         type: "string"
-        description: "If the category is true the name is the space name otherwise the name is the ente name"
+        description: "If the category is true the name is the category name otherwise the name is the ente name"
       category:
         type: "boolean"
         description: "If category is true, the linkId links a category otherwise it links a ente"
@@ -1093,3 +1124,15 @@ definitions:
       categoryPropId:
         type: "string"
         description: "Category property identifier"
+  PropertyLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "If the category is true the name is the category property name otherwise the name is the ente property name"
+      category:
+        type: "boolean"
+        description: "If category is true, the propId links a category property otherwise it links a ente property"
+      propId:
+        type: "string"
+        description: "If the 'category' is true, propId contains the category property identifier, otherwise propId contains the ente property identifier"

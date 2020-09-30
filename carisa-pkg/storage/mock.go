@@ -165,7 +165,9 @@ type ErrMockCRUDOper struct {
 	put           bool
 	createWithRel bool
 	putWithRel    bool
+	update        bool
 	connectTo     bool
+	listDLR       bool
 	store         CRUD
 }
 
@@ -185,12 +187,16 @@ func (e *ErrMockCRUDOper) Activate(methods ...string) {
 			e.create = true
 		case "Put":
 			e.put = true
+		case "Update":
+			e.update = true
 		case "CreateWithRel":
 			e.createWithRel = true
 		case "PutWithRel":
 			e.putWithRel = true
-		case "ConnectTo":
+		case "LinkTo":
 			e.connectTo = true
+		case "ListDLR":
+			e.listDLR = true
 		default:
 			panic("method not found")
 		}
@@ -203,7 +209,9 @@ func (e *ErrMockCRUDOper) Clear() {
 	e.put = false
 	e.createWithRel = false
 	e.putWithRel = false
+	e.update = false
 	e.connectTo = false
+	e.listDLR = false
 }
 
 func (e *ErrMockCRUDOper) Store() CRUD {
@@ -238,7 +246,14 @@ func (e *ErrMockCRUDOper) PutWithRel(loc string, storeTimeout StoreWithTimeout, 
 	return true, true, nil
 }
 
-func (e *ErrMockCRUDOper) ConnectTo(
+func (e *ErrMockCRUDOper) Update(loc string, storeTimeout StoreWithTimeout, entity Entity, upd func(entity Entity)) (bool, error) {
+	if e.update {
+		return false, errors.New("update")
+	}
+	return true, nil
+}
+
+func (e *ErrMockCRUDOper) LinkTo(
 	loc string,
 	storeTimeout StoreWithTimeout,
 	txn Txn,
@@ -247,7 +262,14 @@ func (e *ErrMockCRUDOper) ConnectTo(
 	fill func(child Entity)) (bool, bool, Entity, error) {
 	//
 	if e.connectTo {
-		return false, false, nil, errors.New("ConnecTo")
+		return false, false, nil, errors.New("linkTo")
 	}
 	return true, true, nil, nil
+}
+
+func (e *ErrMockCRUDOper) ListDLR(storeTimeout StoreWithTimeout, childID string) ([]Entity, error) {
+	if e.listDLR {
+		return nil, errors.New("listDLR")
+	}
+	return nil, nil
 }

@@ -87,6 +87,7 @@ type (
 		StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
 
 		// Range lists all entities that is greater than skey and ended by eKey with the limit of the top parameter.
+		// Top = 0 is configured as unlimited
 		Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error)
 
 		// RangeRaw lists all keys and values that is greater than skey and ended by eKey with the limit of the top parameter.

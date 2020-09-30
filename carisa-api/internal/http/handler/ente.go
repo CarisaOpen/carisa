@@ -99,8 +99,8 @@ func (e *Ente) Get(c httpc.Context) error {
 	return c.JSON(http.GetStatus(found), ente)
 }
 
-// ConnectToCat connects ente to category in the tree
-func (e *Ente) ConnectToCat(c httpc.Context) error {
+// LinkToCat connects ente to category in the tree
+func (e *Ente) LinkToCat(c httpc.Context) error {
 	enteID, err := convert.ParamXID(c, "enteId")
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (e *Ente) ConnectToCat(c httpc.Context) error {
 		return err
 	}
 
-	efound, cfound, rel, err := e.srv.ConnectToCat(enteID, catID)
+	efound, cfound, rel, err := e.srv.LinkToCat(enteID, catID)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, err)
 	}

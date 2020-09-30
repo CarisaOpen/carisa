@@ -336,6 +336,76 @@ func TestCRUDOperation_PutError(t *testing.T) {
 	}
 }
 
+func TestCRUDOperation_Update(t *testing.T) {
+	tests := []struct {
+		name  string
+		e     *Object
+		found bool
+	}{
+		{
+			name: "Not found.",
+			e: &Object{
+				ID:    "key1",
+				Value: 1,
+			},
+			found: false,
+		},
+		{
+			name: "Updated.",
+			e: &Object{
+				ID:    "key",
+				Value: 5,
+			},
+			found: true,
+		},
+	}
+
+	storef := NewEctdIntegra(t)
+	defer storef.Close()
+
+	o := Object{
+		ID:    "key",
+		Value: 2,
+	}
+
+	oper := newCRUDOper(storef)
+	_, err := oper.Put("loc", storeTimeout, &o)
+	if err != nil {
+		assert.Error(t, err, "Creating entity")
+		return
+	}
+
+	for _, tt := range tests {
+		cpy := *tt.e
+		found, err := oper.Update("loc", storeTimeout, tt.e, func(e Entity) {
+			e.(*Object).Value = cpy.Value
+		})
+		if assert.NoError(t, err, strings.Concat(tt.name, "Updating")) {
+			assert.Equal(t, tt.found, found, strings.Concat(tt.name, "Found"))
+			if tt.found {
+				var res Object
+				_, err := storef.Store().Get(context.TODO(), tt.e.ID, &res)
+				if assert.NoError(t, err, strings.Concat(tt.name, "Get entity")) {
+					assert.Equal(t, cpy, res, strings.Concat(tt.name, "Entity updated"))
+				}
+			}
+		}
+	}
+}
+
+func TestCRUDOperation_UpdateError(t *testing.T) {
+	e := entity()
+
+	oper, store, _ := newCRUDOperMock()
+
+	store.Activate("Get")
+
+	_, err := oper.Update("loc", storeTimeout, e, func(entity Entity) {})
+	if assert.Error(t, err, "Update") {
+		assert.Equal(t, "get", err.Error())
+	}
+}
+
 func TestCRUDOperation_PutWithRelation(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -475,7 +545,7 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 	}
 }
 
-func TestCRUDOperation_ConnectTo(t *testing.T) {
+func TestCRUDOperation_LinkTo(t *testing.T) {
 	tests := []struct {
 		name      string
 		kchild    Object
@@ -515,7 +585,7 @@ func TestCRUDOperation_ConnectTo(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		sfound, tfound, link, err := oper.ConnectTo("loc", storeTimeout, nil, &tt.kchild, tt.kparentID, func(child Entity) {
+		sfound, tfound, link, err := oper.LinkTo("loc", storeTimeout, nil, &tt.kchild, tt.kparentID, func(child Entity) {
 			child.(*Object).Parent = tt.kparentID
 		})
 		if assert.NoError(t, err, tt.name) {
@@ -547,7 +617,7 @@ func TestCRUDOperation_ConnectTo(t *testing.T) {
 	}
 }
 
-func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
+func TestCRUDOperation_LinkTo_Txn(t *testing.T) {
 	storef := NewEctdIntegra(t)
 	defer storef.Close()
 
@@ -571,10 +641,10 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 	}
 	txn.DoNotFound(put)
 
-	_, _, _, err = oper.ConnectTo("loc", storeTimeout, txn, o, o.ID, func(child Entity) {
+	_, _, _, err = oper.LinkTo("loc", storeTimeout, txn, o, o.ID, func(child Entity) {
 		child.(*Object).Parent = o.ID
 	})
-	if assert.NoError(t, err, "ConnectTo") {
+	if assert.NoError(t, err, "LinkTo") {
 		ctx, cancel := storeTimeout()
 		_, err := txn.Commit(ctx)
 		cancel()
@@ -589,6 +659,43 @@ func TestCRUDOperation_ConnectTo_Txn(t *testing.T) {
 			if assert.NoError(t, err, "Transaction entity") {
 				assert.True(t, found, "Exists transaction entity")
 			}
+		}
+	}
+}
+
+func TestCRUDOperation_ListDLR(t *testing.T) {
+	storef := NewEctdIntegra(t)
+	defer storef.Close()
+	oper := newCRUDOper(storef)
+
+	const childID = "C1"
+	dlrTest := []DLRel{
+		{
+			ChildID:  childID,
+			ParentID: "P1",
+			Type:     "T1",
+			Pointer:  "P1",
+		},
+		{
+			ChildID:  childID,
+			ParentID: "P2",
+			Type:     "T3",
+			Pointer:  "P2",
+		},
+	}
+
+	for _, dlrt := range dlrTest {
+		_, err := oper.Create("loc", storeTimeout, &dlrt)
+		if err != nil {
+			assert.Error(t, err, "Creating DLR")
+			return
+		}
+	}
+
+	dlrs, err := oper.ListDLR(storeTimeout, childID)
+	if assert.NoError(t, err, "Listing DLR") {
+		for i, dlr := range dlrs {
+			assert.Equal(t, &dlrTest[i], dlr)
 		}
 	}
 }

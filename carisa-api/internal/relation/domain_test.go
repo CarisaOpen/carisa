@@ -57,7 +57,7 @@ func TestSpaceEnte_Key(t *testing.T) {
 }
 
 func TestEnteEnteProp_ToString(t *testing.T) {
-	s := EnteEnteProp{
+	s := EnteProp{
 		ID:         "key",
 		Name:       "name",
 		EntePropID: "1",
@@ -66,7 +66,7 @@ func TestEnteEnteProp_ToString(t *testing.T) {
 }
 
 func TestEnteEnteProp_Key(t *testing.T) {
-	i := EnteEnteProp{
+	i := EnteProp{
 		ID:         "key",
 		EntePropID: "1",
 	}
@@ -122,4 +122,21 @@ func TestCategoryProp_Key(t *testing.T) {
 		LinkID: "1",
 	}
 	assert.Equal(t, c.ID, c.Key())
+}
+
+func TestCatPropLink_ToString(t *testing.T) {
+	s := CatPropProp{
+		ID:     "key",
+		Name:   "name",
+		PropID: "1",
+	}
+	assert.Equal(t, "catprop-link: ID:key, Name:name", s.ToString())
+}
+
+func TestCatPropLink_Key(t *testing.T) {
+	i := CatPropProp{
+		ID:     "key",
+		PropID: "1",
+	}
+	assert.Equal(t, i.ID, i.Key())
 }

@@ -20,13 +20,14 @@ import "github.com/carisa/pkg/strings"
 
 // Link name. Must be unique
 const (
-	InstSpaceLn = "IS"
-	SpaceCatLn  = "SC"
-	EntePropLn  = "EP"
-	CatCatLn    = "CC"
-	CatEnteLn   = "CE"
-	CatPropLn   = "CP"
-	SpaceEnteLn = "SE"
+	InstSpaceLn   = "IS"
+	SpaceCatLn    = "SC"
+	EntePropLn    = "EP"
+	CatCatLn      = "CC"
+	CatEnteLn     = "CE"
+	CatPropLn     = "CP"
+	SpaceEnteLn   = "SE"
+	CatPropPropLn = "CPP"
 )
 
 // InstSpace represents the link between instance and space
@@ -59,18 +60,18 @@ func (s *SpaceEnte) Key() string {
 	return s.ID
 }
 
-// EnteEnteProp represents the link between ente and her properties
-type EnteEnteProp struct {
+// EnteProp represents the link between ente and her properties
+type EnteProp struct {
 	ID         string `json:"-"`
 	Name       string `json:"name"`
 	EntePropID string `json:"entePropId"`
 }
 
-func (s *EnteEnteProp) ToString() string {
+func (s *EnteProp) ToString() string {
 	return strings.Concat("ente-enteprop-link: ID:", s.Key(), ", Name:", s.Name)
 }
 
-func (s *EnteEnteProp) Key() string {
+func (s *EnteProp) Key() string {
 	return s.ID
 }
 
@@ -118,4 +119,21 @@ func (c *CategoryProp) ToString() string {
 
 func (c *CategoryProp) Key() string {
 	return c.ID
+}
+
+// CatPropProp represents the link between category property and others category property or ente property
+// of the children
+type CatPropProp struct {
+	ID       string `json:"-"`
+	Name     string `json:"name"`
+	PropID   string `json:"propertyId"`
+	Category bool   `json:"category"` // Category=false the property links to a ente property
+}
+
+func (l *CatPropProp) ToString() string {
+	return strings.Concat("catprop-link: ID:", l.Key(), ", Name:", l.Name)
+}
+
+func (l *CatPropProp) Key() string {
+	return l.ID
 }

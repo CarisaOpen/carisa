@@ -71,7 +71,7 @@ func TestEnteService_Put(t *testing.T) {
 		ente    *Ente
 	}{
 		{
-			name:    "Creating ente",
+			name:    "Creating prop",
 			updated: false,
 			ente: &Ente{
 				Descriptor: entity.Descriptor{
@@ -83,7 +83,7 @@ func TestEnteService_Put(t *testing.T) {
 			},
 		},
 		{
-			name:    "Updating ente",
+			name:    "Updating prop",
 			updated: true,
 			ente: &Ente{
 				Descriptor: entity.Descriptor{
@@ -110,7 +110,7 @@ func checkEnte(t *testing.T, srv Service, e Ente) {
 	var er Ente
 	_, err := srv.Get(e.ID, &er)
 	if assert.NoError(t, err) {
-		assert.Equal(t, e, er, "Getting ente")
+		assert.Equal(t, e, er, "Getting prop")
 	}
 }
 
@@ -133,13 +133,13 @@ func TestEnteService_Get(t *testing.T) {
 	}
 }
 
-func TestEnteService_ConnectToCat(t *testing.T) {
+func TestEnteService_LinkToCat(t *testing.T) {
 	srv, mng := newServiceFaked(t)
 	defer mng.Close()
 
 	ente, err := createEnte(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating ente")
+		assert.Error(t, err, "Creating prop")
 	}
 
 	cat, err := samples.CreateEntityMock(mng)
@@ -147,7 +147,7 @@ func TestEnteService_ConnectToCat(t *testing.T) {
 		assert.Error(t, err, "Creating category")
 	}
 
-	sfound, tfound, rel, err := srv.ConnectToCat(ente.ID, cat.ID)
+	sfound, tfound, rel, err := srv.LinkToCat(ente.ID, cat.ID)
 
 	if assert.NoError(t, err) {
 		assert.True(t, sfound, "Ente found")
@@ -206,7 +206,7 @@ func TestEnteService_PutProp(t *testing.T) {
 	defer mng.Close()
 	ente, err := createEnte(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating ente")
+		assert.Error(t, err, "Creating prop")
 	}
 
 	tests := []struct {

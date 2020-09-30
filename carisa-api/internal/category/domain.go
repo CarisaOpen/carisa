@@ -102,11 +102,13 @@ func (c *Category) Empty() storage.EntityRelation {
 
 // Prop are the properties of category. Each property represents a generalization
 // of the properties of the entes or of the properties of the categories
+// Each category property can inherit properties of child (category or ente)
 // All of them have the same type. The type is assigned when is linked the first property so ente as the category
 type Prop struct {
 	entity.Descriptor
-	CatID xid.ID          `json:"categoryId"` // Category container
-	Type  entity.TypeProp `json:"type"`
+	CatID     xid.ID          `json:"categoryId"` // Category container
+	Type      entity.TypeProp `json:"type"`
+	catPropID string          // Is used temporarily to connect the property and the category property.
 }
 
 func NewProp() Prop {
@@ -114,6 +116,10 @@ func NewProp() Prop {
 		Descriptor: entity.NewDescriptor(),
 		Type:       entity.None,
 	}
+}
+
+func (c *Prop) GetType() entity.TypeProp {
+	return c.Type
 }
 
 func (c *Prop) ToString() string {
@@ -134,23 +140,50 @@ func (c *Prop) RelName() string {
 
 // ParentKey gets the Ente ID
 func (c *Prop) ParentKey() string {
-	return c.CatID.String()
+	return c.parentID()
 }
 
 // Link gets the link between Category and her properties
 func (c *Prop) Link() storage.Entity {
-	return c.link(c.CatID.String())
+	catProp := true
+	if len(c.catPropID) == 0 {
+		catProp = false
+	}
+	return c.link(catProp, c.parentID())
+}
+
+func (c *Prop) parentID() string {
+	parentID := c.catPropID
+	if len(c.catPropID) == 0 {
+		parentID = c.CatID.String()
+	}
+	return parentID
 }
 
 func (c *Prop) LinkName() string {
-	return relation.CatPropLn
+	if len(c.catPropID) == 0 {
+		return relation.CatPropLn
+	}
+	return relation.CatPropPropLn
 }
 
 func (c *Prop) ReLink(dlr storage.DLRel) storage.Entity {
-	return c.link(dlr.ParentID)
+	catProp := true
+	if dlr.Type == relation.CatPropLn {
+		catProp = false
+	}
+	return c.link(catProp, dlr.ParentID)
 }
 
-func (c *Prop) link(parentID string) storage.Entity {
+func (c *Prop) link(catProp bool, parentID string) storage.Entity {
+	if catProp {
+		return &relation.CatPropProp{
+			ID:       strings.Concat(parentID, c.Name, c.Key()),
+			Name:     c.Name,
+			PropID:   c.Key(),
+			Category: true,
+		}
+	}
 	return &relation.CategoryProp{
 		ID:        strings.Concat(parentID, relation.CatPropLn, c.Name, c.Key()),
 		Name:      c.Name,

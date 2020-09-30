@@ -16,12 +16,9 @@
 
 package entity
 
-import "github.com/carisa/pkg/storage"
-
-type Domain interface {
-	storage.Entity
-	Descriptors
-}
+import (
+	"github.com/carisa/pkg/storage"
+)
 
 // TypeProp is the field type of the property
 type TypeProp uint8
@@ -38,3 +35,14 @@ const (
 	// DateTime is a value with date and time
 	DateTime
 )
+
+type Domain interface {
+	storage.Entity
+	Descriptors
+}
+
+type Property interface {
+	Descriptors
+	ParentKey() string
+	GetType() TypeProp
+}

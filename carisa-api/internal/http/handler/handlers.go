@@ -84,8 +84,8 @@ func (h *Handlers) EnteListProps(ctx echo.Context) error {
 	return h.EnteHandler.ListProps(echoc.NewContext(ctx))
 }
 
-func (h *Handlers) EnteConnectToCat(ctx echo.Context) error {
-	return h.EnteHandler.ConnectToCat(echoc.NewContext(ctx))
+func (h *Handlers) EnteLinkToCat(ctx echo.Context) error {
+	return h.EnteHandler.LinkToCat(echoc.NewContext(ctx))
 }
 
 func (h *Handlers) EnteCreateProp(ctx echo.Context) error {
@@ -131,4 +131,8 @@ func (h *Handlers) CatCreateProp(ctx echo.Context) error {
 
 func (h *Handlers) CatPutProp(ctx echo.Context) error {
 	return h.CategoryHandler.PutProp(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatPropLinkTo(ctx echo.Context) error {
+	return h.CategoryHandler.LinkToProp(echoc.NewContext(ctx))
 }

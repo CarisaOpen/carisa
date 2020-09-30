@@ -26,16 +26,16 @@ import (
 	"github.com/rs/xid"
 )
 
-const locService = "ente.service"
+const locService = "prop.service"
 
-// Service implements CRUD operations for the ente
+// Service implements CRUD operations for the prop
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a ente service
+// NewService builds a prop service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -44,22 +44,22 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a ente into of the repository and links ente and space.
-// If the ente exists return false in the first param returned.
+// Create creates a prop into of the repository and links prop and space.
+// If the prop exists return false in the first param returned.
 // If the space doesn't exist return false in the second param returned.
 func (s *Service) Create(ente *Ente) (bool, bool, error) {
 	ente.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
 
-// Put creates or updates a ente into of the repository.
-// If the ente exists return true in the first param returned otherwise return false.
+// Put creates or updates a prop into of the repository.
+// If the prop exists return true in the first param returned otherwise return false.
 // If the space doesn't exist return false in the second param returned.
 func (s *Service) Put(ente *Ente) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
 
-// Get gets the ente from storage
+// Get gets the prop from storage
 func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, id.String(), ente)
@@ -67,48 +67,48 @@ func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	return ok, err
 }
 
-// ConnectToCat connect ente to category
-// If the ente exists return true in the first param returned otherwise return false.
+// LinkToCat connect prop to category
+// If the prop exists return true in the first param returned otherwise return false.
 // If the category exists return true in the second param returned otherwise return false.
-func (s *Service) ConnectToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relation.Hierarchy, error) {
+func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relation.Hierarchy, error) {
 	category := categoryID.String()
 	ente := New()
 	ente.ID = enteID
 
-	sfound, tfound, link, err := s.crud.ConnectTo(
+	cfound, pfound, link, err := s.crud.LinkTo(
 		locService,
 		s.cnt.StoreWithTimeout,
 		nil,
 		&ente,
 		category,
 		func(e storage.Entity) {
-			e.(*Ente).catID = categoryID.String()
+			e.(*Ente).CatID = category
 		})
 	if err != nil {
-		return sfound, tfound, relation.Hierarchy{},
+		return cfound, pfound, relation.Hierarchy{},
 			s.cnt.Log.ErrWrap2(
 				err,
-				"ente cannot be connected to category",
+				"prop cannot be linked to category",
 				locService,
 				logging.String("CategoryId", category),
 				logging.String("EnteId", ente.Key()))
 	}
 
-	if !sfound || !tfound {
-		return sfound, tfound, relation.Hierarchy{}, nil
+	if !cfound || !pfound {
+		return cfound, pfound, relation.Hierarchy{}, nil
 	}
-	return sfound, tfound, *link.(*relation.Hierarchy), nil
+	return cfound, pfound, *link.(*relation.Hierarchy), nil
 }
 
 // ListProps lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat(relation.EntePropLn, name), ranges, top, func() storage.Entity { return &relation.EnteEnteProp{} })
+	return s.ext.List(id, strings.Concat(relation.EntePropLn, name), ranges, top, func() storage.Entity { return &relation.EnteProp{} })
 }
 
-// CreateProp creates a property into of the repository and links ente property and ente.
+// CreateProp creates a property into of the repository and links prop property and prop.
 // If the property exists return false in the first param returned.
-// If the ente doesn't exist return false in the second param returned.
+// If the prop doesn't exist return false in the second param returned.
 func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 	prop.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
@@ -116,7 +116,7 @@ func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 
 // PutProp creates or updates a peroperty into of the repository.
 // If the property exists return true in the first param returned otherwise return false.
-// If the ente doesn't exist return false in the second param returned.
+// If the prop doesn't exist return false in the second param returned.
 func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
