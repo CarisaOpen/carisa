@@ -92,6 +92,7 @@ func TestErrMockOper_Activate(t *testing.T) {
 	_, _, err = m.CreateWithRel("", nil, nil)
 	assert.Error(t, err, "CreateWithError")
 	_, _, err = m.PutWithRel("", nil, nil)
+	assert.Error(t, err, "PutWithRel")
 	_, err = m.Update("", nil, nil, nil)
 	assert.Error(t, err, "Update")
 	_, _, _, err = m.LinkTo("", nil, nil, nil, "", nil)

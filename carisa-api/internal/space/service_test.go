@@ -19,6 +19,8 @@ package space
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/test"
+
 	entesmpl "github.com/carisa/api/internal/ente/samples"
 	"github.com/carisa/api/internal/samples"
 	srv "github.com/carisa/api/internal/service"
@@ -50,7 +52,7 @@ func TestSpaceService_Create(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
 			assert.True(t, found, "Instance found")
-			checkSpace(t, srv, *s)
+			checkSpace(t, srv, "Checking relations.", *s)
 		}
 	}
 }
@@ -99,17 +101,18 @@ func TestSpaceService_Put(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Space updated"))
 			assert.True(t, found, strings.Concat(tt.name, "Instance found"))
-			checkSpace(t, srv, *tt.space)
+			checkSpace(t, srv, tt.name, *tt.space)
 		}
 	}
 }
 
-func checkSpace(t *testing.T, srv Service, s Space) {
+func checkSpace(t *testing.T, srv Service, name string, s Space) {
 	var sr Space
 	_, err := srv.Get(s.ID, &sr)
 	if assert.NoError(t, err) {
 		assert.Equal(t, s, sr, "Getting space")
 	}
+	test.CheckRelations(t, srv.crud.Store(), name, &s)
 }
 
 func TestSpaceService_Get(t *testing.T) {

@@ -20,6 +20,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/carisa/api/internal/test"
+
 	"github.com/carisa/api/internal/service"
 
 	"github.com/carisa/api/internal/samples"
@@ -52,7 +54,7 @@ func TestEnteService_Create(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
 			assert.True(t, found, "Space found")
-			checkEnte(t, srv, *s)
+			checkEnte(t, srv, "Checking relations", *s)
 		}
 	}
 }
@@ -101,17 +103,18 @@ func TestEnteService_Put(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Ente updated"))
 			assert.True(t, found, strings.Concat(tt.name, "Space found"))
-			checkEnte(t, srv, *tt.ente)
+			checkEnte(t, srv, tt.name, *tt.ente)
 		}
 	}
 }
 
-func checkEnte(t *testing.T, srv Service, e Ente) {
+func checkEnte(t *testing.T, srv Service, name string, e Ente) {
 	var er Ente
 	_, err := srv.Get(e.ID, &er)
 	if assert.NoError(t, err) {
 		assert.Equal(t, e, er, "Getting prop")
 	}
+	test.CheckRelations(t, srv.crud.Store(), name, &e)
 }
 
 func TestEnteService_Get(t *testing.T) {
@@ -155,7 +158,11 @@ func TestEnteService_LinkToCat(t *testing.T) {
 
 		found, err := srv.crud.Store().Exists(context.TODO(), rel.Key())
 		if assert.NoError(t, err) {
-			assert.True(t, found, "Getting relation")
+			assert.True(t, found, "Getting link")
+		}
+		found, err = srv.crud.Store().Exists(context.TODO(), storage.DLRKey(ente.Key(), cat.Key()))
+		if assert.NoError(t, err) {
+			assert.True(t, found, "Getting DLR")
 		}
 	}
 }
@@ -196,7 +203,7 @@ func TestEnteService_CreateProp(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
 			assert.True(t, found, "Ente found")
-			checkProp(t, srv, *prop)
+			checkProp(t, srv, "Checking relations", *prop)
 		}
 	}
 }
@@ -246,9 +253,18 @@ func TestEnteService_PutProp(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Property updated"))
 			assert.True(t, found, strings.Concat(tt.name, "Ente found"))
-			checkProp(t, srv, *tt.prop)
+			checkProp(t, srv, tt.name, *tt.prop)
 		}
 	}
+}
+
+func checkProp(t *testing.T, srv Service, name string, p Prop) {
+	var prop Prop
+	_, err := srv.GetProp(p.ID, &prop)
+	if assert.NoError(t, err) {
+		assert.Equal(t, p, prop, "Getting property")
+	}
+	test.CheckRelations(t, srv.crud.Store(), name, &p)
 }
 
 func TestEnteService_GetProp(t *testing.T) {
@@ -267,14 +283,6 @@ func TestEnteService_GetProp(t *testing.T) {
 				assert.Equal(t, prop, &get, "Property returned")
 			}
 		}
-	}
-}
-
-func checkProp(t *testing.T, srv Service, p Prop) {
-	var prop Prop
-	_, err := srv.GetProp(p.ID, &prop)
-	if assert.NoError(t, err) {
-		assert.Equal(t, p, prop, "Getting property")
 	}
 }
 

@@ -80,7 +80,12 @@ func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) (
 // ListProps lists properties depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat(relation.CatPropLn, name), ranges, top, func() storage.Entity { return &relation.CategoryProp{} })
+	return s.ext.List(
+		id,
+		strings.Concat(relation.CatPropLn, name),
+		ranges,
+		top,
+		func() storage.Entity { return &relation.CategoryProp{} })
 }
 
 // CreateProp creates a property into of the repository and links category property and category.
@@ -190,6 +195,9 @@ func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool
 				p.CatPropID = scatPropID
 			}
 		})
+	if err != nil {
+		return true, true, true, true, relation.CatPropProp{}, err
+	}
 
 	if !cfound || !pfound {
 		return pfound, cfound, true, true, relation.CatPropProp{}, nil

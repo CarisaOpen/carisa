@@ -41,24 +41,24 @@ func CreateRootLink(mng storage.Integration, catID xid.ID) (storage.Entity, cate
 	return createLink(mng, catID, true)
 }
 
-func createLink(mng storage.Integration, catId xid.ID, root bool) (storage.Entity, category.Category, error) {
+func createLink(mng storage.Integration, catID xid.ID, root bool) (storage.Entity, category.Category, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	s := category.New()
 	s.Name = "name"
 	s.Desc = "desc"
-	s.ParentID = catId
+	s.ParentID = catID
 	s.Root = root
 	link := s.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
 	return link, s, err
 }
 
-func CreateLinkProp(mng storage.Integration, catId xid.ID) (storage.Entity, category.Prop, error) {
+func CreateLinkProp(mng storage.Integration, catID xid.ID) (storage.Entity, category.Prop, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	prop := category.NewProp()
 	prop.Name = "namep"
 	prop.Desc = "descp"
-	prop.CatID = catId
+	prop.CatID = catID
 	link := prop.Link()
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
 	return link, prop, err

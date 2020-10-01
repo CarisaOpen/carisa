@@ -61,12 +61,12 @@ func TestEnte_Empty(t *testing.T) {
 func TestEnte_Link(t *testing.T) {
 	enteID := xid.New()
 	parentID := xid.New()
-	name := "name"
+	name := "namele"
 
 	tests := []struct {
 		name  string
 		ente  Ente
-		catId string
+		catID string
 		link  storage.Entity
 	}{
 		{
@@ -74,7 +74,7 @@ func TestEnte_Link(t *testing.T) {
 			ente: Ente{
 				Descriptor: entity.Descriptor{
 					ID:   enteID,
-					Name: "name",
+					Name: "namele",
 				},
 				SpaceID: parentID,
 				CatID:   "",
@@ -90,7 +90,7 @@ func TestEnte_Link(t *testing.T) {
 			ente: Ente{
 				Descriptor: entity.Descriptor{
 					ID:   enteID,
-					Name: "name",
+					Name: "namele",
 				},
 				CatID: parentID.String(),
 			},
@@ -206,7 +206,7 @@ func TestEnteEnteProp_Empty(t *testing.T) {
 func TestEnteEnteProp_Link(t *testing.T) {
 	propID := xid.New()
 	parentID := xid.New()
-	name := "name"
+	name := "namele"
 
 	tests := []struct {
 		name string
@@ -218,7 +218,7 @@ func TestEnteEnteProp_Link(t *testing.T) {
 			prop: Prop{
 				Descriptor: entity.Descriptor{
 					ID:   propID,
-					Name: "name",
+					Name: "namele",
 				},
 				EnteID:    parentID,
 				CatPropID: "",
@@ -234,7 +234,7 @@ func TestEnteEnteProp_Link(t *testing.T) {
 			prop: Prop{
 				Descriptor: entity.Descriptor{
 					ID:   propID,
-					Name: "name",
+					Name: "namele",
 				},
 				CatPropID: parentID.String(),
 			},

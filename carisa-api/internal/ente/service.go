@@ -103,7 +103,12 @@ func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relat
 // ListProps lists entes depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat(relation.EntePropLn, name), ranges, top, func() storage.Entity { return &relation.EnteProp{} })
+	return s.ext.List(
+		id,
+		strings.Concat(relation.EntePropLn, name),
+		ranges,
+		top,
+		func() storage.Entity { return &relation.EnteProp{} })
 }
 
 // CreateProp creates a property into of the repository and links prop property and prop.

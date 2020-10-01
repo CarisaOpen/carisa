@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	nethttp "net/http"
@@ -427,41 +428,48 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		params  map[string]string
+		source  xid.ID
+		target  xid.ID
 		status  int
 		resBody string
 		typep   entity.TypeProp
 	}{
 		{
 			name:   "Category property not found",
-			params: map[string]string{"catPropId": xid.NilID().String(), "propId": xid.NilID().String()},
+			source: xid.NilID(),
+			target: xid.NilID(),
 			status: nethttp.StatusNotFound,
 		},
 		{
 			name:   "Target property not found",
-			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": xid.NilID().String()},
+			source: catPropRoot.ID,
+			target: xid.NilID(),
 			status: nethttp.StatusNotFound,
 		},
 		{
 			name:   "The category or ente of the property is not child of the category of the property",
-			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catccProp.ID.String()},
+			source: catPropRoot.ID,
+			target: catccProp.ID,
 			status: nethttp.StatusBadRequest,
 		},
 		{
 			name:    "The category property is linked successfully with other category property",
-			params:  map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catChildProp1.ID.String()},
+			source:  catPropRoot.ID,
+			target:  catChildProp1.ID,
 			status:  nethttp.StatusOK,
 			resBody: fmt.Sprintf(`{"name":"namecp","propertyId":"%s","category":true}`, catChildProp1.ID.String()),
 			typep:   entity.Integer,
 		},
 		{
 			name:   "The category property is not the same type than the target property",
-			params: map[string]string{"catPropId": catPropRoot.ID.String(), "propId": catChildProp2.ID.String()},
+			source: catPropRoot.ID,
+			target: catChildProp2.ID,
 			status: nethttp.StatusConflict,
 		},
 		{
 			name:    "The category property is linked successfully with a ente property",
-			params:  map[string]string{"catPropId": catPropRoot.ID.String(), "propId": enteChildProp.ID.String()},
+			source:  catPropRoot.ID,
+			target:  enteChildProp.ID,
 			status:  nethttp.StatusOK,
 			resBody: fmt.Sprintf(`{"name":"nameep","propertyId":"%s","category":false}`, enteChildProp.ID.String()),
 			typep:   entity.Integer,
@@ -469,24 +477,36 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesProp/:catPropId/linkto/:propId", "", tt.params, nil)
+		params := map[string]string{"catPropId": tt.source.String(), "propId": tt.target.String()}
+		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesProp/:catPropId/linkto/:propId", "", params, nil)
 		err := handlers.CategoryHandler.LinkToProp(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
 			continue
 		}
+		if err != nil {
+			assert.Error(t, err)
+			return
+		}
+
+		assert.Contains(t, rec.Body.String(), tt.resBody, tt.name)
+		var catp category.Prop
+		_, err = srv.GetProp(catPropRoot.ID, &catp)
 		if assert.NoError(t, err) {
-			assert.Contains(t, rec.Body.String(), tt.resBody, tt.name)
-			var catp category.Prop
-			_, err := srv.GetProp(catPropRoot.ID, &catp)
-			if assert.NoError(t, err) {
-				assert.Equal(t, tt.typep, catp.Type, tt.name)
-			}
+			assert.Equal(t, tt.typep, catp.Type, tt.name)
+		}
+		found, err := mng.Store().Exists(context.TODO(), storage.DLRKey(tt.target.String(), tt.source.String()))
+		if assert.NoError(t, err) {
+			assert.True(t, found, "Getting DLR")
 		}
 	}
 }
 
-func createCat(t *testing.T, service category.Service, catParent category.Category, typep entity.TypeProp) (bool, category.Category, category.Prop) {
+func createCat(t *testing.T,
+	service category.Service,
+	catParent category.Category,
+	typep entity.TypeProp) (bool, category.Category, category.Prop) {
+	//
 	catChild := category.New()
 	catChild.ParentID = catParent.ID
 	_, _, err := service.Create(&catChild)

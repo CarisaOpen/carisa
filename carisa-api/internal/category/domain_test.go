@@ -193,7 +193,7 @@ func TestCategoryCatProp_Empty(t *testing.T) {
 func TestCategoryCatProp_Link(t *testing.T) {
 	propID := xid.New()
 	parentID := xid.New()
-	name := "name"
+	name := "namel"
 
 	tests := []struct {
 		name string
@@ -205,7 +205,7 @@ func TestCategoryCatProp_Link(t *testing.T) {
 			prop: Prop{
 				Descriptor: entity.Descriptor{
 					ID:   propID,
-					Name: "name",
+					Name: "namel",
 				},
 				CatID: parentID,
 			},
@@ -220,7 +220,7 @@ func TestCategoryCatProp_Link(t *testing.T) {
 			prop: Prop{
 				Descriptor: entity.Descriptor{
 					ID:   propID,
-					Name: "name",
+					Name: "namel",
 				},
 				catPropID: parentID.String(),
 			},

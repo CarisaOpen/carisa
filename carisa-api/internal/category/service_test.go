@@ -19,6 +19,8 @@ package category
 import (
 	"testing"
 
+	"github.com/carisa/api/internal/test"
+
 	"github.com/carisa/api/internal/ente"
 
 	"github.com/carisa/api/internal/samples"
@@ -130,6 +132,7 @@ func checkCat(t *testing.T, name string, srv Service, cat Category) {
 	if assert.NoError(t, err, name) {
 		assert.Equal(t, cat, catr, strings.Concat(name, "Getting category"))
 	}
+	test.CheckRelations(t, srv.crud.Store(), name, &cat)
 }
 
 func TestCatService_Get(t *testing.T) {
@@ -213,7 +216,7 @@ func TestCatService_CreateProp(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.True(t, ok, "Created")
 			assert.True(t, found, "Category found")
-			checkProp(t, srv, *prop)
+			checkProp(t, srv, "Checking relations", *prop)
 		}
 	}
 }
@@ -263,9 +266,18 @@ func TestCatService_PutProp(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Property updated"))
 			assert.True(t, found, strings.Concat(tt.name, "Category found"))
-			checkProp(t, srv, *tt.prop)
+			checkProp(t, srv, tt.name, *tt.prop)
 		}
 	}
+}
+
+func checkProp(t *testing.T, srv Service, name string, p Prop) {
+	var prop Prop
+	_, err := srv.GetProp(p.ID, &prop)
+	if assert.NoError(t, err) {
+		assert.Equal(t, p, prop, "Getting property")
+	}
+	test.CheckRelations(t, srv.crud.Store(), name, &p)
 }
 
 func TestCatService_GetProp(t *testing.T) {
@@ -284,14 +296,6 @@ func TestCatService_GetProp(t *testing.T) {
 				assert.Equal(t, prop, &get, "Property returned")
 			}
 		}
-	}
-}
-
-func checkProp(t *testing.T, srv Service, p Prop) {
-	var prop Prop
-	_, err := srv.GetProp(p.ID, &prop)
-	if assert.NoError(t, err) {
-		assert.Equal(t, p, prop, "Getting property")
 	}
 }
 

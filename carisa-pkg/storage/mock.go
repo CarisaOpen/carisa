@@ -246,7 +246,12 @@ func (e *ErrMockCRUDOper) PutWithRel(loc string, storeTimeout StoreWithTimeout, 
 	return true, true, nil
 }
 
-func (e *ErrMockCRUDOper) Update(loc string, storeTimeout StoreWithTimeout, entity Entity, upd func(entity Entity)) (bool, error) {
+func (e *ErrMockCRUDOper) Update(
+	loc string,
+	storeTimeout StoreWithTimeout,
+	entity Entity,
+	upd func(entity Entity)) (bool, error) {
+	//
 	if e.update {
 		return false, errors.New("update")
 	}

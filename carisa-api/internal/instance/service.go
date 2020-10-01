@@ -67,5 +67,10 @@ func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 // ListSpaces lists spaces depending ranges parameter.
 // Look at service.List
 func (s *Service) ListSpaces(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, strings.Concat(relation.InstSpaceLn, name), ranges, top, func() storage.Entity { return &relation.InstSpace{} })
+	return s.ext.List(
+		id,
+		strings.Concat(relation.InstSpaceLn, name),
+		ranges,
+		top,
+		func() storage.Entity { return &relation.InstSpace{} })
 }

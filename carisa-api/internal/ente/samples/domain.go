@@ -45,12 +45,12 @@ func CreateLinkForSpace(mng storage.Integration, spaceID xid.ID) (storage.Entity
 	return link, s, err
 }
 
-func CatLinkForEnte(mng storage.Integration, catId xid.ID, name string, enteId xid.ID) (storage.Entity, error) {
+func CatLinkForEnte(mng storage.Integration, catID xid.ID, name string, enteID xid.ID) (storage.Entity, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	link := &relation.Hierarchy{
-		ID:       strings.Concat(catId.String(), name, enteId.String()),
+		ID:       strings.Concat(catID.String(), name, enteID.String()),
 		Name:     name,
-		LinkID:   enteId.String(),
+		LinkID:   enteID.String(),
 		Category: false,
 	}
 	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)

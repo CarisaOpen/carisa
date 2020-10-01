@@ -684,8 +684,8 @@ func TestCRUDOperation_ListDLR(t *testing.T) {
 		},
 	}
 
-	for _, dlrt := range dlrTest {
-		_, err := oper.Create("loc", storeTimeout, &dlrt)
+	for i := range dlrTest {
+		_, err := oper.Create("loc", storeTimeout, &dlrTest[i])
 		if err != nil {
 			assert.Error(t, err, "Creating DLR")
 			return
