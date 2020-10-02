@@ -58,36 +58,36 @@ func Middleware(e *echo.Echo) {
 // Router defines all http route for API
 func Router(e *echo.Echo, h handler.Handlers) {
 	// Instance
-	e.GET("/api/instances/:id", h.InstGet)
 	e.POST("/api/instances", h.InstCreate)
 	e.PUT("/api/instances/:id", h.InstPut)
+	e.GET("/api/instances/:id", h.InstGet)
 	e.GET("/api/instances/:id/spaces", h.InstListSpaces)
 
 	// Space
-	e.GET("/api/spaces/:id", h.SpaceGet)
 	e.POST("/api/spaces", h.SpaceCreate)
 	e.PUT("/api/spaces/:id", h.SpacePut)
+	e.GET("/api/spaces/:id", h.SpaceGet)
 	e.GET("/api/spaces/:id/entes", h.SpcListEntes)
 	e.GET("/api/spaces/:id/categories", h.SpcListCategories)
 
 	// Ente
-	e.GET("/api/entes/:id", h.EnteGet)
 	e.POST("/api/entes", h.EnteCreate)
 	e.PUT("/api/entes/:id", h.EntePut)
+	e.GET("/api/entes/:id", h.EnteGet)
 	e.GET("/api/entes/:id/properties", h.EnteListProps)
 	e.PUT("/api/entes/:enteId/linkToCategory/:categoryId", h.EnteLinkToCat)
-	e.GET("/api/entesProp/:id", h.EnteGetProp)
 	e.POST("/api/entesProp", h.EnteCreateProp)
 	e.PUT("/api/entesProp/:id", h.EntePutProp)
+	e.GET("/api/entesProp/:id", h.EnteGetProp)
 
 	// Category
-	e.GET("/api/categories/:id", h.CatGet)
 	e.POST("/api/categories", h.CatCreate)
 	e.PUT("/api/categories/:id", h.CatPut)
+	e.GET("/api/categories/:id", h.CatGet)
 	e.GET("/api/categories/:id/child", h.CatListCategories)
 	e.GET("/api/categories/:id/properties", h.CatListProps)
-	e.GET("/api/categoriesProp/:id", h.CatGetProp)
 	e.POST("/api/categoriesProp", h.CatCreateProp)
 	e.PUT("/api/categoriesProp/:id", h.CatPutProp)
-	e.PUT("/api/categoriesProp/:catPropId/linkto/:propId", h.CatPropLinkTo)
+	e.GET("/api/categoriesProp/:id", h.CatGetProp)
+	e.PUT("/api/categoriesProp/:catPropId/linkTo/:propId", h.CatPropLinkTo)
 }
