@@ -39,7 +39,7 @@ func New() Ente {
 }
 
 func (e *Ente) ToString() string {
-	return strings.Concat("prop: ID:", e.Key(), ", name:", e.Name)
+	return strings.Concat("ente: ID:", e.Key(), ", name:", e.Name)
 }
 
 func (e *Ente) Key() string {
@@ -131,7 +131,7 @@ func (e *Prop) GetType() entity.TypeProp {
 }
 
 func (e *Prop) ToString() string {
-	return strings.Concat("prop-property: ID:", e.Key(), ", name:", e.Name)
+	return strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name)
 }
 
 func (e *Prop) Key() string {
@@ -151,7 +151,6 @@ func (e *Prop) ParentKey() string {
 	return e.parentID()
 }
 
-// Link gets the link between Ente and properties or category property
 func (e *Prop) Link() storage.Entity {
 	cat := true
 	if len(e.CatPropID) == 0 {

@@ -34,7 +34,7 @@ import (
 
 func TestEnte_ToString(t *testing.T) {
 	e := New()
-	assert.Equal(t, strings.Concat("prop: ID:", e.Key(), ", name:", e.Name), e.ToString())
+	assert.Equal(t, strings.Concat("ente: ID:", e.Key(), ", name:", e.Name), e.ToString())
 }
 
 func TestEnte_Key(t *testing.T) {
@@ -179,7 +179,7 @@ func TestEnteEnteProp_Field(t *testing.T) {
 
 func TestEnteEnteProp_ToString(t *testing.T) {
 	e := NewProp()
-	assert.Equal(t, strings.Concat("prop-property: ID:", e.Key(), ", name:", e.Name), e.ToString())
+	assert.Equal(t, strings.Concat("ente-property: ID:", e.Key(), ", name:", e.Name), e.ToString())
 }
 
 func TestEnteEnteProp_Key(t *testing.T) {

@@ -152,42 +152,64 @@ func TestCRUDOperation_CreateError(t *testing.T) {
 }
 
 func TestCRUDOperation_CreateWithRel(t *testing.T) {
+	const parentKey = "parentKey"
+	const name = "namec"
+
 	tests := []struct {
 		name    string
+		e       Object
 		parent  bool
 		created bool
 	}{
 		{
-			name:    "Creating. Parent not found",
+			name: "Creating. Parent not found",
+			e: Object{
+				ID:     "key",
+				Name:   name,
+				Parent: "parentKey1",
+			},
 			parent:  false,
 			created: false,
 		},
 		{
-			name:    "Creating.",
+			name: "Creating.",
+			e: Object{
+				ID:     "key1",
+				Name:   name,
+				Value:  1,
+				Parent: parentKey,
+			},
+			parent:  true,
+			created: true,
+		},
+		{
+			name: "Creating with virtual parent.",
+			e: Object{
+				ID:     "key2",
+				Name:   name,
+				Value:  2,
+				Parent: Virtual,
+			},
 			parent:  true,
 			created: true,
 		},
 	}
 
-	e := entity()
-
 	storef := NewEctdIntegra(t)
 	oper := newCRUDOper(storef)
 	defer storef.Close()
 
-	for _, tt := range tests {
-		if tt.parent {
-			_, err := oper.Create("loc", storeTimeout, &Object{
-				ID:    e.ParentKey(),
-				Value: 1,
-			})
-			if err != nil {
-				assert.Error(t, err)
-				continue
-			}
-		}
+	_, err := oper.Create("loc", storeTimeout, &Object{
+		ID:    parentKey,
+		Value: 1,
+	})
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
 
-		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, &e)
+	for _, tt := range tests {
+		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, &tt.e)
 		if err != nil {
 			assert.Error(t, err)
 			continue
@@ -198,13 +220,13 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 
 		if tt.parent {
 			var entityr Object
-			found, err := oper.Store().Get(context.TODO(), e.Key(), &entityr)
+			found, err := oper.Store().Get(context.TODO(), tt.e.Key(), &entityr)
 			if assert.NoError(t, err) {
 				assert.True(t, found, strings.Concat(tt.name, "Entity found"))
-				assert.Equal(t, e, entityr, strings.Concat(tt.name, "Entity saved"))
+				assert.Equal(t, tt.e, entityr, strings.Concat(tt.name, "Entity saved"))
 			}
 
-			lnk := e.Link()
+			lnk := tt.e.Link()
 			var link Link
 			found, err = oper.Store().Get(context.TODO(), lnk.Key(), &link)
 			if assert.NoError(t, err) {

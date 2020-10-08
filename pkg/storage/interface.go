@@ -33,21 +33,25 @@ type (
 	// A -> B. The relation is defined in B. When it's create B entity
 	// is linked with her parent depending the relation information that's provide B
 	Relation interface {
-		// ParentKey gets the key of the parent entity that contains this child entity
+		// ParentKey gets the key of the parent entity that contains this child entity.
+		// See storage.CrudOperation
 		ParentKey() string
 
-		// Name gets the relation Name
+		// Name gets the relation Name. See storage.CrudOperation.
+		// See storage.CrudOperation
 		RelName() string
 
-		// Link gets the relation entity that joins the parent and child. This link is used when is created the relation
+		// Link gets the relation entity that joins the parent and child. This link is used when is created the relation.
+		// See storage.CrudOperation
 		Link() Entity
 
-		// LinkName gets the name which differentiates to the link. This name is used when is created
-		// the doubly linked inverse relation
+		// LinkName gets the name which differentiates to the link. it could have several links.
+		// See storage.CrudOperation
 		LinkName() string
 
 		// ReLink regenerates the link when change the relation name. When is called ReLink this entity
-		// has the new information to change. 'dlr' parameter provides the relation information with old values
+		// has the new information to change. 'DLR' parameter provides the relation information with old values
+		// See storage.CrudOperation
 		ReLink(dlr DLRel) Entity
 
 		// Empty builds empty relation entity

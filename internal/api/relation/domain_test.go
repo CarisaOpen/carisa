@@ -140,3 +140,20 @@ func TestCatPropLink_Key(t *testing.T) {
 	}
 	assert.Equal(t, i.ID, i.Key())
 }
+
+func TestPlatformPluginLink_ToString(t *testing.T) {
+	s := PlatformPlugin{
+		ID:       "key",
+		Name:     "name",
+		ProtoID:  "1",
+		Category: "query",
+	}
+	assert.Equal(t, "platform-plugin-link: ID:key, Name:name", s.ToString())
+}
+
+func TestPlatformPluginLink_Key(t *testing.T) {
+	i := PlatformPlugin{
+		ID: "key",
+	}
+	assert.Equal(t, i.ID, i.Key())
+}

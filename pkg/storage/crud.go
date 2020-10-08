@@ -25,7 +25,10 @@ import (
 	"github.com/carisa/pkg/logging"
 )
 
-const dlrSep = "#R#"
+const (
+	dlrSep  = "#R#"
+	Virtual = "#V#"
+)
 
 type StoreWithTimeout func() (context.Context, context.CancelFunc)
 
@@ -40,35 +43,45 @@ type CrudOperation interface {
 	// Create creates the entity into of the store
 	Create(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
-	// CreateWithRel creates the entity and the relation entity that joins the parent and child
-	// In addition to the relation it creates a doubled linked relation (dlr) between the child
+	// CreateWithRel creates the entity and the relation entity that joins the parent and child.
+	// In addition of the relation it creates a doubled linked relation (DLRel) between the child,
 	// the relation and the parent. This can useful to navigate in inverse order
+	// The parent key is gotten using Relation.ParentKey() for creating the DLRel.
+	// it could have several links. The relation type for generating the DLRel is gotten using Relation.LinkName().
 	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
 	// If the entity was created returns true in the first param returned.
 	// If the parent exists into store returns true in the second param returned.
+	// The parent key is gotten using Relation.ParentKey().
 	CreateWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
 
-	// Put creates if exist the entity or updates if not exists the entity into storage
 	Put(loc string, storeTimeout StoreWithTimeout, entity Entity) (bool, error)
 
 	// Update updates the entity fields through of the 'upd' parameter
-	// The entity is searched using entity.Key(). The entity parameter will be replaced with the entity stored in the DB.
+	// The entity is searched using Entity.Key(). The entity parameter will be replaced with the entity stored in the DB.
 	Update(loc string, storeTimeout StoreWithTimeout, entity Entity, upd func(entity Entity)) (bool, error)
 
 	// PutWithRel creates or updates the entity and the relation entity that joins the parent and child
-	// The relation is found if the relation 'name' has changed
-	// In addition to the relation it creates a doubled linked relation (dlr) between the child
-	// the relation and the parent. This can be useful to navigate in inverse order
+	// The name is part of the relation key. If the name has changed the relation key is changed.
+	// To find out if the name of the relationship has changed is used Relation.RelName() for getting the actual relation name.
+	// In addition to the relation it creates a doubled linked relation (DLRel) between the child,
+	// the relation and the parent. This can be useful to navigate in inverse order.
+	// it could have several links. The relation type for generating the DLRel is gotten using Relation.LinkName().
+	// If the name has changed the DLR is regenerated using Relation.Relink(dlr DLRel).
+	// If the entity is created the parent key is gotten using Relation.ParentKey() for creating the DLR
+	// it could have several links. The relation type is gotten using dlr DLRel.LinkName().
 	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
 	// If the entity was found returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
+	// The parent key is gotten using dlr DLRel.ParentKey().
 	PutWithRel(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, bool, error)
 
-	// LinkTo creates relation that links parent and child
-	// The child parameter must be filled the ID.
+	// LinkTo creates relation that links parent and child.
+	// The child parameter must include the child ID.
 	// The 'fill' parameter is a function to complete the fields of the child. This function receive as parameter
-	// the child entity of the DB
-	// If the transaction is sent as parameter just can be configured in DoNotFound
+	// the child entity of the DB.
+	// It creates the relation using Relation.Link().
+	// The DLRel is created using Relation.ParentKey(), Relation.LinkName().
+	// If the transaction is sent as parameter just can be configured in DoNotFound.
 	// If the child entity exist returns true in the first param returned otherwise return false.
 	// If the parent entity exist returns true in the second param returned otherwise return false.
 	LinkTo(
@@ -344,7 +357,7 @@ func (c *crudOperation) updateRel(storeTimeout StoreWithTimeout, loc string, ent
 		return false, nil
 	}
 
-	// Even if the entity is not found later it will be created with with DoNotFound
+	// Even if the entity is not found, it will be created with with DoNotFound later
 	name := rel.RelName()
 	if len(name) != 0 && name != oldEntity.RelName() {
 		// it removes old relation and creating new relation when change Name. Name is part of key
@@ -388,11 +401,15 @@ func (c *crudOperation) updateRel(storeTimeout StoreWithTimeout, loc string, ent
 }
 
 func (c *crudOperation) existsParent(loc string, storeTimeout StoreWithTimeout, entity EntityRelation) (bool, error) {
+	parentKey := entity.ParentKey()
+	if parentKey == Virtual { // The parent is not stored in the DB
+		return true, nil
+	}
 	ctx, cancel := storeTimeout()
-	found, err := c.store.Exists(ctx, entity.ParentKey())
+	found, err := c.store.Exists(ctx, parentKey)
 	cancel()
 	if err != nil {
-		return false, c.log.ErrWrap1(err, "finding parent", loc, logging.String("Parent key", entity.ParentKey()))
+		return false, c.log.ErrWrap1(err, "finding parent", loc, logging.String("Parent key", parentKey))
 	}
 	return found, nil
 }

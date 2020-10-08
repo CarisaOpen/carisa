@@ -137,3 +137,19 @@ func (l *CatPropProp) ToString() string {
 func (l *CatPropProp) Key() string {
 	return l.ID
 }
+
+// PlatformPlugin represents the link between platform and plugin prototype
+type PlatformPlugin struct {
+	ID       string `json:"-"`
+	Name     string `json:"name"`
+	ProtoID  string `json:"protoId"`
+	Category string `json:"category"` // Category is the type of plugin (query, etc)
+}
+
+func (l *PlatformPlugin) ToString() string {
+	return strings.Concat("platform-plugin-link: ID:", l.Key(), ", Name:", l.Name)
+}
+
+func (l *PlatformPlugin) Key() string {
+	return l.ID
+}
