@@ -29,7 +29,7 @@ import (
 type Ente struct {
 	entity.Descriptor
 	SpaceID xid.ID `json:"spaceId"` // Space container
-	CatID   string // Is used temporarily to connect the entity and the category.
+	CatID   string `json:"-"`       // Is used temporarily to connect the entity and the category.
 }
 
 func New() Ente {
@@ -116,7 +116,7 @@ type Prop struct {
 	entity.Descriptor
 	EnteID    xid.ID          `json:"enteId"` // Ente container
 	Type      entity.TypeProp `json:"type"`
-	CatPropID string          // Is used temporarily to connect the property and the category property.
+	CatPropID string          `json:"-"` // Is used temporarily to connect the property and the category property.
 }
 
 func NewProp() Prop {

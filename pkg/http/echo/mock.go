@@ -39,11 +39,11 @@ func HTTPMock() http.Mock {
 }
 
 func (h *echoHTTPMock) NewHTTP(method string,
-	urlr string,
+	urir string,
 	body string,
 	params map[string]string,
 	qparams map[string]string) (*httptest.ResponseRecorder, http.Context) {
-	req := httptest.NewRequest(method, queryParams(urlr, qparams), strings.NewReader(body))
+	req := httptest.NewRequest(method, queryParams(urir, qparams), strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := h.e.NewContext(req, rec)

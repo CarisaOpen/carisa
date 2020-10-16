@@ -70,7 +70,7 @@ func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 // Look at service.List
 func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id,
+		id.String(),
 		strings.Concat(relation.SpaceEnteLn, name),
 		ranges,
 		top,
@@ -81,7 +81,7 @@ func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]sto
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id,
+		id.String(),
 		strings.Concat(relation.SpaceCatLn, name),
 		ranges,
 		top,

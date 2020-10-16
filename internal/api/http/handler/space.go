@@ -104,7 +104,7 @@ func (s *Space) Get(c httpc.Context) error {
 // If sname query param is not empty, is filtered by entes which name starts by name parameter
 // If gtname query param is not empty, is filtered by entes which name is greater than name parameter
 func (s *Space) ListEntes(c httpc.Context) error {
-	id, name, top, ranges, err := convert.FilterLink(c)
+	id, name, top, ranges, err := convert.FilterLink(c, false)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (s *Space) ListEntes(c httpc.Context) error {
 // If sname query param is not empty, is filtered by categories which name starts by name parameter
 // If gtname query param is not empty, is filtered by categories which name is greater than name parameter
 func (s *Space) ListCategories(c httpc.Context) error {
-	id, name, top, ranges, err := convert.FilterLink(c)
+	id, name, top, ranges, err := convert.FilterLink(c, false)
 	if err != nil {
 		return err
 	}

@@ -35,10 +35,15 @@ func ParamID(c http.Context) (xid.ID, error) {
 // FilterLink gets the filter parameters.
 // The parameters are entity ID, sname or gtname, top and filter type. Look at api documentation
 // The default top parameter is 20
-func FilterLink(c http.Context) (xid.ID, string, int, bool, error) {
-	id, err := ParamXID(c, "id")
-	if err != nil {
-		return xid.NilID(), "", 0, false, err
+func FilterLink(c http.Context, excludeID bool) (xid.ID, string, int, bool, error) {
+	id := xid.NilID()
+	var err error
+
+	if !excludeID {
+		id, err = ParamXID(c, "id")
+		if err != nil {
+			return xid.NilID(), "", 0, false, err
+		}
 	}
 
 	tops := c.QueryParam("top")

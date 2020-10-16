@@ -71,13 +71,14 @@ func TestConverter_ParamID_ConvertParamError(t *testing.T) {
 
 func TestFilterLink(t *testing.T) {
 	tests := []struct {
-		error  bool
-		ranges bool
-		top    int
-		name   string
+		qparam map[string]string
 		id     string
 		pname  string
-		qparam map[string]string
+		name   string
+		top    int
+		error  bool
+		ranges bool
+		exclID bool
 	}{
 		{
 			name:   "List start name.",
@@ -95,6 +96,17 @@ func TestFilterLink(t *testing.T) {
 			name:   "Range.",
 			error:  false,
 			id:     xid.New().String(),
+			pname:  "gtname",
+			top:    20,
+			ranges: true,
+			qparam: map[string]string{
+				"gtname": "gtname",
+			},
+		},
+		{
+			name:   "Range. Exclude ID.",
+			error:  false,
+			id:     xid.NilID().String(),
 			pname:  "gtname",
 			top:    20,
 			ranges: true,
@@ -162,7 +174,7 @@ func TestFilterLink(t *testing.T) {
 
 	for _, tt := range tests {
 		_, ctx := h.NewHTTP(http.MethodGet, "/api/:id", "", map[string]string{"id": tt.id}, tt.qparam)
-		id, name, top, ranges, err := FilterLink(ctx)
+		id, name, top, ranges, err := FilterLink(ctx, tt.exclID)
 		if tt.error {
 			assert.Error(t, err, strings.Concat(tt.name, "Error"))
 		} else {

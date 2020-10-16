@@ -16,10 +16,9 @@
 package service
 
 import (
-	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/pkg/storage"
-	"github.com/rs/xid"
+	"github.com/carisa/pkg/strings"
 )
 
 type Extension struct {
@@ -38,15 +37,15 @@ func NewExt(cnt *runtime.Container, crud storage.CRUD) *Extension {
 // List lists entities depending ranges parameter.
 // If ranges is equal to true is filtered by entity which name is greater than name parameter
 // If ranges is equal to false is filtered by entity which name starts by name parameter
-func (e *Extension) List(id xid.ID, name string, ranges bool, top int, empty func() storage.Entity) ([]storage.Entity, error) {
+func (e *Extension) List(id string, name string, ranges bool, top int, empty func() storage.Entity) ([]storage.Entity, error) {
 	var list []storage.Entity
 	var err error
 
 	ctx, cancel := e.cnt.StoreWithTimeout()
 	if ranges {
-		list, err = e.crud.Range(ctx, entity.SoundLink(id, name), id.String(), top, empty)
+		list, err = e.crud.Range(ctx, strings.Concat(id, name), id, top, empty)
 	} else {
-		list, err = e.crud.StartKey(ctx, entity.SoundLink(id, name), top, empty)
+		list, err = e.crud.StartKey(ctx, strings.Concat(id, name), top, empty)
 	}
 	cancel()
 

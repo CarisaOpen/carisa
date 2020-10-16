@@ -110,7 +110,7 @@ func (c *Category) Get(ctx httpc.Context) error {
 // If sname query param is not empty, is filtered by categories which name starts by name parameter
 // If gtname query param is not empty, is filtered by categories which name is greater than name parameter
 func (c *Category) ListCategories(ctx httpc.Context) error {
-	id, name, top, ranges, err := convert.FilterLink(ctx)
+	id, name, top, ranges, err := convert.FilterLink(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (c *Category) ListCategories(ctx httpc.Context) error {
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
 func (c *Category) ListProps(ctx httpc.Context) error {
-	id, name, top, ranges, err := convert.FilterLink(ctx)
+	id, name, top, ranges, err := convert.FilterLink(ctx, false)
 	if err != nil {
 		return err
 	}

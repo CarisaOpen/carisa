@@ -46,13 +46,13 @@ func NewEnteHandle(srv ente.Service, cnt *runtime.Container) Ente {
 }
 
 // Create creates the ente
-func (e *Ente) Create(c httpc.Context) error {
+func (p *Ente) Create(c httpc.Context) error {
 	ente := ente.Ente{}
-	if err := bind(c, locEnte, e.cnt.Log, &ente); err != nil {
+	if err := bind(c, locEnte, p.cnt.Log, &ente); err != nil {
 		return err
 	}
 
-	created, found, err := e.srv.Create(&ente)
+	created, found, err := p.srv.Create(&ente)
 	if err = errCRUDSrv(c, err, "it was impossible to create the ente", "space not found", found); err != nil {
 		return err
 	}
@@ -61,19 +61,19 @@ func (e *Ente) Create(c httpc.Context) error {
 }
 
 // Put creates or update the ente
-func (e *Ente) Put(c httpc.Context) error {
+func (p *Ente) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
 		return err
 	}
 
 	ente := ente.Ente{}
-	if err := bind(c, locEnte, e.cnt.Log, &ente); err != nil {
+	if err := bind(c, locEnte, p.cnt.Log, &ente); err != nil {
 		return err
 	}
 
 	ente.ID = id
-	updated, found, err := e.srv.Put(&ente)
+	updated, found, err := p.srv.Put(&ente)
 	if err = errCRUDSrv(
 		c, err, "it was impossible to create or update the ente", "space not found", found); err != nil {
 		return err
@@ -83,7 +83,7 @@ func (e *Ente) Put(c httpc.Context) error {
 }
 
 // Get gets the ente by ID
-func (e *Ente) Get(c httpc.Context) error {
+func (p *Ente) Get(c httpc.Context) error {
 	var ente ente.Ente
 
 	id, err := convert.ParamID(c)
@@ -91,7 +91,7 @@ func (e *Ente) Get(c httpc.Context) error {
 		return err
 	}
 
-	found, err := e.srv.Get(id, &ente)
+	found, err := p.srv.Get(id, &ente)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the ente")
 	}
@@ -100,7 +100,7 @@ func (e *Ente) Get(c httpc.Context) error {
 }
 
 // LinkToCat connects ente to category in the tree
-func (e *Ente) LinkToCat(c httpc.Context) error {
+func (p *Ente) LinkToCat(c httpc.Context) error {
 	enteID, err := convert.ParamXID(c, "enteId")
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (e *Ente) LinkToCat(c httpc.Context) error {
 		return err
 	}
 
-	efound, cfound, rel, err := e.srv.LinkToCat(enteID, catID)
+	efound, cfound, rel, err := p.srv.LinkToCat(enteID, catID)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, err)
 	}
@@ -128,13 +128,13 @@ func (e *Ente) LinkToCat(c httpc.Context) error {
 // ListProps list properties by ente ID and return top properties.
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
-func (e *Ente) ListProps(c httpc.Context) error {
-	id, name, top, ranges, err := convert.FilterLink(c)
+func (p *Ente) ListProps(c httpc.Context) error {
+	id, name, top, ranges, err := convert.FilterLink(c, false)
 	if err != nil {
 		return err
 	}
 
-	props, err := e.srv.ListProps(id, name, ranges, top)
+	props, err := p.srv.ListProps(id, name, ranges, top)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to list the properties of the ente")
 	}
@@ -143,13 +143,13 @@ func (e *Ente) ListProps(c httpc.Context) error {
 }
 
 // CreateProp creates the property of ente
-func (e *Ente) CreateProp(c httpc.Context) error {
+func (p *Ente) CreateProp(c httpc.Context) error {
 	prop := ente.Prop{}
-	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
+	if err := bind(c, locEnte, p.cnt.Log, &prop); err != nil {
 		return err
 	}
 
-	created, found, err := e.srv.CreateProp(&prop)
+	created, found, err := p.srv.CreateProp(&prop)
 	if err = errCRUDSrv(c, err, "it was impossible to create the property of the ente", "ente not found", found); err != nil {
 		return err
 	}
@@ -158,19 +158,19 @@ func (e *Ente) CreateProp(c httpc.Context) error {
 }
 
 // PutProp creates or update the property of ente category
-func (e *Ente) PutProp(c httpc.Context) error {
+func (p *Ente) PutProp(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
 		return err
 	}
 
 	prop := ente.Prop{}
-	if err := bind(c, locEnte, e.cnt.Log, &prop); err != nil {
+	if err := bind(c, locEnte, p.cnt.Log, &prop); err != nil {
 		return err
 	}
 
 	prop.ID = id
-	updated, found, err := e.srv.PutProp(&prop)
+	updated, found, err := p.srv.PutProp(&prop)
 	if err = errCRUDSrv(
 		c, err, "it was impossible to create or update the property of the ente", "ente not found", found); err != nil {
 		return err
@@ -180,7 +180,7 @@ func (e *Ente) PutProp(c httpc.Context) error {
 }
 
 // GetProp gets the property of ente by ID
-func (e *Ente) GetProp(c httpc.Context) error {
+func (p *Ente) GetProp(c httpc.Context) error {
 	var prop ente.Prop
 
 	id, err := convert.ParamID(c)
@@ -188,7 +188,7 @@ func (e *Ente) GetProp(c httpc.Context) error {
 		return err
 	}
 
-	found, err := e.srv.GetProp(id, &prop)
+	found, err := p.srv.GetProp(id, &prop)
 	if err != nil {
 		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to get the property of the ente")
 	}

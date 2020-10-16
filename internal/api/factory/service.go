@@ -20,6 +20,7 @@ import (
 	"github.com/carisa/internal/api/category"
 	"github.com/carisa/internal/api/ente"
 	"github.com/carisa/internal/api/instance"
+	"github.com/carisa/internal/api/plugin"
 	"github.com/carisa/internal/api/runtime"
 	srv "github.com/carisa/internal/api/service"
 	"github.com/carisa/internal/api/space"
@@ -32,17 +33,19 @@ type service struct {
 	spaceSrv    space.Service
 	enteSrv     ente.Service
 	catSrv      category.Service
+	pluginSrv   plugin.Service
 }
 
 // configService builds the services
 func configService(cnt *runtime.Container, store storage.CRUD) service {
 	crud := storage.NewCrudOperation(store, cnt.Log, storage.NewTxn)
 	ext := srv.NewExt(cnt, store)
-	srv := service{
+	s := service{
 		instanceSrv: instance.NewService(cnt, ext, crud),
 		spaceSrv:    space.NewService(cnt, ext, crud),
 		enteSrv:     ente.NewService(cnt, ext, crud),
+		pluginSrv:   plugin.NewService(cnt, ext, crud),
 	}
-	srv.catSrv = category.NewService(cnt, ext, crud, &srv.enteSrv)
-	return srv
+	s.catSrv = category.NewService(cnt, ext, crud, &s.enteSrv)
+	return s
 }

@@ -1,8 +1,8 @@
 cmd
-internal/category/samples
-internal/ente/samples
-internal/instance/samples
-internal/mock
-internal/samples
-internal/space/samples
-internal/test
+internal/api/category/samples
+internal/api/ente/samples
+internal/api/instance/samples
+internal/api/mock
+internal/api/samples
+internal/api/space/samples
+internal/api/test

@@ -14,19 +14,21 @@
  *
  */
 
-package entity
+package samples
 
 import (
-	"testing"
-
-	"github.com/carisa/pkg/strings"
-	"github.com/rs/xid"
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/internal/api/mock"
+	"github.com/carisa/internal/api/plugin"
+	"github.com/carisa/pkg/storage"
 )
 
-func TestSoundLink(t *testing.T) {
-	id := xid.New()
-	likeName := "likeName"
-
-	assert.Equal(t, strings.Concat(id.String(), likeName), SoundLink(id, likeName))
+func CreateLinkPlugin(mng storage.Integration, cat plugin.Category) (storage.Entity, plugin.Prototype, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	proto := plugin.New()
+	proto.Category = cat
+	proto.Name = "nameproto"
+	proto.Desc = "descproto"
+	link := proto.Link()
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
+	return link, proto, err
 }

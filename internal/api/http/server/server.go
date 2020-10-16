@@ -90,4 +90,10 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.PUT("/api/categoriesProp/:id", h.CatPutProp)
 	e.GET("/api/categoriesProp/:id", h.CatGetProp)
 	e.PUT("/api/categoriesProp/:catPropId/linkTo/:propId", h.CatPropLinkTo)
+
+	// Query plugin Prototype
+	e.POST("/api/plugins/queries", h.PluginQryCreate)
+	e.PUT("/api/plugins/queries/:id", h.PluginQryPut)
+	e.GET("/api/plugins/queries/:id", h.PluginQryGet)
+	e.GET("/api/plugins/queries", h.PluginQryListPlugins)
 }

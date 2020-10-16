@@ -101,5 +101,6 @@ func handlers(srv service, cnt *runtime.Container) handler.Handlers {
 		SpaceHandler:    handler.NewSpaceHandle(srv.spaceSrv, cnt),
 		EnteHandler:     handler.NewEnteHandle(srv.enteSrv, cnt),
 		CategoryHandler: handler.NewCatHandle(srv.catSrv, cnt),
+		PluginHandler:   handler.NewPluginHandle(srv.pluginSrv, cnt),
 	}
 }

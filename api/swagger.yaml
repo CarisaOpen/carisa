@@ -23,6 +23,8 @@ tags:
     description: "The category represents a hierarchy to organize the entes and how the information spreads between the different categories"
   - name: "categoryprop"
     description: "The category property are the fields of the category. This properties link to other child category properties or the child ente properties."
+  - name: "queryplugin"
+    description: "The query plugin defines the diferrents types of queries in real-time over the stream datas. This plugins must be registered over the platform. The user could instantiate them it to define their own queries."
 schemes:
   - "https"
   - "http"
@@ -309,7 +311,7 @@ paths:
           type: string
         - in: "query"
           name: "top"
-          description: "Limit of categories"
+          description: "Limit of the categories"
           type: integer
           minimum: 1
           maximum: 100
@@ -861,6 +863,128 @@ paths:
           description: "The target property (category or ente property) must be of the same type than the category property for linking"
         "500":
           description: "Internal server error"
+  /plugins/queries:
+    post:
+      tags:
+        - "queryplugin"
+      summary: "Add a new query plugin to the platform"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Query plugin object that needs to be added to the platform"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginReq"
+      responses:
+        "201":
+          description: "Query plugin created"
+          schema:
+            $ref: "#/definitions/Plugin"
+        "302":
+          description: "Query plugin found"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /plugins/queries/{id}:
+    put:
+      tags:
+        - "queryplugin"
+      summary: "If the query plugin ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Query plugin identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query plugin object that needs to be added or updated to the platform"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginReq"
+      responses:
+        "200":
+          description: "Query plugin updated"
+          schema:
+            $ref: "#/definitions/Plugin"
+        "201":
+          description: "Query plugin created"
+          schema:
+            $ref: "#/definitions/Plugin"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "queryplugin"
+      summary: "Find query plugin by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Query plugin identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Query plugin found"
+          schema:
+            $ref: "#/definitions/Plugin"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Query plugin not found"
+        "500":
+          description: "Internal server error"
+  /api/plugins/queries:
+    get:
+      tags:
+        - "queryplugin"
+      summary: "List properties of the ente by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "sname"
+          description: "List queries plugin that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List queries plugin greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of queries"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/PluginLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
 definitions:
   Instance:
     type: "object"
@@ -1136,3 +1260,41 @@ definitions:
       propId:
         type: "string"
         description: "If the 'category' is true, propId contains the category property identifier, otherwise propId contains the ente property identifier"
+  Plugin:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Plugin identifier"
+      name:
+        type: "string"
+        description: "Plugin name"
+      description:
+        type: "string"
+        description: "Plugin description"
+  PluginReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Plugin name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Plugin description"
+  PluginLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Plugin name"
+      protoId:
+        type: "string"
+        description: "Plugin identifier"
+      category:
+        type: "string"
+        description: "The type of plugin (query)"

@@ -48,7 +48,7 @@ type CrudOperation interface {
 	// the relation and the parent. This can useful to navigate in inverse order
 	// The parent key is gotten using Relation.ParentKey() for creating the DLRel.
 	// it could have several links. The relation type for generating the DLRel is gotten using Relation.LinkName().
-	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
+	// P -> R -> C, where P: Parent entity, R: Relation, C: Child.
 	// If the entity was created returns true in the first param returned.
 	// If the parent exists into store returns true in the second param returned.
 	// The parent key is gotten using Relation.ParentKey().
@@ -69,7 +69,7 @@ type CrudOperation interface {
 	// If the name has changed the DLR is regenerated using Relation.Relink(dlr DLRel).
 	// If the entity is created the parent key is gotten using Relation.ParentKey() for creating the DLR
 	// it could have several links. The relation type is gotten using dlr DLRel.LinkName().
-	// P -> R -> C, where P: Parent entity, R: Relation, C: Child
+	// P -> R -> C, where P: Parent entity, R: Relation, C: Child.
 	// If the entity was found returns true in the first param returned otherwise it is created.
 	// If the parent exists into store returns true in the second param returned.
 	// The parent key is gotten using dlr DLRel.ParentKey().

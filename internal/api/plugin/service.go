@@ -14,7 +14,7 @@
  *
  */
 
-package instance
+package plugin
 
 import (
 	"github.com/carisa/internal/api/relation"
@@ -25,16 +25,16 @@ import (
 	"github.com/rs/xid"
 )
 
-const locService = "instance.service"
+const locService = "plugin.service"
 
-// Service implements CRUD operations for the instance category
+// Service implements CRUD operations for the plugin
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a instance service
+// NewService builds a plugin service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -43,34 +43,36 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a instance into of the repository
-// If the instance exists returns false
-func (s *Service) Create(inst *Instance) (bool, error) {
-	inst.AutoID()
-	return s.crud.Create(locService, s.cnt.StoreWithTimeout, inst)
+// Create creates a plugin into of the repository and links plugin and platform.
+// If the plugin exists return false in the first param returned.
+func (s *Service) Create(proto *Prototype) (bool, error) {
+	proto.AutoID()
+	created, _, err := s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, proto)
+	return created, err
 }
 
-// Put creates or updates depending of if exists the instance into storage
-// If the instance is updated return true
-func (s *Service) Put(inst *Instance) (bool, error) {
-	return s.crud.Put(locService, s.cnt.StoreWithTimeout, inst)
+// Put creates or updates a plugin into of the repository.
+// If the plugin exists return true in the first param returned otherwise return false.
+func (s *Service) Put(proto *Prototype) (bool, error) {
+	updated, _, err := s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, proto)
+	return updated, err
 }
 
-// Get gets the instance from storage
-func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
+// Get gets the plugin from storage
+func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), inst)
+	ok, err := s.crud.Store().Get(ctx, id.String(), proto)
 	cancel()
 	return ok, err
 }
 
-// ListSpaces lists spaces depending ranges parameter.
+// ListPlugins lists the plugins depending ranges parameter.
 // Look at service.List
-func (s *Service) ListSpaces(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
+func (s *Service) ListPlugins(cat Category, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
-		strings.Concat(relation.InstSpaceLn, name),
+		storage.Virtual,
+		strings.Concat(string(cat), name),
 		ranges,
 		top,
-		func() storage.Entity { return &relation.InstSpace{} })
+		func() storage.Entity { return &relation.PlatformPlugin{} })
 }

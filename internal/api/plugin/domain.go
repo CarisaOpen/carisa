@@ -27,7 +27,7 @@ import (
 type Category string
 
 const (
-	Query Category = "QP"
+	Query Category = "query"
 )
 
 // It allows make prototype of dynamic object. Each object have n dynamic properties
@@ -39,7 +39,7 @@ const (
 // See object.Instance
 type Prototype struct {
 	entity.Descriptor
-	Category Category
+	Category Category `json:"-"`
 }
 
 func New() Prototype {
@@ -88,15 +88,8 @@ func (p *Prototype) link(category string, parentID string) storage.Entity {
 		ID:       strings.Concat(parentID, category, p.Name, p.Key()),
 		Name:     p.Name,
 		ProtoID:  p.Key(),
-		Category: humanName(category),
+		Category: category,
 	}
-}
-
-func humanName(category string) string {
-	if category == string(Query) {
-		return "query"
-	}
-	panic("plugin category not found")
 }
 
 func (p *Prototype) Empty() storage.EntityRelation {

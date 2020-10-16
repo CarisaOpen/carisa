@@ -74,14 +74,14 @@ func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 // ListCategories lists categories depending ranges parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id, name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
+	return s.ext.List(id.String(), name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
 }
 
 // ListProps lists properties depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id,
+		id.String(),
 		strings.Concat(relation.CatPropLn, name),
 		ranges,
 		top,

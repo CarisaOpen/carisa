@@ -73,7 +73,7 @@ func TestEnteService_Put(t *testing.T) {
 		ente    *Ente
 	}{
 		{
-			name:    "Creating prop",
+			name:    "Creating ente",
 			updated: false,
 			ente: &Ente{
 				Descriptor: entity.Descriptor{
@@ -85,7 +85,7 @@ func TestEnteService_Put(t *testing.T) {
 			},
 		},
 		{
-			name:    "Updating prop",
+			name:    "Updating ente",
 			updated: true,
 			ente: &Ente{
 				Descriptor: entity.Descriptor{
@@ -112,7 +112,7 @@ func checkEnte(t *testing.T, srv Service, name string, e Ente) {
 	var er Ente
 	_, err := srv.Get(e.ID, &er)
 	if assert.NoError(t, err) {
-		assert.Equal(t, e, er, "Getting prop")
+		assert.Equal(t, e, er, "Getting ente")
 	}
 	test.CheckRelations(t, srv.crud.Store(), name, &e)
 }
@@ -142,7 +142,7 @@ func TestEnteService_LinkToCat(t *testing.T) {
 
 	ente, err := createEnte(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating prop")
+		assert.Error(t, err, "Creating ente")
 	}
 
 	cat, err := samples.CreateEntityMock(mng)

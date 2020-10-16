@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"github.com/carisa/internal/api/plugin"
 	echoc "github.com/carisa/pkg/http/echo"
 	"github.com/labstack/echo/v4"
 )
@@ -27,6 +28,7 @@ type Handlers struct {
 	SpaceHandler    Space
 	EnteHandler     Ente
 	CategoryHandler Category
+	PluginHandler   Plugin
 }
 
 // Instance
@@ -135,4 +137,21 @@ func (h *Handlers) CatPutProp(ctx echo.Context) error {
 
 func (h *Handlers) CatPropLinkTo(ctx echo.Context) error {
 	return h.CategoryHandler.LinkToProp(echoc.NewContext(ctx))
+}
+
+// Plugin query prototype
+func (h *Handlers) PluginQryCreate(ctx echo.Context) error {
+	return h.PluginHandler.Create(echoc.NewContext(ctx), plugin.Query)
+}
+
+func (h *Handlers) PluginQryPut(ctx echo.Context) error {
+	return h.PluginHandler.Put(echoc.NewContext(ctx), plugin.Query)
+}
+
+func (h *Handlers) PluginQryGet(ctx echo.Context) error {
+	return h.PluginHandler.Get(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) PluginQryListPlugins(ctx echo.Context) error {
+	return h.PluginHandler.ListPlugins(echoc.NewContext(ctx), plugin.Query)
 }
