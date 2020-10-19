@@ -75,10 +75,10 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.PUT("/api/entes/:id", h.EntePut)
 	e.GET("/api/entes/:id", h.EnteGet)
 	e.GET("/api/entes/:id/properties", h.EnteListProps)
-	e.PUT("/api/entes/:enteId/linkToCategory/:categoryId", h.EnteLinkToCat)
-	e.POST("/api/entesProp", h.EnteCreateProp)
-	e.PUT("/api/entesProp/:id", h.EntePutProp)
-	e.GET("/api/entesProp/:id", h.EnteGetProp)
+	e.PUT("/api/entes/:enteid/linktocategories/:categoryid", h.EnteLinkToCat)
+	e.POST("/api/entesproperties", h.EnteCreateProp)
+	e.PUT("/api/entesproperties/:id", h.EntePutProp)
+	e.GET("/api/entesproperties/:id", h.EnteGetProp)
 
 	// Category
 	e.POST("/api/categories", h.CatCreate)
@@ -86,10 +86,10 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/categories/:id", h.CatGet)
 	e.GET("/api/categories/:id/child", h.CatListCategories)
 	e.GET("/api/categories/:id/properties", h.CatListProps)
-	e.POST("/api/categoriesProp", h.CatCreateProp)
-	e.PUT("/api/categoriesProp/:id", h.CatPutProp)
-	e.GET("/api/categoriesProp/:id", h.CatGetProp)
-	e.PUT("/api/categoriesProp/:catPropId/linkTo/:propId", h.CatPropLinkTo)
+	e.POST("/api/categoriesproperties", h.CatCreateProp)
+	e.PUT("/api/categoriesproperties/:id", h.CatPutProp)
+	e.GET("/api/categoriesproperties/:id", h.CatGetProp)
+	e.PUT("/api/categoriesproperties/:catpropid/linkto/:propid", h.CatPropLinkTo)
 
 	// Query plugin Prototype
 	e.POST("/api/plugins/queries", h.PluginQryCreate)

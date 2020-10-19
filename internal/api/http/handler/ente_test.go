@@ -339,31 +339,31 @@ func TestEnteHandler_LinkToCategory(t *testing.T) {
 		{
 			name: "Ente not found.",
 			params: map[string]string{
-				"enteId":     xid.New().String(),
-				"categoryId": cat.ID.String(),
+				"enteid":     xid.New().String(),
+				"categoryid": cat.ID.String(),
 			},
 			status: nethttp.StatusNotFound,
 		},
 		{
 			name: "Category not found.",
 			params: map[string]string{
-				"enteId":     e.ID.String(),
-				"categoryId": xid.New().String(),
+				"enteid":     e.ID.String(),
+				"categoryid": xid.New().String(),
 			},
 			status: nethttp.StatusNotFound,
 		},
 		{
 			name: "Ente connected.",
 			params: map[string]string{
-				"enteId":     e.ID.String(),
-				"categoryId": cat.ID.String(),
+				"enteid":     e.ID.String(),
+				"categoryid": cat.ID.String(),
 			},
 			status: nethttp.StatusOK,
 		},
 	}
 
 	for _, tt := range test {
-		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entes/:enteId/linktocategory:categoryId", "", tt.params, nil)
+		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entes/:enteid/linktocategories:categoryid", "", tt.params, nil)
 		err := handlers.EnteHandler.LinkToCat(ctx)
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
 			continue
@@ -392,12 +392,12 @@ func TestEnteHandler_LinkToCategoryError(t *testing.T) {
 		},
 		{
 			name:   "Param category wrong. Bad request",
-			param:  map[string]string{"enteId": xid.New().String(), "categoryId": "123"},
+			param:  map[string]string{"enteid": xid.New().String(), "categoryid": "123"},
 			status: nethttp.StatusBadRequest,
 		},
 		{
 			name:     "LinkTo. Internal server error",
-			param:    map[string]string{"enteId": xid.New().String(), "categoryId": xid.New().String()},
+			param:    map[string]string{"enteid": xid.New().String(), "categoryid": xid.New().String()},
 			mockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("LinkTo") },
 			status:   nethttp.StatusInternalServerError,
 		},
@@ -408,7 +408,7 @@ func TestEnteHandler_LinkToCategoryError(t *testing.T) {
 			tt.mockOper(crud)
 		}
 
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entes/:enteId/linktocategory:categoryId", "", tt.param, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entes/:enteid/linktocategories:categoryid", "", tt.param, nil)
 		err := handlers.EnteHandler.LinkToCat(ctx)
 		assert.Equal(t, tt.status, err.(*echo.HTTPError).Code, tt.name)
 		assert.Error(t, err, tt.name)
@@ -445,7 +445,7 @@ func TestEnteHandler_CreateProp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesprop", strings.Concat("{", tt.body, "}"), nil, nil)
+		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesproperties", strings.Concat("{", tt.body, "}"), nil, nil)
 		err := handlers.EnteHandler.CreateProp(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -476,7 +476,7 @@ func TestEnteHandler_CreatePropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesprop", tt.Body, nil, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/entesproperties", tt.Body, nil, nil)
 		err := handlers.EnteHandler.CreateProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -523,7 +523,7 @@ func TestEnteHandler_PutProp(t *testing.T) {
 	for _, tt := range tests {
 		rec, ctx := h.NewHTTP(
 			nethttp.MethodPut,
-			"/api/entesprop",
+			"/api/entesproperties",
 			strings.Concat("{", tt.body, "}"),
 			params,
 			nil)
@@ -553,7 +553,7 @@ func TestEnteHandler_PutPropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entesprop", tt.Body, tt.Params, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/entesproperties", tt.Body, tt.Params, nil)
 		err := handlers.EnteHandler.PutProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -599,7 +599,7 @@ func TestEnteHandler_GetProp(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesprop/:id", "", tt.params, nil)
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesproperties/:id", "", tt.params, nil)
 			err := handlers.EnteHandler.GetProp(ctx)
 
 			if assert.NoError(t, err) {
@@ -629,7 +629,7 @@ func TestEnteHandler_GetPropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesprop/:id", "", tt.Param, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/entesproperties/:id", "", tt.Param, nil)
 		err := handlers.EnteHandler.GetProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)

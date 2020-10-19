@@ -207,11 +207,11 @@ func (c *Category) GetProp(ctx httpc.Context) error {
 
 // LinkToProp connects a category property or with other or with a ente property
 func (c *Category) LinkToProp(ctx httpc.Context) error {
-	catPropID, err := convert.ParamXID(ctx, "catPropId")
+	catPropID, err := convert.ParamXID(ctx, "catpropid")
 	if err != nil {
 		return err
 	}
-	propID, err := convert.ParamXID(ctx, "propId")
+	propID, err := convert.ParamXID(ctx, "propid")
 	if err != nil {
 		return err
 	}

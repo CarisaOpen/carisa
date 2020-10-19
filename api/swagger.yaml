@@ -455,7 +455,7 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /entes/{enteId}/linkToCategory/{categoryId}:
+  /entes/{enteid}/linktocategories/{categoryid}:
     put:
       tags:
         - "ente"
@@ -466,12 +466,12 @@ paths:
         - "application/json"
       parameters:
         - in: "path"
-          name: "enteId"
+          name: "enteid"
           description: "Ente identifier"
           type: string
           required: true
         - in: "path"
-          name: "categoryId"
+          name: "categoryid"
           description: "Category identifier"
           type: string
           required: true
@@ -486,7 +486,7 @@ paths:
           description: "Ente or category not found"
         "500":
           description: "Internal server error"
-  /entesProp:
+  /entesproperties:
     post:
       tags:
         - "enteprop"
@@ -515,7 +515,7 @@ paths:
           description: "Ente not found"
         "500":
           description: "Internal server error"
-  /entesProp/{id}:
+  /entesproperties/{id}:
     put:
       tags:
         - "enteprop"
@@ -744,7 +744,7 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /categoriesProp:
+  /categoriesproperties:
     post:
       tags:
         - "categoryprop"
@@ -773,7 +773,7 @@ paths:
           description: "Ente not found"
         "500":
           description: "Internal server error"
-  /categoriesProp/{id}:
+  /categoriesproperties/{id}:
     put:
       tags:
         - "categoryprop"
@@ -832,7 +832,7 @@ paths:
           description: "Category property not found"
         "500":
           description: "Internal server error"
-  /categoriesProp/{catPropId}/linkTo/{propId}:
+  /categoriesproperties/{catpropid}/linkto/{propId}:
     put:
       tags:
         - "categoryprop"
@@ -843,7 +843,7 @@ paths:
         - "application/json"
       parameters:
         - in: "path"
-          name: "catPropId"
+          name: "catpropid"
           description: "Category property identifier"
           type: string
           required: true

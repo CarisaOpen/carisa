@@ -101,11 +101,11 @@ func (p *Ente) Get(c httpc.Context) error {
 
 // LinkToCat connects ente to category in the tree
 func (p *Ente) LinkToCat(c httpc.Context) error {
-	enteID, err := convert.ParamXID(c, "enteId")
+	enteID, err := convert.ParamXID(c, "enteid")
 	if err != nil {
 		return err
 	}
-	catID, err := convert.ParamXID(c, "categoryId")
+	catID, err := convert.ParamXID(c, "categoryid")
 	if err != nil {
 		return err
 	}

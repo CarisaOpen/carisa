@@ -471,8 +471,8 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		params := map[string]string{"catPropId": tt.source.String(), "propId": tt.target.String()}
-		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesProp/:catPropId/linkto/:propId", "", params, nil)
+		params := map[string]string{"catpropid": tt.source.String(), "propid": tt.target.String()}
+		rec, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesproperties/:catpropid/linkto/:propid", "", params, nil)
 		err := handlers.CategoryHandler.LinkToProp(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -555,7 +555,7 @@ func TestCategoryHandler_CreateProp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/categoriesprop", strings.Concat("{", tt.body, "}"), nil, nil)
+		rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/categoriesproperties", strings.Concat("{", tt.body, "}"), nil, nil)
 		err := handlers.CategoryHandler.CreateProp(ctx)
 
 		if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -586,7 +586,7 @@ func TestCategoryHandler_CreatePropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/categoriesprop", tt.Body, nil, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/categoriesproperties", tt.Body, nil, nil)
 		err := handlers.CategoryHandler.CreateProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -638,7 +638,7 @@ func TestCategoryHandler_PutProp(t *testing.T) {
 	for _, tt := range tests {
 		rec, ctx := h.NewHTTP(
 			nethttp.MethodPut,
-			"/api/categoriesprop",
+			"/api/categoriesproperties",
 			strings.Concat("{", tt.body, "}"),
 			params,
 			nil)
@@ -668,7 +668,7 @@ func TestCategoryHandler_PutPropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesprop", tt.Body, tt.Params, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/categoriesproperties", tt.Body, tt.Params, nil)
 		err := handlers.CategoryHandler.PutProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
@@ -715,7 +715,7 @@ func TestCategoryHandler_GetProp(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/categoriesprop/:id", "", tt.params, nil)
+			rec, ctx := h.NewHTTP(nethttp.MethodGet, "/api/categoriesproperties/:id", "", tt.params, nil)
 			err := handlers.CategoryHandler.GetProp(ctx)
 
 			if assert.NoError(t, err) {
@@ -745,7 +745,7 @@ func TestCategoryHandler_GetPropWithError(t *testing.T) {
 		if tt.MockOper != nil {
 			tt.MockOper(crud)
 		}
-		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/categoriesprop/:id", "", tt.Param, nil)
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/categoriesproperties/:id", "", tt.Param, nil)
 		err := handlers.CategoryHandler.GetProp(ctx)
 
 		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
