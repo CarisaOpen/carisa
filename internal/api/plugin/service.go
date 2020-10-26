@@ -20,8 +20,8 @@ import (
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/internal/api/service"
+	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
-	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
@@ -66,12 +66,28 @@ func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 	return ok, err
 }
 
-// ListPlugins lists the plugins depending ranges parameter.
+// Exists checks if the plugin exists
+func (s *Service) Exists(id xid.ID) (bool, error) {
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	found, err := s.crud.Store().Exists(ctx, id.String())
+	if err != nil {
+		return false,
+			s.cnt.Log.ErrWrap1(
+				err,
+				"checking if the plugin prototype exists",
+				locService,
+				logging.String("PrototypeID", id.String()))
+	}
+	cancel()
+	return found, err
+}
+
+// ListPlugins lists the plugins depending 'ranges' parameter.
 // Look at service.List
 func (s *Service) ListPlugins(cat Category, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
 		storage.Virtual,
-		strings.Concat(string(cat), name),
+		sound(string(cat), name),
 		ranges,
 		top,
 		func() storage.Entity { return &relation.PlatformPlugin{} })

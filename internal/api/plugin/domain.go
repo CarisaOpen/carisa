@@ -23,6 +23,8 @@ import (
 	"github.com/carisa/pkg/strings"
 )
 
+const plugin string = "P"
+
 // Category of the plugin
 type Category string
 
@@ -30,12 +32,17 @@ const (
 	Query Category = "query"
 )
 
-// It allows make prototype of dynamic object. Each object have n dynamic properties
-// Each object define the representative name
+func Plugins() []Category {
+	return []Category{Query}
+}
+
+// It allows make prototype of dynamic object.
+// Each object have n dynamic properties.
+// Each object define the representative name.
 // The plugin developers could define the necessary information what the plugin needs
-// with the Prototype and PrototypeProperty. The user interface will
-// be built dynamically with this information.
-// External users could make dynamic object instance using plugin prototype
+// with the Prototype and PrototypeProperty.
+// The user interface will be built dynamically with this information.
+// External users could make dynamic object instance using plugin prototype.
 // See object.Instance
 type Prototype struct {
 	entity.Descriptor
@@ -85,7 +92,7 @@ func (p *Prototype) ReLink(dlr storage.DLRel) storage.Entity {
 
 func (p *Prototype) link(category string, parentID string) storage.Entity {
 	return &relation.PlatformPlugin{
-		ID:       strings.Concat(parentID, category, p.Name, p.Key()),
+		ID:       strings.Concat(parentID, sound(category, p.Name), p.Key()),
 		Name:     p.Name,
 		ProtoID:  p.Key(),
 		Category: category,
@@ -94,4 +101,8 @@ func (p *Prototype) link(category string, parentID string) storage.Entity {
 
 func (p *Prototype) Empty() storage.EntityRelation {
 	return &Prototype{}
+}
+
+func sound(cat string, name string) string {
+	return strings.Concat(plugin, cat, name)
 }

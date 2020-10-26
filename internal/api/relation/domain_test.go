@@ -157,3 +157,20 @@ func TestPlatformPluginLink_Key(t *testing.T) {
 	}
 	assert.Equal(t, i.ID, i.Key())
 }
+
+func TestPlatformInstanceLink_ToString(t *testing.T) {
+	s := PlatformInstance{
+		ID:       "key",
+		Name:     "name",
+		InstID:   "1",
+		Category: "query",
+	}
+	assert.Equal(t, "platform-instance-link: ID:key, Name:name", s.ToString())
+}
+
+func TestPlatformInstanceLink_Key(t *testing.T) {
+	i := PlatformInstance{
+		ID: "key",
+	}
+	assert.Equal(t, i.ID, i.Key())
+}

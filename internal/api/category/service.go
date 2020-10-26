@@ -39,7 +39,12 @@ type Service struct {
 }
 
 // NewService builds a category service
-func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation, entesrv *ente.Service) Service {
+func NewService(
+	cnt *runtime.Container,
+	ext *service.Extension,
+	crud storage.CrudOperation,
+	entesrv *ente.Service) Service {
+	//
 	return Service{
 		cnt:     cnt,
 		ext:     ext,

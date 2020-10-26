@@ -140,6 +140,29 @@ func TestPluginService_ListPlugins(t *testing.T) {
 	}
 }
 
+func TestPluginService_Exists(t *testing.T) {
+	srv, mng := newServiceFaked(t)
+	defer mng.Close()
+
+	proto := proto()
+
+	_, err := srv.Create(proto)
+	if assert.NoError(t, err) {
+		found, err := srv.Exists(proto.ID)
+		if assert.NoError(t, err) {
+			assert.True(t, found, "Exists")
+		}
+	}
+}
+
+func TestPluginService_ExistsWithError(t *testing.T) {
+	srv, crud := newServiceMocked()
+	crud.Store().(*storage.ErrMockCRUD).Activate("Exists")
+
+	_, err := srv.Exists(xid.New())
+	assert.Error(t, err)
+}
+
 func proto() *Prototype {
 	proto := New()
 	proto.Name = "name"
@@ -151,4 +174,11 @@ func newServiceFaked(t *testing.T) (Service, storage.Integration) {
 	mng, cnt, crudOper := mock.NewFullCrudOperFaked(t)
 	ext := service.NewExt(cnt, crudOper.Store())
 	return NewService(cnt, ext, crudOper), mng
+}
+
+func newServiceMocked() (Service, *storage.ErrMockCRUDOper) {
+	cnt := mock.NewContainerFake()
+	crud := storage.NewErrMockCRUDOper()
+	ext := service.NewExt(cnt, crud.Store())
+	return NewService(cnt, ext, crud), crud
 }

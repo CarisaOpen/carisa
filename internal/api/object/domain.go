@@ -18,21 +18,73 @@ package object
 
 import (
 	"github.com/carisa/internal/api/entity"
+	"github.com/carisa/internal/api/plugin"
+	"github.com/carisa/internal/api/relation"
+	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
-// Instance has n dynamic properties
-// External users could instance a dynamic object using dynamic object instance
-// Example: Queries. The queries has a object prototype where define the metadata of a query type
+// Instance has n dynamic properties and them links with the associated plugin properties
+// Example: Queries. The queries has a plugin prototype where define the metadata of a query type
 // and the instance is the particular information of those metadata configured by users
 // Is similar to classes and objects. Object will be the instance.
 type Instance struct {
 	entity.Descriptor
-	PrototypeID xid.ID `json:"prototypeID"`
+	ContainerID xid.ID          `json:"containerId"`
+	ProtoID     xid.ID          `json:"prototypeId"`
+	Category    plugin.Category `json:"-"`
 }
 
-func NewInstance() Instance {
+func New() Instance {
 	return Instance{
 		Descriptor: entity.NewDescriptor(),
+		Category:   plugin.Query,
 	}
+}
+
+func (i *Instance) ToString() string {
+	return strings.Concat("instance: ID:", i.Key(), ", name:", i.Name)
+}
+
+func (i *Instance) Key() string {
+	return i.ID.String()
+}
+
+func (i *Instance) Nominative() entity.Descriptor {
+	return i.Descriptor
+}
+
+func (i *Instance) RelName() string {
+	return i.Name
+}
+
+func (i *Instance) ParentKey() string {
+	return i.ContainerID.String()
+}
+
+// Link gets the link between the contaier and instance
+func (i *Instance) Link() storage.Entity {
+	return i.link(string(i.Category), i.ParentKey())
+}
+
+func (i *Instance) LinkName() string {
+	return string(i.Category)
+}
+
+func (i *Instance) ReLink(dlr storage.DLRel) storage.Entity {
+	return i.link(dlr.Type, dlr.ParentID)
+}
+
+func (i *Instance) link(category string, parentID string) storage.Entity {
+	return &relation.PlatformInstance{
+		ID:       strings.Concat(parentID, category, i.Name, i.Key()),
+		Name:     i.Name,
+		InstID:   i.Key(),
+		Category: category,
+	}
+}
+
+func (i *Instance) Empty() storage.EntityRelation {
+	return &Instance{}
 }

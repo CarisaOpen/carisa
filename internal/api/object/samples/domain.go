@@ -14,28 +14,24 @@
  *
  */
 
-package server
+package samples
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/carisa/internal/api/http/handler"
-
-	"github.com/labstack/echo/v4"
+	"github.com/carisa/internal/api/mock"
+	"github.com/carisa/internal/api/object"
+	"github.com/carisa/internal/api/plugin"
+	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 )
 
-func TestServer_Middleware(t *testing.T) {
-	e := echo.New()
-	Middleware(e)
-}
-
-func TestServer_Router(t *testing.T) {
-	e := echo.New()
-	h := handler.Handlers{}
-
-	Router(e, h)
-
-	assert.Equal(t, 35, len(e.Routes()))
+func CreateLink(mng storage.Integration, cntID xid.ID, cat plugin.Category) (storage.Entity, object.Instance, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	o := object.New()
+	o.Name = "name"
+	o.Desc = "desc"
+	o.ContainerID = cntID
+	o.Category = cat
+	link := o.Link()
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, link)
+	return link, o, err
 }

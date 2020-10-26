@@ -75,6 +75,7 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.PUT("/api/entes/:id", h.EntePut)
 	e.GET("/api/entes/:id", h.EnteGet)
 	e.GET("/api/entes/:id/properties", h.EnteListProps)
+	e.GET("/api/entes/:id/queries", h.InstQryListQueries)
 	e.PUT("/api/entes/:enteid/linktocategories/:categoryid", h.EnteLinkToCat)
 	e.POST("/api/entesproperties", h.EnteCreateProp)
 	e.PUT("/api/entesproperties/:id", h.EntePutProp)
@@ -86,6 +87,7 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.GET("/api/categories/:id", h.CatGet)
 	e.GET("/api/categories/:id/child", h.CatListCategories)
 	e.GET("/api/categories/:id/properties", h.CatListProps)
+	e.GET("/api/categories/:id/queries", h.InstQryListQueries)
 	e.POST("/api/categoriesproperties", h.CatCreateProp)
 	e.PUT("/api/categoriesproperties/:id", h.CatPutProp)
 	e.GET("/api/categoriesproperties/:id", h.CatGetProp)
@@ -96,4 +98,9 @@ func Router(e *echo.Echo, h handler.Handlers) {
 	e.PUT("/api/plugins/queries/:id", h.PluginQryPut)
 	e.GET("/api/plugins/queries/:id", h.PluginQryGet)
 	e.GET("/api/plugins/queries", h.PluginQryListPlugins)
+
+	// Query object Instance
+	e.POST("/api/queries", h.InstQryCreate)
+	e.PUT("/api/queries/:id", h.InstQryPut)
+	e.GET("/api/queries/:id", h.InstQryGet)
 }

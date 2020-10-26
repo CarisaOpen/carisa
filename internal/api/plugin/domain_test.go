@@ -64,7 +64,7 @@ func TestPrototype_Link(t *testing.T) {
 		Category: Query,
 	}
 	link := &relation.PlatformPlugin{
-		ID:       strings.Concat(storage.Virtual, string(Query), name, id.String()),
+		ID:       strings.Concat(storage.Virtual, plugin, string(Query), name, id.String()),
 		Name:     name,
 		ProtoID:  id.String(),
 		Category: "query",
@@ -90,7 +90,7 @@ func TestPrototype_ReLink(t *testing.T) {
 		Category: Query,
 	}
 	link := &relation.PlatformPlugin{
-		ID:       strings.Concat(storage.Virtual, string(Query), name, id.String()),
+		ID:       strings.Concat(storage.Virtual, plugin, string(Query), name, id.String()),
 		Name:     name,
 		ProtoID:  id.String(),
 		Category: "query",

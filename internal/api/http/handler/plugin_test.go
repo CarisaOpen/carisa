@@ -44,7 +44,7 @@ func TestPluginHandler_Create(t *testing.T) {
 	h := mock.HTTP()
 	defer h.Close(cnt.Log)
 
-	plugins := plugins()
+	plugins := plugin.Plugins()
 
 	tests := []struct {
 		name   string
@@ -86,7 +86,7 @@ func TestPluginHandler_Create(t *testing.T) {
 func TestPluginHandler_CreateWithError(t *testing.T) {
 	cnt, handlers, crud := newPluginHandlerMocked()
 
-	plugins := plugins()
+	plugins := plugin.Plugins()
 
 	tests := tsamples.TestCreateWithError("CreateWithRel")
 
@@ -113,7 +113,7 @@ func TestPluginHandler_Put(t *testing.T) {
 	h := mock.HTTP()
 	defer h.Close(cnt.Log)
 
-	plugins := plugins()
+	plugins := plugin.Plugins()
 
 	params := map[string]string{"id": xid.NilID().String()}
 
@@ -160,7 +160,7 @@ func TestPluginHandler_Put(t *testing.T) {
 func TestPluginHandler_PutWithError(t *testing.T) {
 	cnt, handlers, crud := newPluginHandlerMocked()
 
-	plugins := plugins()
+	plugins := plugin.Plugins()
 
 	params := map[string]string{"id": xid.NilID().String()}
 	tests := tsamples.TestPutWithError("PutWithRel", params)
@@ -256,7 +256,7 @@ func TestPluginHandler_ListPlugins(t *testing.T) {
 	h := mock.HTTP()
 	defer h.Close(cnt.Log)
 
-	plugins := plugins()
+	plugins := plugin.Plugins()
 
 	for _, pc := range plugins {
 		_, proto, err := psamples.CreateLinkPlugin(mng, pc)
@@ -316,8 +316,4 @@ func newPluginHandlerMocked() (*runtime.Container, Handlers, *storage.ErrMockCRU
 	srv := plugin.NewService(cnt, ext, crud)
 	hands := Handlers{PluginHandler: NewPluginHandle(srv, cnt)}
 	return cnt, hands, crud
-}
-
-func plugins() []plugin.Category {
-	return []plugin.Category{plugin.Query}
 }

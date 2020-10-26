@@ -20,7 +20,19 @@ import (
 	"github.com/carisa/internal/api/mock"
 	"github.com/carisa/internal/api/plugin"
 	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 )
+
+func CreatePlugin(mng storage.Integration, cat plugin.Category, id xid.ID) (plugin.Prototype, error) {
+	cnt, crudOper := mock.NewCrudOperFaked(mng)
+	proto := plugin.New()
+	proto.ID = id
+	proto.Category = cat
+	proto.Name = "nameproto"
+	proto.Desc = "descproto"
+	_, err := crudOper.Create("", cnt.StoreWithTimeout, &proto)
+	return proto, err
+}
 
 func CreateLinkPlugin(mng storage.Integration, cat plugin.Category) (storage.Entity, plugin.Prototype, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)

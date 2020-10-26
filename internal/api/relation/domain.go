@@ -146,10 +146,26 @@ type PlatformPlugin struct {
 	Category string `json:"category"` // Category is the type of plugin (query, etc)
 }
 
-func (l *PlatformPlugin) ToString() string {
-	return strings.Concat("platform-plugin-link: ID:", l.Key(), ", Name:", l.Name)
+func (p *PlatformPlugin) ToString() string {
+	return strings.Concat("platform-plugin-link: ID:", p.Key(), ", Name:", p.Name)
 }
 
-func (l *PlatformPlugin) Key() string {
-	return l.ID
+func (p *PlatformPlugin) Key() string {
+	return p.ID
+}
+
+// PlatformInstance represents the link between platform and plugin instance
+type PlatformInstance struct {
+	ID       string `json:"-"`
+	Name     string `json:"name"`
+	InstID   string `json:"instanceId"`
+	Category string `json:"category"` // Category is the type of plugin (query, etc)
+}
+
+func (p *PlatformInstance) ToString() string {
+	return strings.Concat("platform-instance-link: ID:", p.Key(), ", Name:", p.Name)
+}
+
+func (p *PlatformInstance) Key() string {
+	return p.ID
 }

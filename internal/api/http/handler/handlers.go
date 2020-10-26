@@ -29,6 +29,7 @@ type Handlers struct {
 	EnteHandler     Ente
 	CategoryHandler Category
 	PluginHandler   Plugin
+	ObjectHandler   Object
 }
 
 // Instance
@@ -154,4 +155,21 @@ func (h *Handlers) PluginQryGet(ctx echo.Context) error {
 
 func (h *Handlers) PluginQryListPlugins(ctx echo.Context) error {
 	return h.PluginHandler.ListPlugins(echoc.NewContext(ctx), plugin.Query)
+}
+
+// Query object instance
+func (h *Handlers) InstQryCreate(ctx echo.Context) error {
+	return h.ObjectHandler.Create(echoc.NewContext(ctx), plugin.Query)
+}
+
+func (h *Handlers) InstQryPut(ctx echo.Context) error {
+	return h.ObjectHandler.Put(echoc.NewContext(ctx), plugin.Query)
+}
+
+func (h *Handlers) InstQryGet(ctx echo.Context) error {
+	return h.ObjectHandler.Get(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) InstQryListQueries(ctx echo.Context) error {
+	return h.ObjectHandler.ListInstances(echoc.NewContext(ctx), plugin.Query)
 }

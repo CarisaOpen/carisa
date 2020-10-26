@@ -102,5 +102,6 @@ func handlers(srv service, cnt *runtime.Container) handler.Handlers {
 		EnteHandler:     handler.NewEnteHandle(srv.enteSrv, cnt),
 		CategoryHandler: handler.NewCatHandle(srv.catSrv, cnt),
 		PluginHandler:   handler.NewPluginHandle(srv.pluginSrv, cnt),
+		ObjectHandler:   handler.NewObjectHandle(srv.objectSrv, cnt),
 	}
 }

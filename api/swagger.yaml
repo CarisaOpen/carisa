@@ -24,7 +24,9 @@ tags:
   - name: "categoryprop"
     description: "The category property are the fields of the category. This properties link to other child category properties or the child ente properties."
   - name: "queryplugin"
-    description: "The query plugin defines the diferrents types of queries in real-time over the stream datas. This plugins must be registered over the platform. The user could instantiate them it to define their own queries."
+    description: "The query plugin defines the various types of queries in real-time over the stream datas. This plugins must be registered over the platform. The user could instantiate them it to define their own queries."
+  - name: "queryinstance"
+    description: "The query defines the specific properties of the plugin on the category or ente. The query is an aggregation involves computing all of real-time data of a category or ente."
 schemes:
   - "https"
   - "http"
@@ -455,6 +457,47 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
+  /entes/{id}/queries:
+    get:
+      tags:
+        - "ente"
+      summary: "List the queries of the ente by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List ente queries that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List ente queries greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of queries"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/InstanceLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
   /entes/{enteid}/linktocategories/{categoryid}:
     put:
       tags:
@@ -744,6 +787,47 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
+  /categories/{id}/queries:
+    get:
+      tags:
+        - "category"
+      summary: "List the queries of the category by ID"
+      description: "The 'sname' and 'gtname' query parameters are exclusive. The 'top' query parameter must be between 1 and 100."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "query"
+          name: "sname"
+          description: "List category queries that start by 'sname'"
+          type: string
+        - in: "query"
+          name: "gtname"
+          description: "List category queries greater or equal than 'gtname'"
+          type: string
+        - in: "query"
+          name: "top"
+          description: "Limit of queries"
+          type: integer
+          minimum: 1
+          maximum: 100
+      responses:
+        "200":
+          description: "Successful request"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/InstanceLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
   /categoriesproperties:
     post:
       tags:
@@ -983,6 +1067,92 @@ paths:
               $ref: "#/definitions/PluginLink"
         "400":
           description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /queries:
+    post:
+      tags:
+        - "queryinstance"
+      summary: "Add a new query to the category or ente"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added to the category or ente"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "302":
+          description: "Query found"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /queries/{id}:
+    put:
+      tags:
+        - "queryinstance"
+      summary: "If the query ID exists is updated otherwise is added."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Query identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added or updated to the category or ente"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "200":
+          description: "Query updated"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+    get:
+      tags:
+        - "queryinstance"
+      summary: "Find query by ID"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Query identifier"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Query found"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "400":
+          description: "Invalid input"
+        "404":
+          description: "Query not found"
         "500":
           description: "Internal server error"
 definitions:
@@ -1295,6 +1465,56 @@ definitions:
       protoId:
         type: "string"
         description: "Plugin identifier"
+      category:
+        type: "string"
+        description: "The type of plugin (query)"
+  PluginInstance:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Instance identifier"
+      name:
+        type: "string"
+        description: "Instance name"
+      description:
+        type: "string"
+        description: "Instance description"
+      containerId:
+        type: "string"
+        description: "Container identifier. Depending of the instance type"
+      prototypeId:
+        type: "string"
+        description: "Plugin prototype identifier."
+  PluginInstanceReq:
+    type: "object"
+    required:
+      - "name"
+      - "description"
+    properties:
+      name:
+        type: "string"
+        maxLength: 50
+        description: "Instance name"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Instance description"
+      containerId:
+        type: "string"
+        description: "Container identifier. Depending of the instance"
+      prototypeId:
+        type: "string"
+        description: "Plugin prototype identifier."
+  InstanceLink:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Instance name"
+      instanceId:
+        type: "string"
+        description: "Plugin instance identifier"
       category:
         type: "string"
         description: "The type of plugin (query)"
