@@ -38,7 +38,7 @@ func (i *Instance) ToString() string {
 }
 
 func (i *Instance) Key() string {
-	return i.ID.String()
+	return entity.InstKey(i.ID)
 }
 
 func (i *Instance) Nominative() entity.Descriptor {

@@ -235,7 +235,7 @@ func TestInstanceHandler_ListSpaces(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","spaceId":"%s"}]`, space.Key()),
+				fmt.Sprintf(`[{"name":"name","spaceId":"%s"}]`, space.ID.String()),
 				"List space")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}

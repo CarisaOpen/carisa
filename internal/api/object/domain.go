@@ -31,9 +31,10 @@ import (
 // Is similar to classes and objects. Object will be the instance.
 type Instance struct {
 	entity.Descriptor
-	ContainerID xid.ID          `json:"containerId"`
-	ProtoID     xid.ID          `json:"prototypeId"`
-	Category    plugin.Category `json:"-"`
+	SchContainer string          `json:"-"`
+	ContainerID  xid.ID          `json:"containerId"`
+	ProtoID      xid.ID          `json:"prototypeId"`
+	Category     plugin.Category `json:"-"`
 }
 
 func New() Instance {
@@ -48,7 +49,7 @@ func (i *Instance) ToString() string {
 }
 
 func (i *Instance) Key() string {
-	return i.ID.String()
+	return entity.ObjectKey(i.ID)
 }
 
 func (i *Instance) Nominative() entity.Descriptor {
@@ -60,10 +61,10 @@ func (i *Instance) RelName() string {
 }
 
 func (i *Instance) ParentKey() string {
-	return i.ContainerID.String()
+	return entity.Key(i.SchContainer, i.ContainerID)
 }
 
-// Link gets the link between the contaier and instance
+// Link gets the link between the container and instance
 func (i *Instance) Link() storage.Entity {
 	return i.link(string(i.Category), i.ParentKey())
 }
@@ -80,7 +81,7 @@ func (i *Instance) link(category string, parentID string) storage.Entity {
 	return &relation.PlatformInstance{
 		ID:       strings.Concat(parentID, category, i.Name, i.Key()),
 		Name:     i.Name,
-		InstID:   i.Key(),
+		InstID:   i.ID.String(),
 		Category: category,
 	}
 }

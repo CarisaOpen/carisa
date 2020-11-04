@@ -17,6 +17,7 @@
 package instance
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/internal/api/service"
@@ -59,7 +60,7 @@ func (s *Service) Put(inst *Instance) (bool, error) {
 // Get gets the instance from storage
 func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), inst)
+	ok, err := s.crud.Store().Get(ctx, entity.InstKey(id), inst)
 	cancel()
 	return ok, err
 }
@@ -68,7 +69,7 @@ func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 // Look at service.List
 func (s *Service) ListSpaces(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
+		entity.InstKey(id),
 		strings.Concat(relation.InstSpaceLn, name),
 		ranges,
 		top,

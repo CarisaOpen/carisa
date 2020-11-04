@@ -29,7 +29,7 @@ import (
 type Ente struct {
 	entity.Descriptor
 	SpaceID xid.ID `json:"spaceId"` // Space container
-	CatID   string `json:"-"`       // Is used temporarily to connect the entity and the category.
+	CatID   xid.ID `json:"-"`       // Is used temporarily to connect the entity and the category.
 }
 
 func New() Ente {
@@ -43,7 +43,7 @@ func (e *Ente) ToString() string {
 }
 
 func (e *Ente) Key() string {
-	return e.ID.String()
+	return entity.EnteKey(e.ID)
 }
 
 func (e *Ente) Nominative() entity.Descriptor {
@@ -56,28 +56,24 @@ func (e *Ente) RelName() string {
 
 // ParentKey gets the Space ID
 func (e *Ente) ParentKey() string {
-	return e.parentID()
+	parentID := entity.CategoryKey(e.CatID)
+	if e.CatID.IsNil() {
+		parentID = entity.SpaceKey(e.SpaceID)
+	}
+	return parentID
 }
 
 // Link gets the link between instance and prop
 func (e *Ente) Link() storage.Entity {
 	cat := true
-	if len(e.CatID) == 0 {
+	if e.CatID.IsNil() {
 		cat = false
 	}
-	return e.link(cat, e.parentID())
-}
-
-func (e *Ente) parentID() string {
-	parentID := e.CatID
-	if len(e.CatID) == 0 {
-		parentID = e.SpaceID.String()
-	}
-	return parentID
+	return e.link(cat, e.ParentKey())
 }
 
 func (e *Ente) LinkName() string {
-	if len(e.CatID) == 0 {
+	if e.CatID.IsNil() {
 		return relation.SpaceEnteLn
 	}
 	return relation.CatEnteLn
@@ -96,14 +92,14 @@ func (e *Ente) link(cat bool, parentID string) storage.Entity {
 		return &relation.Hierarchy{
 			ID:       strings.Concat(parentID, e.Name, e.Key()),
 			Name:     e.Name,
-			LinkID:   e.Key(),
+			LinkID:   e.ID.String(),
 			Category: false,
 		}
 	}
 	return &relation.SpaceEnte{
 		ID:     strings.Concat(parentID, relation.SpaceEnteLn, e.Name, e.Key()),
 		Name:   e.Name,
-		EnteID: e.Key(),
+		EnteID: e.ID.String(),
 	}
 }
 
@@ -116,7 +112,7 @@ type Prop struct {
 	entity.Descriptor
 	EnteID    xid.ID          `json:"enteId"` // Ente container
 	Type      entity.TypeProp `json:"type"`
-	CatPropID string          `json:"-"` // Is used temporarily to connect the property and the category property.
+	CatPropID xid.ID          `json:"-"` // Is used temporarily to connect the property and the category property.
 }
 
 func NewProp() Prop {
@@ -135,7 +131,7 @@ func (e *Prop) ToString() string {
 }
 
 func (e *Prop) Key() string {
-	return e.ID.String()
+	return entity.EntePropKey(e.ID)
 }
 
 func (e *Prop) Nominative() entity.Descriptor {
@@ -146,29 +142,25 @@ func (e *Prop) RelName() string {
 	return e.Name
 }
 
-// ParentKey gets the Ente ID
+// ParentKey gets the Ente or category.Category ID
 func (e *Prop) ParentKey() string {
-	return e.parentID()
-}
-
-func (e *Prop) Link() storage.Entity {
-	cat := true
-	if len(e.CatPropID) == 0 {
-		cat = false
-	}
-	return e.link(cat, e.parentID())
-}
-
-func (e *Prop) parentID() string {
-	parentID := e.CatPropID
-	if len(e.CatPropID) == 0 {
-		parentID = e.EnteID.String()
+	parentID := entity.CatPropKey(e.CatPropID)
+	if e.CatPropID.IsNil() {
+		parentID = entity.EnteKey(e.EnteID)
 	}
 	return parentID
 }
 
+func (e *Prop) Link() storage.Entity {
+	cat := true
+	if e.CatPropID.IsNil() {
+		cat = false
+	}
+	return e.link(cat, e.ParentKey())
+}
+
 func (e *Prop) LinkName() string {
-	if len(e.CatPropID) == 0 {
+	if e.CatPropID.IsNil() {
 		return relation.EntePropLn
 	}
 	return relation.CatPropPropLn
@@ -187,7 +179,7 @@ func (e *Prop) link(cat bool, parentID string) storage.Entity {
 		return &relation.CatPropProp{
 			ID:       strings.Concat(parentID, e.Name, e.Key()),
 			Name:     e.Name,
-			PropID:   e.Key(),
+			PropID:   e.ID.String(),
 			Category: false,
 		}
 	}

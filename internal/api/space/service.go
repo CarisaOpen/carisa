@@ -17,6 +17,7 @@
 package space
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/internal/api/service"
@@ -61,27 +62,27 @@ func (s *Service) Put(space *Space) (bool, bool, error) {
 // Get gets the space from storage
 func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), space)
+	ok, err := s.crud.Store().Get(ctx, entity.SpaceKey(id), space)
 	cancel()
 	return ok, err
 }
 
-// ListEntes lists entes depending ranges parameter.
+// ListEntes lists entes depending 'ranges' parameter.
 // Look at service.List
 func (s *Service) ListEntes(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
+		entity.SpaceKey(id),
 		strings.Concat(relation.SpaceEnteLn, name),
 		ranges,
 		top,
 		func() storage.Entity { return &relation.SpaceEnte{} })
 }
 
-// ListCategories lists categories depending ranges parameter.
+// ListCategories lists categories depending 'ranges' parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
+		entity.SpaceKey(id),
 		strings.Concat(relation.SpaceCatLn, name),
 		ranges,
 		top,

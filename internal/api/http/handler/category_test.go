@@ -241,7 +241,7 @@ func TestCategoryHandler_Get(t *testing.T) {
 						rec.Body.String(),
 						fmt.Sprintf(
 							`"name":"cname","description":"cdesc","parentId":"%s","root":true`,
-							cat.ParentKey()),
+							cat.ParentID),
 						"Get category")
 				}
 				assert.Equal(t, tt.status, rec.Code, "Http status")
@@ -290,7 +290,7 @@ func TestCategoryHandler_ListCategories(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","linkId":"%s","category":true}]`, prop.Key()),
+				fmt.Sprintf(`[{"name":"name","linkId":"%s","category":true}]`, prop.ID),
 				"List categories of the space")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}
@@ -337,7 +337,7 @@ func TestCategoryHandler_ListProps(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"namep","categoryPropId":"%s"}]`, prop.Key()),
+				fmt.Sprintf(`[{"name":"namep","categoryPropId":"%s"}]`, prop.ID.String()),
 				"List properties of the category")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}
@@ -424,46 +424,49 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 		name    string
 		source  xid.ID
 		target  xid.ID
+		targets string
 		status  int
 		resBody string
 		typep   entity.TypeProp
 	}{
 		{
-			name:   "Category property not found",
+			name:   "Category property not found.",
 			source: xid.NilID(),
 			target: xid.NilID(),
 			status: nethttp.StatusNotFound,
 		},
 		{
-			name:   "Target property not found",
+			name:   "Target property not found.",
 			source: catPropRoot.ID,
 			target: xid.NilID(),
 			status: nethttp.StatusNotFound,
 		},
 		{
-			name:   "The category or ente of the property is not child of the category of the property",
+			name:   "The category or ente of the property is not child of the category of the property.",
 			source: catPropRoot.ID,
 			target: catccProp.ID,
 			status: nethttp.StatusBadRequest,
 		},
 		{
-			name:    "The category property is linked successfully with other category property",
+			name:    "The category property is linked successfully with other category property.",
 			source:  catPropRoot.ID,
 			target:  catChildProp1.ID,
+			targets: entity.SchCatProp,
 			status:  nethttp.StatusOK,
 			resBody: fmt.Sprintf(`{"name":"namecp","propertyId":"%s","category":true}`, catChildProp1.ID.String()),
 			typep:   entity.Integer,
 		},
 		{
-			name:   "The category property is not the same type than the target property",
+			name:   "The category property is not the same type than the target property.",
 			source: catPropRoot.ID,
 			target: catChildProp2.ID,
 			status: nethttp.StatusConflict,
 		},
 		{
-			name:    "The category property is linked successfully with a ente property",
+			name:    "The category property is linked successfully with a ente property.",
 			source:  catPropRoot.ID,
 			target:  enteChildProp.ID,
+			targets: entity.SchEnteProp,
 			status:  nethttp.StatusOK,
 			resBody: fmt.Sprintf(`{"name":"nameep","propertyId":"%s","category":false}`, enteChildProp.ID.String()),
 			typep:   entity.Integer,
@@ -480,7 +483,7 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 		}
 		if err != nil {
 			assert.Error(t, err)
-			return
+			continue
 		}
 
 		assert.Contains(t, rec.Body.String(), tt.resBody, tt.name)
@@ -489,9 +492,12 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, tt.typep, catp.Type, tt.name)
 		}
-		found, err := mng.Store().Exists(context.TODO(), storage.DLRKey(tt.target.String(), tt.source.String()))
+		found, err := mng.Store().Exists(
+			context.TODO(),
+			storage.DLRKey(entity.Key(tt.targets, tt.target),
+				entity.CatPropKey(tt.source)))
 		if assert.NoError(t, err) {
-			assert.True(t, found, "Getting DLR")
+			assert.True(t, found, strings.Concat(tt.name, "Getting DLR"))
 		}
 	}
 }
@@ -725,7 +731,7 @@ func TestCategoryHandler_GetProp(t *testing.T) {
 						rec.Body.String(),
 						fmt.Sprintf(
 							`"name":"namep","description":"descp","categoryId":"%s","type":1`,
-							prop.ParentKey()),
+							prop.CatID),
 						"Get property of the category")
 				}
 				assert.Equal(t, tt.status, rec.Code, "Http status")

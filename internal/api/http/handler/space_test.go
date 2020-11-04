@@ -238,7 +238,7 @@ func TestSpaceHandler_Get(t *testing.T) {
 						rec.Body.String(),
 						fmt.Sprintf(
 							`"name":"name","description":"desc","instanceId":"%s"`,
-							space.ParentKey()),
+							space.InstID),
 						strings.Concat(tt.name, "Get space"))
 				}
 				assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
@@ -287,7 +287,7 @@ func TestSpaceHandler_ListEntes(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","enteId":"%s"}]`, ente.Key()),
+				fmt.Sprintf(`[{"name":"name","enteId":"%s"}]`, ente.ID),
 				"List entes")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}
@@ -334,7 +334,7 @@ func TestSpaceHandler_ListCategories(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"name","categoryId":"%s"}]`, ente.Key()),
+				fmt.Sprintf(`[{"name":"name","categoryId":"%s"}]`, ente.ID),
 				"List categories")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}

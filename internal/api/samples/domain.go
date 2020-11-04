@@ -25,6 +25,7 @@ import (
 
 type EntityMock struct {
 	entity.Descriptor
+	scheme string
 }
 
 func NewEM() EntityMock {
@@ -38,12 +39,13 @@ func (e EntityMock) ToString() string {
 }
 
 func (e EntityMock) Key() string {
-	return e.ID.String()
+	return strings.Concat(e.scheme, e.ID.String())
 }
 
-func CreateEntityMock(mng storage.Integration) (EntityMock, error) {
+func CreateEntityMock(mng storage.Integration, scheme string) (EntityMock, error) {
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	e := NewEM()
+	e.scheme = scheme
 	e.Name = "name"
 	e.Desc = "desc"
 	_, err := crudOper.Put("loc", cnt.StoreWithTimeout, &e)

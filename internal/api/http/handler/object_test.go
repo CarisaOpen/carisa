@@ -21,6 +21,8 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	"github.com/carisa/internal/api/entity"
+
 	osamples "github.com/carisa/internal/api/object/samples"
 
 	"github.com/carisa/internal/api/samples"
@@ -41,13 +43,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const cntParamID = "containerid"
+
 func TestObjectHandler_Create(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, _, mng := newObjectHandlerFaked(t)
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	container, err := samples.CreateEntityMock(mng)
+	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		assert.Error(t, err, "Creating container")
 		return
@@ -90,6 +94,8 @@ func TestObjectHandler_Create(t *testing.T) {
 		},
 	}
 
+	params := map[string]string{cntParamID: xid.NilID().String()}
+
 	for _, pc := range plugins {
 		_, err := psamples.CreatePlugin(mng, pc, protoID)
 		if err != nil {
@@ -98,8 +104,8 @@ func TestObjectHandler_Create(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", strings.Concat("{", tt.body, "}"), nil, nil)
-			err := handlers.ObjectHandler.Create(ctx, pc)
+			rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", strings.Concat("{", tt.body, "}"), params, nil)
+			err := handlers.ObjectHandler.Create(ctx, cntParamID, entity.SchCategory, pc)
 
 			if err != nil && tt.status == err.(*echo.HTTPError).Code {
 				assert.Equal(t, tt.errmsg, err.Error(), strings.Concat(tt.name, "Error message"))
@@ -107,8 +113,9 @@ func TestObjectHandler_Create(t *testing.T) {
 			}
 			if err != nil {
 				assert.Error(t, err, "Error creating")
+				continue
 			}
-			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, strings.Concat(tt.name, "Http status")))
+			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
 			if rec.Code != nethttp.StatusCreated {
 				continue
 			}
@@ -118,7 +125,38 @@ func TestObjectHandler_Create(t *testing.T) {
 }
 
 func TestObjectHandler_CreateWithError(t *testing.T) {
-	tests := tsamples.TestCreateWithError("CreateWithRel")
+	tests := []struct {
+		Name     string
+		Params   map[string]string
+		Body     string
+		MockOper func(txn *storage.ErrMockCRUDOper)
+		Status   int
+	}{
+		{
+			Name:   "Body wrong. Bad request",
+			Params: map[string]string{cntParamID: xid.New().String()},
+			Body:   "{df",
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "Descriptor validation. Bad request",
+			Params: map[string]string{cntParamID: xid.New().String()},
+			Body:   `{"Name":"","description":"desc"}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:     "Creating the entity. Error creating",
+			Params:   map[string]string{cntParamID: xid.New().String()},
+			Body:     `{"Name":"Name","description":"desc"}`,
+			MockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("CreateWithRel") },
+			Status:   nethttp.StatusInternalServerError,
+		},
+		{
+			Name:   "Getting container identifier. Bad request",
+			Params: map[string]string{"i": xid.New().String()},
+			Status: nethttp.StatusBadRequest,
+		},
+	}
 
 	plugins := plugin.Plugins()
 
@@ -131,8 +169,8 @@ func TestObjectHandler_CreateWithError(t *testing.T) {
 			if tt.MockOper != nil {
 				tt.MockOper(crud)
 			}
-			_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", tt.Body, nil, nil)
-			err := handlers.ObjectHandler.Create(ctx, pc)
+			_, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", tt.Body, tt.Params, nil)
+			err := handlers.ObjectHandler.Create(ctx, cntParamID, entity.SchCategory, pc)
 
 			assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
 			assert.Error(t, err, tt.Name)
@@ -146,7 +184,7 @@ func TestObjectHandler_Put(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	container, err := samples.CreateEntityMock(mng)
+	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		assert.Error(t, err, "Creating container")
 		return
@@ -155,14 +193,18 @@ func TestObjectHandler_Put(t *testing.T) {
 	plugins := plugin.Plugins()
 	protoID := xid.New()
 
+	id := xid.New().String()
+
 	tests := []struct {
 		name   string
+		Params map[string]string
 		body   string
 		status int
 		errmsg string
 	}{
 		{
-			name: "Creating object instance. Prototype not found.",
+			name:   "Creating object instance. Prototype not found.",
+			Params: map[string]string{"id": xid.New().String(), cntParamID: container.ID.String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				container.ID.String(),
@@ -171,7 +213,8 @@ func TestObjectHandler_Put(t *testing.T) {
 			errmsg: "code=404, message=[the plugin prototype not found]",
 		},
 		{
-			name: "Creating object instance. Container not found.",
+			name:   "Creating object instance. Container not found.",
+			Params: map[string]string{"id": xid.New().String(), cntParamID: xid.New().String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				xid.NilID(),
@@ -180,7 +223,8 @@ func TestObjectHandler_Put(t *testing.T) {
 			errmsg: "code=404, message=[container not found]",
 		},
 		{
-			name: "Creating object instance.",
+			name:   "Creating object instance.",
+			Params: map[string]string{"id": id, cntParamID: container.ID.String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				container.ID.String(),
@@ -188,7 +232,8 @@ func TestObjectHandler_Put(t *testing.T) {
 			status: nethttp.StatusCreated,
 		},
 		{
-			name: "Updating object instance.",
+			name:   "Updating object instance.",
+			Params: map[string]string{"id": id, cntParamID: container.ID.String()},
 			body: fmt.Sprintf(
 				`"name":"name1","description":"desc1","containerId":"%s","prototypeId":"%s"`,
 				container.ID.String(),
@@ -203,16 +248,15 @@ func TestObjectHandler_Put(t *testing.T) {
 			assert.Error(t, err, "Creating plugin")
 			return
 		}
-		params := map[string]string{"id": xid.NilID().String()}
 
 		for _, tt := range tests {
 			rec, ctx := h.NewHTTP(
 				nethttp.MethodPut,
 				"/api/objects",
 				strings.Concat("{", tt.body, "}"),
-				params,
+				tt.Params,
 				nil)
-			err := handlers.ObjectHandler.Put(ctx, pc)
+			err := handlers.ObjectHandler.Put(ctx, cntParamID, entity.SchCategory, pc)
 
 			if err != nil && tt.status == err.(*echo.HTTPError).Code {
 				assert.Equal(t, tt.errmsg, err.Error(), strings.Concat(tt.name, "Error message"))
@@ -235,8 +279,46 @@ func TestObjectHandler_PutWithError(t *testing.T) {
 
 	plugins := plugin.Plugins()
 
-	params := map[string]string{"id": xid.NilID().String()}
-	tests := tsamples.TestPutWithError("PutWithRel", params)
+	params := map[string]string{"id": xid.NilID().String(), cntParamID: xid.NilID().String()}
+	tests := []struct {
+		Name     string
+		Params   map[string]string
+		Body     string
+		MockOper func(txn *storage.ErrMockCRUDOper)
+		Status   int
+	}{
+		{
+			Name:   "Body wrong. Bad request",
+			Params: params,
+			Body:   "{df",
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "ID validation. Bad request",
+			Params: map[string]string{"i": "", cntParamID: xid.NilID().String()},
+			Body:   `{"Name":"Name","description":"desc"}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "Getting container identifier. Bad request",
+			Params: map[string]string{"id": xid.NilID().String(), "i": xid.NilID().String()},
+			Body:   `{"Name":"Name","description":"desc"}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:   "Descriptor validation. Bad request",
+			Params: params,
+			Body:   `{"Name":"Name","description":""}`,
+			Status: nethttp.StatusBadRequest,
+		},
+		{
+			Name:     "Putting the entity. Error putting",
+			Params:   params,
+			Body:     `{"Name":"Name","description":"desc"}`,
+			MockOper: func(s *storage.ErrMockCRUDOper) { s.Activate("PutWithRel") },
+			Status:   nethttp.StatusInternalServerError,
+		},
+	}
 
 	for _, pc := range plugins {
 		for _, tt := range tests {
@@ -244,7 +326,7 @@ func TestObjectHandler_PutWithError(t *testing.T) {
 				tt.MockOper(crud)
 			}
 			_, ctx := h.NewHTTP(nethttp.MethodPut, "/api/objects", tt.Body, tt.Params, nil)
-			err := handlers.ObjectHandler.Put(ctx, pc)
+			err := handlers.ObjectHandler.Put(ctx, cntParamID, entity.SchCategory, pc)
 
 			assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
 			assert.Error(t, err, tt.Name)
@@ -257,7 +339,7 @@ func TestObjectHandler_Get(t *testing.T) {
 	defer mng.Close()
 	defer h.Close(cnt.Log)
 
-	container, err := samples.CreateEntityMock(mng)
+	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		assert.Error(t, err, "Creating container")
 		return
@@ -271,12 +353,12 @@ func TestObjectHandler_Get(t *testing.T) {
 		status int
 	}{
 		{
-			name:   "Finding inst. Ok",
+			name:   "Finding inst. Ok.",
 			params: map[string]string{"id": instID.String()},
 			status: nethttp.StatusOK,
 		},
 		{
-			name:   "Finding inst. Not found",
+			name:   "Finding inst. Not found.",
 			params: map[string]string{"id": xid.NilID().String()},
 			status: nethttp.StatusNotFound,
 		},
@@ -296,6 +378,7 @@ func TestObjectHandler_Get(t *testing.T) {
 		inst.ID = instID
 		inst.Name = "iname"
 		inst.Desc = "idesc"
+		inst.SchContainer = entity.SchCategory
 		inst.ContainerID = container.ID
 		inst.ProtoID = protoID
 		_, _, _, err = srv.Put(&inst)
@@ -314,7 +397,7 @@ func TestObjectHandler_Get(t *testing.T) {
 						t,
 						rec.Body.String(),
 						`"name":"iname","description":"idesc"`,
-						"Get instance")
+						strings.Concat(tt.name, "Get instance"))
 				}
 				assert.Equal(t, tt.status, rec.Code, "Http status")
 			}
@@ -350,7 +433,7 @@ func TestObjectHandler_ListQueries(t *testing.T) {
 	plugins := plugin.Plugins()
 
 	for _, pc := range plugins {
-		_, prop, err := osamples.CreateLink(mng, xid.NilID(), pc)
+		_, prop, err := osamples.CreateLink(mng, xid.NilID(), entity.SchCategory, pc)
 
 		if assert.NoError(t, err) {
 			rec, ctx := h.NewHTTP(
@@ -360,12 +443,12 @@ func TestObjectHandler_ListQueries(t *testing.T) {
 				map[string]string{"id": xid.NilID().String()},
 				map[string]string{"sname": "name"})
 
-			err := handlers.ObjectHandler.ListInstances(ctx, pc)
+			err := handlers.ObjectHandler.ListInstances(ctx, entity.SchCategory, pc)
 			if assert.NoError(t, err) {
 				assert.Contains(
 					t,
 					rec.Body.String(),
-					fmt.Sprintf(`[{"name":"name","instanceId":"%s","category":"%s"}]`, prop.Key(), string(pc)),
+					fmt.Sprintf(`[{"name":"name","instanceId":"%s","category":"%s"}]`, prop.ID, string(pc)),
 					"List categories of the space")
 				assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 			}

@@ -34,7 +34,7 @@ func TestInstance_ToString(t *testing.T) {
 
 func TestInstance_Key(t *testing.T) {
 	i := New()
-	assert.Equal(t, i.ID.String(), i.Key())
+	assert.Equal(t, entity.InstKey(i.ID), i.Key())
 }
 
 func TestInstnace_Nominative(t *testing.T) {

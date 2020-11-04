@@ -19,6 +19,8 @@ package handler
 import (
 	nethttp "net/http"
 
+	"github.com/rs/xid"
+
 	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/internal/api/object"
@@ -50,38 +52,47 @@ func NewObjectHandle(srv object.Service, cnt *runtime.Container) Object {
 }
 
 // Create creates the object instance
-func (o *Object) Create(c httpc.Context, category plugin.Category) error {
-	inst := object.Instance{}
-	if err := bind(c, locObject, o.cnt.Log, &inst); err != nil {
+func (o *Object) Create(c httpc.Context, cntParam string, schContainer string, category plugin.Category) error {
+	cntID, err := convert.ParamXID(c, cntParam)
+	if err != nil {
 		return err
 	}
-	inst.Category = category
+
+	inst, err := o.bindInstance(c, category, cntID, schContainer)
+	if err != nil {
+		return err
+	}
 
 	created, foundp, foundc, err := o.srv.Create(&inst)
+	if err != nil {
+		return c.HTTPError(nethttp.StatusInternalServerError, "it was impossible to create the instance")
+	}
 	if !foundp {
 		return c.HTTPError(nethttp.StatusNotFound, "the plugin prototype not found")
 	}
-	if err = errCRUDSrv(c, err, "it was impossible to create the instance", "container not found", foundc); err != nil {
-		return err
+	if !foundc {
+		return c.HTTPError(nethttp.StatusNotFound, "container not found")
 	}
-
 	return c.JSON(http.CreateStatus(created), inst)
 }
 
 // Put creates or update the object instance
-func (o *Object) Put(c httpc.Context, category plugin.Category) error {
+func (o *Object) Put(c httpc.Context, cntParam string, schContainer string, category plugin.Category) error {
+	cntID, err := convert.ParamXID(c, cntParam)
+	if err != nil {
+		return err
+	}
 	id, err := convert.ParamID(c)
 	if err != nil {
 		return err
 	}
 
-	inst := object.Instance{}
-	if err := bind(c, locObject, o.cnt.Log, &inst); err != nil {
+	inst, err := o.bindInstance(c, category, cntID, schContainer)
+	if err != nil {
 		return err
 	}
-	inst.Category = category
-
 	inst.ID = id
+
 	updated, foundp, foundc, err := o.srv.Put(&inst)
 	if !foundp {
 		return c.HTTPError(nethttp.StatusNotFound, "the plugin prototype not found")
@@ -92,6 +103,22 @@ func (o *Object) Put(c httpc.Context, category plugin.Category) error {
 	}
 
 	return c.JSON(http.PutStatus(updated), inst)
+}
+
+func (o *Object) bindInstance(
+	c httpc.Context,
+	category plugin.Category,
+	cntID xid.ID,
+	schContainer string) (object.Instance, error) {
+	//
+	inst := object.Instance{}
+	if err := bind(c, locObject, o.cnt.Log, &inst); err != nil {
+		return object.Instance{}, err
+	}
+	inst.Category = category
+	inst.ContainerID = cntID
+	inst.SchContainer = schContainer
+	return inst, nil
 }
 
 // Get gets the object instance by ID
@@ -114,13 +141,13 @@ func (o *Object) Get(c httpc.Context) error {
 // ListInstances list child queries by ID and return top queries.
 // If sname query param is not empty, is filtered by categories which name starts by name parameter
 // If gtname query param is not empty, is filtered by categories which name is greater than name parameter
-func (o *Object) ListInstances(ctx httpc.Context, category plugin.Category) error {
+func (o *Object) ListInstances(ctx httpc.Context, schContainer string, category plugin.Category) error {
 	id, name, top, ranges, err := convert.FilterLink(ctx, false)
 	if err != nil {
 		return err
 	}
 
-	props, err := o.srv.ListInstances(id, category, name, ranges, top)
+	props, err := o.srv.ListInstances(schContainer, id, category, name, ranges, top)
 	if err != nil {
 		return ctx.HTTPError(
 			nethttp.StatusInternalServerError,

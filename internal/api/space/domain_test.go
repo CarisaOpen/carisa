@@ -39,10 +39,10 @@ func TestSpace_ToString(t *testing.T) {
 
 func TestSpace_Key(t *testing.T) {
 	s := New()
-	assert.Equal(t, s.ID.String(), s.Key())
+	assert.Equal(t, entity.SpaceKey(s.ID), s.Key())
 }
 
-func TestEnte_Nominative(t *testing.T) {
+func TestSpace_Nominative(t *testing.T) {
 	s := Space{}
 	assert.Equal(t, entity.Descriptor{}, s.Nominative())
 }
@@ -50,7 +50,7 @@ func TestEnte_Nominative(t *testing.T) {
 func TestSpace_ParentKey(t *testing.T) {
 	s := New()
 	s.InstID = xid.New()
-	assert.Equal(t, s.InstID.String(), s.ParentKey())
+	assert.Equal(t, entity.InstKey(s.InstID), s.ParentKey())
 }
 
 func TestSpace_Empty(t *testing.T) {
@@ -63,7 +63,7 @@ func TestSpace_Link(t *testing.T) {
 	s.InstID = xid.New()
 
 	link := relation.InstSpace{
-		ID:      strings.Concat(s.InstID.String(), relation.InstSpaceLn, s.Name, s.Key()),
+		ID:      strings.Concat(entity.InstKey(s.InstID), relation.InstSpaceLn, s.Name, s.Key()),
 		Name:    s.Name,
 		SpaceID: s.ID.String(),
 	}
@@ -78,16 +78,16 @@ func TestSpace_LinkName(t *testing.T) {
 
 func TestSpace_ReLink(t *testing.T) {
 	c := New()
-	parentID := xid.New().String()
+	parentID := xid.New()
 
 	link := relation.InstSpace{
-		ID:      strings.Concat(parentID, relation.InstSpaceLn, c.Name, c.Key()),
+		ID:      strings.Concat(entity.InstKey(parentID), relation.InstSpaceLn, c.Name, c.Key()),
 		Name:    c.Name,
 		SpaceID: c.ID.String(),
 	}
 
 	dlr := storage.DLRel{
-		ParentID: parentID,
+		ParentID: entity.InstKey(parentID),
 		Type:     relation.InstSpaceLn,
 	}
 	assert.Equal(t, &link, c.ReLink(dlr))

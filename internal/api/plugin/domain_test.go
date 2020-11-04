@@ -34,7 +34,7 @@ func TestPrototype_ToString(t *testing.T) {
 
 func TestPrototype_Key(t *testing.T) {
 	p := New()
-	assert.Equal(t, p.ID.String(), p.Key())
+	assert.Equal(t, entity.PluginKey(p.ID), p.Key())
 }
 
 func TestPrototype_Nominative(t *testing.T) {
@@ -64,7 +64,7 @@ func TestPrototype_Link(t *testing.T) {
 		Category: Query,
 	}
 	link := &relation.PlatformPlugin{
-		ID:       strings.Concat(storage.Virtual, plugin, string(Query), name, id.String()),
+		ID:       strings.Concat(storage.Virtual, string(Query), name, entity.PluginKey(id)),
 		Name:     name,
 		ProtoID:  id.String(),
 		Category: "query",
@@ -90,7 +90,7 @@ func TestPrototype_ReLink(t *testing.T) {
 		Category: Query,
 	}
 	link := &relation.PlatformPlugin{
-		ID:       strings.Concat(storage.Virtual, plugin, string(Query), name, id.String()),
+		ID:       strings.Concat(storage.Virtual, string(Query), name, entity.PluginKey(id)),
 		Name:     name,
 		ProtoID:  id.String(),
 		Category: "query",

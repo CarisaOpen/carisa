@@ -17,11 +17,13 @@
 package plugin
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/internal/api/service"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
 	"github.com/rs/xid"
 )
 
@@ -61,7 +63,7 @@ func (s *Service) Put(proto *Prototype) (bool, error) {
 // Get gets the plugin from storage
 func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), proto)
+	ok, err := s.crud.Store().Get(ctx, entity.PluginKey(id), proto)
 	cancel()
 	return ok, err
 }
@@ -69,7 +71,7 @@ func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 // Exists checks if the plugin exists
 func (s *Service) Exists(id xid.ID) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	found, err := s.crud.Store().Exists(ctx, id.String())
+	found, err := s.crud.Store().Exists(ctx, entity.PluginKey(id))
 	if err != nil {
 		return false,
 			s.cnt.Log.ErrWrap1(
@@ -87,7 +89,7 @@ func (s *Service) Exists(id xid.ID) (bool, error) {
 func (s *Service) ListPlugins(cat Category, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
 		storage.Virtual,
-		sound(string(cat), name),
+		strings.Concat(string(cat), name),
 		ranges,
 		top,
 		func() storage.Entity { return &relation.PlatformPlugin{} })

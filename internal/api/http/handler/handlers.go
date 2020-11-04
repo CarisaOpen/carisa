@@ -17,10 +17,14 @@
 package handler
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/plugin"
 	echoc "github.com/carisa/pkg/http/echo"
 	"github.com/labstack/echo/v4"
 )
+
+const enteParamID = "enteid"
+const catParamID = "categoryid"
 
 // Handlers is a handlers container
 type Handlers struct {
@@ -91,6 +95,18 @@ func (h *Handlers) EnteLinkToCat(ctx echo.Context) error {
 	return h.EnteHandler.LinkToCat(echoc.NewContext(ctx))
 }
 
+func (h *Handlers) EnteQryCreate(ctx echo.Context) error {
+	return h.ObjectHandler.Create(echoc.NewContext(ctx), enteParamID, entity.SchEnte, plugin.Query)
+}
+
+func (h *Handlers) EnteQryPut(ctx echo.Context) error {
+	return h.ObjectHandler.Put(echoc.NewContext(ctx), enteParamID, entity.SchEnte, plugin.Query)
+}
+
+func (h *Handlers) EnteListQueries(ctx echo.Context) error {
+	return h.ObjectHandler.ListInstances(echoc.NewContext(ctx), entity.SchEnte, plugin.Query)
+}
+
 func (h *Handlers) EnteCreateProp(ctx echo.Context) error {
 	return h.EnteHandler.CreateProp(echoc.NewContext(ctx))
 }
@@ -122,6 +138,18 @@ func (h *Handlers) CatListCategories(ctx echo.Context) error {
 
 func (h *Handlers) CatListProps(ctx echo.Context) error {
 	return h.CategoryHandler.ListProps(echoc.NewContext(ctx))
+}
+
+func (h *Handlers) CatQryCreate(ctx echo.Context) error {
+	return h.ObjectHandler.Create(echoc.NewContext(ctx), catParamID, entity.SchCategory, plugin.Query)
+}
+
+func (h *Handlers) CatQryPut(ctx echo.Context) error {
+	return h.ObjectHandler.Put(echoc.NewContext(ctx), catParamID, entity.SchCategory, plugin.Query)
+}
+
+func (h *Handlers) CatListQueries(ctx echo.Context) error {
+	return h.ObjectHandler.ListInstances(echoc.NewContext(ctx), entity.SchCategory, plugin.Query)
 }
 
 func (h *Handlers) CatGetProp(ctx echo.Context) error {
@@ -158,18 +186,6 @@ func (h *Handlers) PluginQryListPlugins(ctx echo.Context) error {
 }
 
 // Query object instance
-func (h *Handlers) InstQryCreate(ctx echo.Context) error {
-	return h.ObjectHandler.Create(echoc.NewContext(ctx), plugin.Query)
-}
-
-func (h *Handlers) InstQryPut(ctx echo.Context) error {
-	return h.ObjectHandler.Put(echoc.NewContext(ctx), plugin.Query)
-}
-
 func (h *Handlers) InstQryGet(ctx echo.Context) error {
 	return h.ObjectHandler.Get(echoc.NewContext(ctx))
-}
-
-func (h *Handlers) InstQryListQueries(ctx echo.Context) error {
-	return h.ObjectHandler.ListInstances(echoc.NewContext(ctx), plugin.Query)
 }

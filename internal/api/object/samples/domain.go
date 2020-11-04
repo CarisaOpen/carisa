@@ -24,11 +24,17 @@ import (
 	"github.com/rs/xid"
 )
 
-func CreateLink(mng storage.Integration, cntID xid.ID, cat plugin.Category) (storage.Entity, object.Instance, error) {
+func CreateLink(
+	mng storage.Integration,
+	cntID xid.ID,
+	scheme string,
+	cat plugin.Category) (storage.Entity, object.Instance, error) {
+	//
 	cnt, crudOper := mock.NewCrudOperFaked(mng)
 	o := object.New()
 	o.Name = "name"
 	o.Desc = "desc"
+	o.SchContainer = scheme
 	o.ContainerID = cntID
 	o.Category = cat
 	link := o.Link()

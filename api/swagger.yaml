@@ -458,6 +458,37 @@ paths:
         "500":
           description: "Internal server error"
   /entes/{id}/queries:
+    post:
+      tags:
+        - "ente"
+      summary: "Add a new query to the ente. View queryinstance description"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added to the ente"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "302":
+          description: "Query found"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
     get:
       tags:
         - "ente"
@@ -494,6 +525,45 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/InstanceLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /entes/{enteid}/queries/{id}:
+    put:
+      tags:
+        - "ente"
+      summary: "If the query ID exists is updated otherwise is added. View queryinstance description"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "enteid"
+          description: "Ente identifier"
+          type: string
+          required: true
+        - in: "path"
+          name: "id"
+          description: "Query identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added or updated to the ente"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "200":
+          description: "Query updated"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
         "400":
           description: "Invalid input"
         "500":
@@ -787,7 +857,38 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /categories/{id}/queries:
+  /categories/:{id}/queries:
+    post:
+      tags:
+        - "category"
+      summary: "Add a new query to the category. View queryinstance description"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added to the category"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "302":
+          description: "Query found"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
     get:
       tags:
         - "category"
@@ -824,6 +925,45 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/InstanceLink"
+        "400":
+          description: "Invalid input"
+        "500":
+          description: "Internal server error"
+  /categories/{categoryid}/queries/{id}:
+    put:
+      tags:
+        - "category"
+      summary: "If the query ID exists is updated otherwise is added. View queryinstance description"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "categoryid"
+          description: "Category identifier"
+          type: string
+          required: true
+        - in: "path"
+          name: "id"
+          description: "Query identifier"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Query object that needs to be added or updated to the category"
+          required: true
+          schema:
+            $ref: "#/definitions/PluginInstanceReq"
+      responses:
+        "200":
+          description: "Query updated"
+          schema:
+            $ref: "#/definitions/PluginInstance"
+        "201":
+          description: "Query created"
+          schema:
+            $ref: "#/definitions/PluginInstance"
         "400":
           description: "Invalid input"
         "500":
@@ -1069,67 +1209,7 @@ paths:
           description: "Invalid input"
         "500":
           description: "Internal server error"
-  /queries:
-    post:
-      tags:
-        - "queryinstance"
-      summary: "Add a new query to the category or ente"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "Query object that needs to be added to the category or ente"
-          required: true
-          schema:
-            $ref: "#/definitions/PluginInstanceReq"
-      responses:
-        "201":
-          description: "Query created"
-          schema:
-            $ref: "#/definitions/PluginInstance"
-        "302":
-          description: "Query found"
-        "400":
-          description: "Invalid input"
-        "500":
-          description: "Internal server error"
   /queries/{id}:
-    put:
-      tags:
-        - "queryinstance"
-      summary: "If the query ID exists is updated otherwise is added."
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "path"
-          name: "id"
-          description: "Query identifier"
-          type: string
-          required: true
-        - in: "body"
-          name: "body"
-          description: "Query object that needs to be added or updated to the category or ente"
-          required: true
-          schema:
-            $ref: "#/definitions/PluginInstanceReq"
-      responses:
-        "200":
-          description: "Query updated"
-          schema:
-            $ref: "#/definitions/PluginInstance"
-        "201":
-          description: "Query created"
-          schema:
-            $ref: "#/definitions/PluginInstance"
-        "400":
-          description: "Invalid input"
-        "500":
-          description: "Internal server error"
     get:
       tags:
         - "queryinstance"

@@ -36,7 +36,7 @@ func TestInstance_ToString(t *testing.T) {
 
 func TestInstance_Key(t *testing.T) {
 	i := New()
-	assert.Equal(t, i.ID.String(), i.Key())
+	assert.Equal(t, entity.ObjectKey(i.ID), i.Key())
 }
 
 func TestInstance_Nominative(t *testing.T) {
@@ -46,7 +46,8 @@ func TestInstance_Nominative(t *testing.T) {
 
 func TestInstance_ParentKey(t *testing.T) {
 	i := New()
-	assert.Equal(t, i.ContainerID.String(), i.ParentKey())
+	i.SchContainer = entity.SchCategory
+	assert.Equal(t, entity.Key(entity.SchCategory, i.ContainerID), i.ParentKey())
 }
 
 func TestInstance_Empty(t *testing.T) {
@@ -64,11 +65,12 @@ func TestInstance_Link(t *testing.T) {
 			ID:   id,
 			Name: name,
 		},
-		ContainerID: containerID,
-		Category:    plugin.Query,
+		SchContainer: entity.SchCategory,
+		ContainerID:  containerID,
+		Category:     plugin.Query,
 	}
 	link := &relation.PlatformInstance{
-		ID:       strings.Concat(containerID.String(), string(plugin.Query), name, id.String()),
+		ID:       strings.Concat(entity.Key(entity.SchCategory, containerID), string(plugin.Query), name, entity.ObjectKey(id)),
 		Name:     name,
 		InstID:   id.String(),
 		Category: "query",
@@ -87,23 +89,25 @@ func TestInstance_ReLink(t *testing.T) {
 
 	id := xid.New()
 	containerID := xid.New()
+	containerKey := entity.Key(entity.SchCategory, containerID)
 	proto := Instance{
 		Descriptor: entity.Descriptor{
 			ID:   id,
 			Name: name,
 		},
-		ContainerID: containerID,
-		Category:    plugin.Query,
+		SchContainer: entity.SchCategory,
+		ContainerID:  containerID,
+		Category:     plugin.Query,
 	}
 	link := &relation.PlatformInstance{
-		ID:       strings.Concat(containerID.String(), string(plugin.Query), name, id.String()),
+		ID:       strings.Concat(containerKey, string(plugin.Query), name, entity.ObjectKey(id)),
 		Name:     name,
 		InstID:   id.String(),
 		Category: "query",
 	}
 
 	dlr := storage.DLRel{
-		ParentID: containerID.String(),
+		ParentID: containerKey,
 		Type:     string(plugin.Query),
 	}
 

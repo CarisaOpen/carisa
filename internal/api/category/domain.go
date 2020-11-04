@@ -44,7 +44,7 @@ func (c *Category) ToString() string {
 }
 
 func (c *Category) Key() string {
-	return c.ID.String()
+	return entity.CategoryKey(c.ID)
 }
 
 func (c *Category) Nominative() entity.Descriptor {
@@ -56,13 +56,16 @@ func (c *Category) RelName() string {
 }
 
 func (c *Category) ParentKey() string {
-	return c.ParentID.String()
+	if c.Root {
+		return entity.SpaceKey(c.ParentID)
+	}
+	return entity.CategoryKey(c.ParentID)
 }
 
-// Link gets the link between category and space, if the Root field is true
-// If the Root field is false gets the link between category and others category or cat
+// Link gets the link between category and space if the Root field is true
+// If the Root field is false gets the link between category and others category
 func (c *Category) Link() storage.Entity {
-	return c.link(c.Root, c.ParentID.String())
+	return c.link(c.Root, c.ParentKey())
 }
 
 func (c *Category) LinkName() string {
@@ -85,13 +88,13 @@ func (c *Category) link(root bool, parentID string) storage.Entity {
 		return &relation.SpaceCategory{
 			ID:    strings.Concat(parentID, relation.SpaceCatLn, c.Name, c.Key()),
 			Name:  c.Name,
-			CatID: c.Key(),
+			CatID: c.ID.String(),
 		}
 	}
 	return &relation.Hierarchy{
 		ID:       strings.Concat(parentID, c.Name, c.Key()),
 		Name:     c.Name,
-		LinkID:   c.Key(),
+		LinkID:   c.ID.String(),
 		Category: true,
 	}
 }
@@ -108,7 +111,7 @@ type Prop struct {
 	entity.Descriptor
 	CatID     xid.ID          `json:"categoryId"` // Category container
 	Type      entity.TypeProp `json:"type"`
-	catPropID string          // Is used temporarily to connect the property and the category property.
+	catPropID xid.ID          // Is used temporarily to connect the property and the category property.
 }
 
 func NewProp() Prop {
@@ -127,7 +130,7 @@ func (c *Prop) ToString() string {
 }
 
 func (c *Prop) Key() string {
-	return c.ID.String()
+	return entity.CatPropKey(c.ID)
 }
 
 func (c *Prop) Nominative() entity.Descriptor {
@@ -138,30 +141,24 @@ func (c *Prop) RelName() string {
 	return c.Name
 }
 
-// ParentKey gets the Ente ID
 func (c *Prop) ParentKey() string {
-	return c.parentID()
-}
-
-// Link gets the link between Category and her properties
-func (c *Prop) Link() storage.Entity {
-	catProp := true
-	if len(c.catPropID) == 0 {
-		catProp = false
-	}
-	return c.link(catProp, c.parentID())
-}
-
-func (c *Prop) parentID() string {
-	parentID := c.catPropID
-	if len(c.catPropID) == 0 {
-		parentID = c.CatID.String()
+	parentID := entity.CatPropKey(c.catPropID)
+	if c.catPropID.IsNil() {
+		parentID = entity.CategoryKey(c.CatID)
 	}
 	return parentID
 }
 
+func (c *Prop) Link() storage.Entity {
+	catProp := true
+	if c.catPropID.IsNil() {
+		catProp = false
+	}
+	return c.link(catProp, c.ParentKey())
+}
+
 func (c *Prop) LinkName() string {
-	if len(c.catPropID) == 0 {
+	if c.catPropID.IsNil() {
 		return relation.CatPropLn
 	}
 	return relation.CatPropPropLn
@@ -180,14 +177,14 @@ func (c *Prop) link(catProp bool, parentID string) storage.Entity {
 		return &relation.CatPropProp{
 			ID:       strings.Concat(parentID, c.Name, c.Key()),
 			Name:     c.Name,
-			PropID:   c.Key(),
+			PropID:   c.ID.String(),
 			Category: true,
 		}
 	}
 	return &relation.CategoryProp{
 		ID:        strings.Concat(parentID, relation.CatPropLn, c.Name, c.Key()),
 		Name:      c.Name,
-		CatPropID: c.Key(),
+		CatPropID: c.ID.String(),
 	}
 }
 

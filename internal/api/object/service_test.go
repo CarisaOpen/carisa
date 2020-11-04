@@ -72,7 +72,7 @@ func TestObjectService_Put(t *testing.T) {
 	if err != nil {
 		assert.Error(t, err, "Creating plugin")
 	}
-	container, err := samples.CreateEntityMock(mng)
+	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		assert.Error(t, err, "Creating container")
 	}
@@ -83,7 +83,7 @@ func TestObjectService_Put(t *testing.T) {
 		inst    *Instance
 	}{
 		{
-			name:    "Creating Instance",
+			name:    "Creating Instance.",
 			updated: false,
 			inst: &Instance{
 				Descriptor: entity.Descriptor{
@@ -91,12 +91,13 @@ func TestObjectService_Put(t *testing.T) {
 					Name: "name",
 					Desc: "desc",
 				},
-				ProtoID:     proto.ID,
-				ContainerID: container.ID,
+				ProtoID:      proto.ID,
+				SchContainer: entity.SchCategory,
+				ContainerID:  container.ID,
 			},
 		},
 		{
-			name:    "Updating Instance",
+			name:    "Updating Instance.",
 			updated: true,
 			inst: &Instance{
 				Descriptor: entity.Descriptor{
@@ -104,7 +105,8 @@ func TestObjectService_Put(t *testing.T) {
 					Name: "name",
 					Desc: "desc",
 				},
-				ContainerID: container.ID,
+				SchContainer: entity.SchCategory,
+				ContainerID:  container.ID,
 			},
 		},
 	}
@@ -113,8 +115,8 @@ func TestObjectService_Put(t *testing.T) {
 		updated, foundp, foundc, err := srv.Put(tt.inst)
 		if assert.NoError(t, err) {
 			assert.Equal(t, updated, tt.updated, strings.Concat(tt.name, "Instance updated"))
-			assert.True(t, foundp, strings.Concat(tt.name, "Plugin found"))
-			assert.True(t, foundc, strings.Concat(tt.name, "Container found"))
+			assert.True(t, foundp, strings.Concat(tt.name, "Seeking plugin"))
+			assert.True(t, foundc, strings.Concat(tt.name, "Seeking container"))
 			checkInst(t, srv, tt.name, *tt.inst)
 		}
 	}
@@ -162,6 +164,7 @@ func TestObjectService_ListQueries(t *testing.T) {
 
 	id := xid.New()
 	inst := New()
+	inst.SchContainer = entity.SchCategory
 	inst.ContainerID = id
 	inst.Category = plugin.Query
 	inst.Name = "namei"
@@ -174,7 +177,7 @@ func TestObjectService_ListQueries(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		list, err := s.ListInstances(id, plugin.Query, "namei", tt.Ranges, 2)
+		list, err := s.ListInstances(inst.SchContainer, id, plugin.Query, "namei", tt.Ranges, 2)
 		if assert.NoError(t, err, tt.Name) {
 			assert.Equalf(t, link, list[0], "Ranges: %v", tt.Name)
 		}
@@ -182,13 +185,14 @@ func TestObjectService_ListQueries(t *testing.T) {
 }
 
 func instance(mng storage.Integration, proto plugin.Prototype) (*Instance, error) {
-	entityMock, err := samples.CreateEntityMock(mng)
+	entityMock, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		return nil, err
 	}
 	inst := New()
 	inst.Name = "name"
 	inst.Desc = "desc"
+	inst.SchContainer = entity.SchCategory
 	inst.ContainerID = entityMock.ID
 	inst.ProtoID = proto.ID
 	return &inst, nil

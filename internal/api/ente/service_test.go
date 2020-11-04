@@ -145,7 +145,7 @@ func TestEnteService_LinkToCat(t *testing.T) {
 		assert.Error(t, err, "Creating ente")
 	}
 
-	cat, err := samples.CreateEntityMock(mng)
+	cat, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
 		assert.Error(t, err, "Creating category")
 	}

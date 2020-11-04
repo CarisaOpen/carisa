@@ -37,7 +37,7 @@ func TestCategory_ToString(t *testing.T) {
 
 func TestCategory_Key(t *testing.T) {
 	c := New()
-	assert.Equal(t, c.ID.String(), c.Key())
+	assert.Equal(t, entity.CategoryKey(c.ID), c.Key())
 }
 
 func TestCategory_Nominative(t *testing.T) {
@@ -48,7 +48,7 @@ func TestCategory_Nominative(t *testing.T) {
 func TestCategory_ParentKey(t *testing.T) {
 	c := New()
 	c.ParentID = xid.New()
-	assert.Equal(t, c.ParentID.String(), c.ParentKey())
+	assert.Equal(t, entity.CategoryKey(c.ParentID), c.ParentKey())
 }
 
 func TestCategory_Empty(t *testing.T) {
@@ -69,7 +69,7 @@ func TestCategory_Link(t *testing.T) {
 			name: "Category with space",
 			root: true,
 			link: &relation.SpaceCategory{
-				ID:    strings.Concat(c.ParentID.String(), relation.SpaceCatLn, c.Name, c.Key()),
+				ID:    strings.Concat(entity.SpaceKey(c.ParentID), relation.SpaceCatLn, c.Name, c.Key()),
 				Name:  c.Name,
 				CatID: c.ID.String(),
 			},
@@ -78,7 +78,7 @@ func TestCategory_Link(t *testing.T) {
 			name: "Category with others Category",
 			root: false,
 			link: &relation.Hierarchy{
-				ID:       strings.Concat(c.ParentID.String(), c.Name, c.Key()),
+				ID:       strings.Concat(entity.CategoryKey(c.ParentID), c.Name, c.Key()),
 				Name:     c.Name,
 				Category: true,
 				LinkID:   c.ID.String(),
@@ -169,7 +169,7 @@ func TestCategoryCatProp_ToString(t *testing.T) {
 
 func TestCategoryCatProp_Key(t *testing.T) {
 	c := NewProp()
-	assert.Equal(t, c.ID.String(), c.Key())
+	assert.Equal(t, entity.CatPropKey(c.ID), c.Key())
 }
 
 func TestCategoryCatProp_Nominative(t *testing.T) {
@@ -180,7 +180,7 @@ func TestCategoryCatProp_Nominative(t *testing.T) {
 func TestCategoryCatProp_ParentKey(t *testing.T) {
 	c := NewProp()
 	c.CatID = xid.New()
-	assert.Equal(t, c.CatID.String(), c.ParentKey())
+	assert.Equal(t, entity.CategoryKey(c.CatID), c.ParentKey())
 }
 
 func TestCategoryCatProp_Empty(t *testing.T) {
@@ -208,7 +208,7 @@ func TestCategoryCatProp_Link(t *testing.T) {
 				CatID: parentID,
 			},
 			link: &relation.CategoryProp{
-				ID:        strings.Concat(parentID.String(), relation.CatPropLn, name, propID.String()),
+				ID:        strings.Concat(entity.CategoryKey(parentID), relation.CatPropLn, name, entity.CatPropKey(propID)),
 				Name:      name,
 				CatPropID: propID.String(),
 			},
@@ -220,10 +220,10 @@ func TestCategoryCatProp_Link(t *testing.T) {
 					ID:   propID,
 					Name: "namel",
 				},
-				catPropID: parentID.String(),
+				catPropID: parentID,
 			},
 			link: &relation.CatPropProp{
-				ID:       strings.Concat(parentID.String(), name, propID.String()),
+				ID:       strings.Concat(entity.CatPropKey(parentID), name, entity.CatPropKey(propID)),
 				Name:     name,
 				PropID:   propID.String(),
 				Category: true,
@@ -241,7 +241,7 @@ func TestCategoryCatProp_LinkName(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		catPropID string
+		catPropID xid.ID
 		typen     string
 	}{
 		{
@@ -250,7 +250,7 @@ func TestCategoryCatProp_LinkName(t *testing.T) {
 		},
 		{
 			name:      "Category property -> Category Property",
-			catPropID: "1",
+			catPropID: xid.New(),
 			typen:     relation.CatPropPropLn,
 		},
 	}

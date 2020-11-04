@@ -23,8 +23,6 @@ import (
 	"github.com/carisa/pkg/strings"
 )
 
-const plugin string = "P"
-
 // Category of the plugin
 type Category string
 
@@ -61,7 +59,7 @@ func (p *Prototype) ToString() string {
 }
 
 func (p *Prototype) Key() string {
-	return p.ID.String()
+	return entity.PluginKey(p.ID)
 }
 
 func (p *Prototype) Nominative() entity.Descriptor {
@@ -92,17 +90,13 @@ func (p *Prototype) ReLink(dlr storage.DLRel) storage.Entity {
 
 func (p *Prototype) link(category string, parentID string) storage.Entity {
 	return &relation.PlatformPlugin{
-		ID:       strings.Concat(parentID, sound(category, p.Name), p.Key()),
+		ID:       strings.Concat(parentID, category, p.Name, p.Key()),
 		Name:     p.Name,
-		ProtoID:  p.Key(),
+		ProtoID:  p.ID.String(),
 		Category: category,
 	}
 }
 
 func (p *Prototype) Empty() storage.EntityRelation {
 	return &Prototype{}
-}
-
-func sound(cat string, name string) string {
-	return strings.Concat(plugin, cat, name)
 }

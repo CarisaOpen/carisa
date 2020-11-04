@@ -241,7 +241,7 @@ func TestEnteHandler_Get(t *testing.T) {
 						rec.Body.String(),
 						fmt.Sprintf(
 							`"name":"ename","description":"edesc","spaceId":"%s"`,
-							ente.ParentKey()),
+							ente.SpaceID),
 						"Get ente")
 				}
 				assert.Equal(t, tt.status, rec.Code, "Http status")
@@ -290,7 +290,7 @@ func TestEnteHandler_ListProps(t *testing.T) {
 			assert.Contains(
 				t,
 				rec.Body.String(),
-				fmt.Sprintf(`[{"name":"namep","entePropId":"%s"}]`, prop.Key()),
+				fmt.Sprintf(`[{"name":"namep","entePropId":"%s"}]`, prop.ID.String()),
 				"List properties of the ente")
 			assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 		}
@@ -609,7 +609,7 @@ func TestEnteHandler_GetProp(t *testing.T) {
 						rec.Body.String(),
 						fmt.Sprintf(
 							`"name":"namep","description":"descp","enteId":"%s","type":1`,
-							prop.ParentKey()),
+							prop.EnteID),
 						"Get property of the ente")
 				}
 				assert.Equal(t, tt.status, rec.Code, "Http status")

@@ -71,22 +71,22 @@ func (s *Service) Put(cat *Category) (bool, bool, error) {
 // Get gets the category from storage
 func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), cat)
+	ok, err := s.crud.Store().Get(ctx, entity.CategoryKey(id), cat)
 	cancel()
 	return ok, err
 }
 
-// ListCategories lists categories depending ranges parameter.
+// ListCategories lists categories depending of 'ranges' parameter.
 // Look at service.List
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
-	return s.ext.List(id.String(), name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
+	return s.ext.List(entity.CategoryKey(id), name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
 }
 
 // ListProps lists properties depending ranges parameter.
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
+		entity.CategoryKey(id),
 		strings.Concat(relation.CatPropLn, name),
 		ranges,
 		top,
@@ -111,7 +111,7 @@ func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
 // GetProp gets the property from storage
 func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), prop)
+	ok, err := s.crud.Store().Get(ctx, entity.CatPropKey(id), prop)
 	cancel()
 	return ok, err
 }
@@ -124,8 +124,6 @@ func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
 // The third parameter returned is true if the parent of tPropID is a child of the catPropID.
 // The fourth parameter returned is true if the type of catPropID is equal to tPropID.
 func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool, bool, relation.CatPropProp, error) {
-	scatPropID := catPropID.String()
-
 	var scatProp Prop
 	found, err := s.getProp(catPropID, &scatProp, "getting the source category property for linking")
 	if err != nil {
@@ -153,7 +151,7 @@ func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool
 				err,
 				"checking if the target category property is child of the source property category",
 				locService,
-				logging.String("Source property", scatPropID),
+				logging.String("Source property", catPropID.String()),
 				logging.String("Target property", tPropID.String()))
 	}
 	if !found {
@@ -175,7 +173,7 @@ func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool
 					err,
 					"updating the type of category property before linking",
 					locService,
-					logging.String("Source property", scatPropID),
+					logging.String("Source property", catPropID.String()),
 					logging.String("Target property", tPropID.String()))
 		}
 		txn.DoNotFound(upd)
@@ -191,13 +189,13 @@ func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool
 		s.cnt.StoreWithTimeout,
 		txn,
 		tprop.(storage.EntityRelation),
-		scatPropID,
+		entity.CatPropKey(catPropID),
 		func(child storage.Entity) {
 			switch p := child.(type) {
 			case *Prop:
-				p.catPropID = scatPropID
+				p.catPropID = catPropID
 			case *ente.Prop:
-				p.CatPropID = scatPropID
+				p.CatPropID = catPropID
 			}
 		})
 	if err != nil {
@@ -213,24 +211,20 @@ func (s *Service) LinkToProp(catPropID xid.ID, tPropID xid.ID) (bool, bool, bool
 
 // propType gets the type of property (entity.TypeProp) and the parent identifier
 func (s *Service) propType(tPropID xid.ID) (bool, entity.Property, error) {
-	stPropID := tPropID.String()
+	var prop entity.Property
 	// I research the property type (category or ente)
-	dlrProp, err := s.crud.ListDLR(s.cnt.StoreWithTimeout, stPropID)
+	ctx, cancel := s.cnt.StoreWithTimeout()
+	found, err := s.crud.Store().Exists(ctx, entity.CatPropKey(tPropID))
+	cancel()
 	if err != nil {
 		return false, nil,
 			s.cnt.Log.ErrWrap1(
 				err,
-				"researching the target property type for linking",
+				"it researching the the property type for linking",
 				locService,
-				logging.String("Property", stPropID))
+				logging.String("Property", tPropID.String()))
 	}
-	if len(dlrProp) == 0 {
-		return false, nil, err
-	}
-
-	var prop entity.Property
-	dlr := dlrProp[0].(*storage.DLRel)
-	if dlr.Type == relation.CatPropLn { // Category property
+	if found { // Category property
 		var tcatProp Prop
 		found, err := s.getProp(tPropID, &tcatProp, "getting the target category property for linking")
 		if err != nil {
@@ -256,7 +250,6 @@ func (s *Service) propType(tPropID xid.ID) (bool, entity.Property, error) {
 		}
 		prop = &tenteProp
 	}
-
 	return true, prop, nil
 }
 

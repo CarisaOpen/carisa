@@ -95,7 +95,7 @@ func TestPutWithError(method string, params map[string]string) []struct {
 			Status: nethttp.StatusBadRequest,
 		},
 		{
-			Name:   "ID validation. Bad request",
+			Name:   "Getting the identifier (ID) param. Bad request",
 			Params: map[string]string{"i": ""},
 			Body:   `{"Name":"Name","description":"desc"}`,
 			Status: nethttp.StatusBadRequest,

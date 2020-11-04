@@ -42,7 +42,7 @@ func (s *Space) ToString() string {
 }
 
 func (s *Space) Key() string {
-	return s.ID.String()
+	return entity.SpaceKey(s.ID)
 }
 
 func (s *Space) Nominative() entity.Descriptor {
@@ -55,12 +55,12 @@ func (s *Space) RelName() string {
 
 // ParentKey gets the instance ID
 func (s *Space) ParentKey() string {
-	return s.InstID.String()
+	return entity.InstKey(s.InstID)
 }
 
 // Link gets the link between instance and space
 func (s *Space) Link() storage.Entity {
-	return s.link(s.InstID.String())
+	return s.link(s.ParentKey())
 }
 
 func (s *Space) LinkName() string {

@@ -17,6 +17,7 @@
 package object
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/plugin"
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
@@ -69,10 +70,10 @@ func (s *Service) Create(inst *Instance) (bool, bool, bool, error) {
 // If the instance exists return true in the first param returned otherwise return false.
 // If the plugin prototype doesn't exist return false in the second param returned.
 // The plugin is only checked when the instance exists.
-// If the container doesn't exist return false in the second param returned.
+// If the container doesn't exist return false in the third param returned.
 func (s *Service) Put(inst *Instance) (bool, bool, bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	foundi, err := s.crud.Store().Exists(ctx, inst.ID.String())
+	foundi, err := s.crud.Store().Exists(ctx, entity.ObjectKey(inst.ID))
 	cancel()
 	if err != nil {
 		return false, false, false, err
@@ -97,16 +98,23 @@ func (s *Service) Put(inst *Instance) (bool, bool, bool, error) {
 // Get gets the instance from storage
 func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), inst)
+	ok, err := s.crud.Store().Get(ctx, entity.ObjectKey(id), inst)
 	cancel()
 	return ok, err
 }
 
 // ListInstances lists queries depending ranges parameter.
 // Look at service.List
-func (s *Service) ListInstances(id xid.ID, cat plugin.Category, name string, ranges bool, top int) ([]storage.Entity, error) {
+func (s *Service) ListInstances(
+	scheme string,
+	id xid.ID,
+	cat plugin.Category,
+	name string,
+	ranges bool,
+	top int) ([]storage.Entity, error) {
+	//
 	return s.ext.List(
-		id.String(),
+		entity.Key(scheme, id),
 		strings.Concat(string(cat), name),
 		ranges,
 		top,

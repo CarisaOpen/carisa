@@ -39,7 +39,7 @@ func TestEnte_ToString(t *testing.T) {
 
 func TestEnte_Key(t *testing.T) {
 	e := New()
-	assert.Equal(t, e.ID.String(), e.Key())
+	assert.Equal(t, entity.EnteKey(e.ID), e.Key())
 }
 
 func TestEnte_Nominative(t *testing.T) {
@@ -50,7 +50,7 @@ func TestEnte_Nominative(t *testing.T) {
 func TestEnte_ParentKey(t *testing.T) {
 	e := New()
 	e.SpaceID = xid.New()
-	assert.Equal(t, e.SpaceID.String(), e.ParentKey())
+	assert.Equal(t, entity.SpaceKey(e.SpaceID), e.ParentKey())
 }
 
 func TestEnte_Empty(t *testing.T) {
@@ -70,32 +70,32 @@ func TestEnte_Link(t *testing.T) {
 		link  storage.Entity
 	}{
 		{
-			name: "Space with prop",
+			name: "Space -> Ente",
 			ente: Ente{
 				Descriptor: entity.Descriptor{
 					ID:   enteID,
 					Name: "namele",
 				},
 				SpaceID: parentID,
-				CatID:   "",
+				CatID:   xid.NilID(),
 			},
 			link: &relation.SpaceEnte{
-				ID:     strings.Concat(parentID.String(), relation.SpaceEnteLn, name, enteID.String()),
+				ID:     strings.Concat(entity.SpaceKey(parentID), relation.SpaceEnteLn, name, entity.EnteKey(enteID)),
 				Name:   name,
 				EnteID: enteID.String(),
 			},
 		},
 		{
-			name: "Category with prop",
+			name: "Category -> Ente",
 			ente: Ente{
 				Descriptor: entity.Descriptor{
 					ID:   enteID,
 					Name: "namele",
 				},
-				CatID: parentID.String(),
+				CatID: parentID,
 			},
 			link: &relation.Hierarchy{
-				ID:       strings.Concat(parentID.String(), name, enteID.String()),
+				ID:       strings.Concat(entity.CategoryKey(parentID), name, entity.EnteKey(enteID)),
 				Name:     name,
 				LinkID:   enteID.String(),
 				Category: false,
@@ -113,7 +113,7 @@ func TestEnte_LinkName(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		catID string
+		catID xid.ID
 		typen string
 	}{
 		{
@@ -122,7 +122,7 @@ func TestEnte_LinkName(t *testing.T) {
 		},
 		{
 			name:  "Category -> Ente",
-			catID: "1",
+			catID: xid.New(),
 			typen: relation.CatEnteLn,
 		},
 	}
@@ -184,7 +184,7 @@ func TestEnteEnteProp_ToString(t *testing.T) {
 
 func TestEnteEnteProp_Key(t *testing.T) {
 	e := NewProp()
-	assert.Equal(t, e.ID.String(), e.Key())
+	assert.Equal(t, entity.EntePropKey(e.ID), e.Key())
 }
 
 func TestEnteEnteProp_Nominative(t *testing.T) {
@@ -195,7 +195,7 @@ func TestEnteEnteProp_Nominative(t *testing.T) {
 func TestEnteEnteProp_ParentKey(t *testing.T) {
 	e := NewProp()
 	e.EnteID = xid.New()
-	assert.Equal(t, e.EnteID.String(), e.ParentKey())
+	assert.Equal(t, entity.EnteKey(e.EnteID), e.ParentKey())
 }
 
 func TestEnteEnteProp_Empty(t *testing.T) {
@@ -221,10 +221,10 @@ func TestEnteEnteProp_Link(t *testing.T) {
 					Name: "namele",
 				},
 				EnteID:    parentID,
-				CatPropID: "",
+				CatPropID: xid.NilID(),
 			},
 			link: &relation.EnteProp{
-				ID:         strings.Concat(parentID.String(), relation.EntePropLn, name, propID.String()),
+				ID:         strings.Concat(entity.EnteKey(parentID), relation.EntePropLn, name, entity.EntePropKey(propID)),
 				Name:       name,
 				EntePropID: propID.String(),
 			},
@@ -236,10 +236,10 @@ func TestEnteEnteProp_Link(t *testing.T) {
 					ID:   propID,
 					Name: "namele",
 				},
-				CatPropID: parentID.String(),
+				CatPropID: parentID,
 			},
 			link: &relation.CatPropProp{
-				ID:       strings.Concat(parentID.String(), name, propID.String()),
+				ID:       strings.Concat(entity.CatPropKey(parentID), name, entity.EntePropKey(propID)),
 				Name:     name,
 				PropID:   propID.String(),
 				Category: false,
@@ -257,7 +257,7 @@ func TestEnteEnteProp_LinkName(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		catPropID string
+		catPropID xid.ID
 		typen     string
 	}{
 		{
@@ -266,7 +266,7 @@ func TestEnteEnteProp_LinkName(t *testing.T) {
 		},
 		{
 			name:      "Category property -> Property",
-			catPropID: "1",
+			catPropID: xid.New(),
 			typen:     relation.CatPropPropLn,
 		},
 	}

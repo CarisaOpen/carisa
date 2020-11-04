@@ -17,6 +17,7 @@
 package ente
 
 import (
+	"github.com/carisa/internal/api/entity"
 	"github.com/carisa/internal/api/relation"
 	"github.com/carisa/internal/api/runtime"
 	"github.com/carisa/internal/api/service"
@@ -62,7 +63,7 @@ func (s *Service) Put(ente *Ente) (bool, bool, error) {
 // Get gets the ente from storage
 func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), ente)
+	ok, err := s.crud.Store().Get(ctx, entity.EnteKey(id), ente)
 	cancel()
 	return ok, err
 }
@@ -71,7 +72,6 @@ func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 // If the ente exists return true in the first param returned otherwise return false.
 // If the category exists return true in the second param returned otherwise return false.
 func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relation.Hierarchy, error) {
-	category := categoryID.String()
 	ente := New()
 	ente.ID = enteID
 
@@ -80,9 +80,9 @@ func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relat
 		s.cnt.StoreWithTimeout,
 		nil,
 		&ente,
-		category,
+		entity.CategoryKey(categoryID),
 		func(e storage.Entity) {
-			e.(*Ente).CatID = category
+			e.(*Ente).CatID = categoryID
 		})
 	if err != nil {
 		return cfound, pfound, relation.Hierarchy{},
@@ -90,7 +90,7 @@ func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relat
 				err,
 				"ente cannot be linked to category",
 				locService,
-				logging.String("CategoryId", category),
+				logging.String("CategoryId", categoryID.String()),
 				logging.String("EnteId", ente.Key()))
 	}
 
@@ -104,7 +104,7 @@ func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relat
 // Look at service.List
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
-		id.String(),
+		entity.EnteKey(id),
 		strings.Concat(relation.EntePropLn, name),
 		ranges,
 		top,
@@ -129,7 +129,7 @@ func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
 // GetProp gets the property from storage
 func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
-	ok, err := s.crud.Store().Get(ctx, id.String(), prop)
+	ok, err := s.crud.Store().Get(ctx, entity.EntePropKey(id), prop)
 	cancel()
 	return ok, err
 }

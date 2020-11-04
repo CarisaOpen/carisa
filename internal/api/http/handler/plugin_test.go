@@ -274,7 +274,7 @@ func TestPluginHandler_ListPlugins(t *testing.T) {
 				assert.Contains(
 					t,
 					rec.Body.String(),
-					fmt.Sprintf(`[{"name":"nameproto","protoId":"%s","category":"%s"}]`, proto.Key(), string(pc)),
+					fmt.Sprintf(`[{"name":"nameproto","protoId":"%s","category":"%s"}]`, proto.ID, string(pc)),
 					"List the queries plugin")
 				assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 			}
