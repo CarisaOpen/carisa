@@ -62,7 +62,8 @@ func TestSpaceService_Put(t *testing.T) {
 	defer mng.Close()
 	inst, err := instsmpl.CreateInstance(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating instance")
+		assert.NoError(t, err, "Creating instance")
+		return
 	}
 
 	tests := []struct {

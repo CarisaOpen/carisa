@@ -52,7 +52,7 @@ func TestSpaceHandler_Create(t *testing.T) {
 
 	inst, err := samples.CreateInstance(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -121,7 +121,7 @@ func TestSpaceHandler_Put(t *testing.T) {
 
 	inst, err := samples.CreateInstance(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -198,7 +198,7 @@ func TestSpaceHandler_Get(t *testing.T) {
 
 	inst, err := samples.CreateInstance(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 	space := space.New()

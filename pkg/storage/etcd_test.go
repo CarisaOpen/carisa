@@ -698,7 +698,7 @@ func TestEtcd_RangeRaw(t *testing.T) {
 	for k, v := range samples {
 		_, err := client.Put(ctx, k, v)
 		if err != nil {
-			assert.Error(t, err, "Putting samples")
+			assert.NoError(t, err, "Putting samples")
 			return
 		}
 	}
@@ -762,12 +762,12 @@ func sampling(ctx context.Context, t *testing.T, samples []EntityTest, client *c
 	for _, s := range samples {
 		entity, err := encoding.Encode(s)
 		if err != nil {
-			assert.Error(t, err, "Coding entity for sample")
+			assert.NoError(t, err, "Coding entity for sample")
 			return false
 		}
 		_, err = client.Put(ctx, s.Prop1, entity)
 		if err != nil {
-			assert.Error(t, err)
+			assert.NoError(t, err)
 			return false
 		}
 	}

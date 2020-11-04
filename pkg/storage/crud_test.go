@@ -204,14 +204,14 @@ func TestCRUDOperation_CreateWithRel(t *testing.T) {
 		Value: 1,
 	})
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
 	for _, tt := range tests {
 		ok, foundParent, err := oper.CreateWithRel("loc", storeTimeout, &tt.e)
 		if err != nil {
-			assert.Error(t, err)
+			assert.NoError(t, err)
 			continue
 		}
 
@@ -393,7 +393,7 @@ func TestCRUDOperation_Update(t *testing.T) {
 	oper := newCRUDOper(storef)
 	_, err := oper.Put("loc", storeTimeout, &o)
 	if err != nil {
-		assert.Error(t, err, "Creating entity")
+		assert.NoError(t, err, "Creating entity")
 		return
 	}
 
@@ -489,7 +489,7 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 				Value: 1,
 			})
 			if err != nil {
-				assert.Error(t, err)
+				assert.NoError(t, err)
 				continue
 			}
 		}
@@ -504,7 +504,7 @@ func TestCRUDOperation_PutWithRelation(t *testing.T) {
 			var entityr Object
 			found, err := storef.Store().Get(context.TODO(), tt.e.ID, &entityr)
 			if err != nil {
-				assert.Error(t, err, strings.Concat(tt.name, "Error getting entity"))
+				assert.NoError(t, err, strings.Concat(tt.name, "Error getting entity"))
 				continue
 			}
 			assert.True(t, found, strings.Concat(tt.name, "Get entity"))
@@ -603,7 +603,7 @@ func TestCRUDOperation_LinkTo(t *testing.T) {
 	oper := newCRUDOper(storef)
 	_, err := sampleConnectTo(t, oper)
 	if err != nil {
-		assert.Error(t, err, "Inserting sample")
+		assert.NoError(t, err, "Inserting sample")
 	}
 
 	for _, tt := range tests {
@@ -651,14 +651,15 @@ func TestCRUDOperation_LinkTo_Txn(t *testing.T) {
 	oper := newCRUDOper(storef)
 	o, err := sampleConnectTo(t, oper)
 	if err != nil {
-		assert.Error(t, err, "Inserting sample")
+		assert.NoError(t, err, "Inserting sample")
+		return
 	}
 
 	txn := NewTxn(oper.Store())
 
 	put, err := oper.Store().Put(ot)
 	if err != nil {
-		assert.Error(t, err, "Put txn")
+		assert.NoError(t, err, "Put txn")
 		return
 	}
 	txn.DoNotFound(put)
@@ -671,7 +672,7 @@ func TestCRUDOperation_LinkTo_Txn(t *testing.T) {
 		_, err := txn.Commit(ctx)
 		cancel()
 		if err != nil {
-			assert.Error(t, err, "Commit")
+			assert.NoError(t, err, "Commit")
 			return
 		}
 		found, err := storef.Store().Exists(context.TODO(), o.Link().Key())
@@ -709,7 +710,7 @@ func TestCRUDOperation_ListDLR(t *testing.T) {
 	for i := range dlrTest {
 		_, err := oper.Create("loc", storeTimeout, &dlrTest[i])
 		if err != nil {
-			assert.Error(t, err, "Creating DLR")
+			assert.NoError(t, err, "Creating DLR")
 			return
 		}
 	}
@@ -730,7 +731,7 @@ func sampleConnectTo(t *testing.T, oper CrudOperation) (*Object, error) {
 
 	_, err := oper.Put("loc", storeTimeout, o)
 	if err != nil {
-		assert.Error(t, err, "Put parent")
+		assert.NoError(t, err, "Put parent")
 		return nil, err
 	}
 

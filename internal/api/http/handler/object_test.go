@@ -53,7 +53,7 @@ func TestObjectHandler_Create(t *testing.T) {
 
 	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
-		assert.Error(t, err, "Creating container")
+		assert.NoError(t, err, "Creating container")
 		return
 	}
 
@@ -62,12 +62,14 @@ func TestObjectHandler_Create(t *testing.T) {
 
 	tests := []struct {
 		name   string
+		params map[string]string
 		body   string
 		status int
 		errmsg string
 	}{
 		{
-			name: "Creating object instance.",
+			name:   "Creating object instance.",
+			params: map[string]string{cntParamID: container.ID.String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				container.ID.String(),
@@ -75,7 +77,8 @@ func TestObjectHandler_Create(t *testing.T) {
 			status: nethttp.StatusCreated,
 		},
 		{
-			name: "Creating object instance. Prototype not found.",
+			name:   "Creating object instance. Prototype not found.",
+			params: map[string]string{cntParamID: container.ID.String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				container.ID.String(),
@@ -84,7 +87,8 @@ func TestObjectHandler_Create(t *testing.T) {
 			errmsg: "code=404, message=[the plugin prototype not found]",
 		},
 		{
-			name: "Creating object instance. Container not found.",
+			name:   "Creating object instance. Container not found.",
+			params: map[string]string{cntParamID: xid.NilID().String()},
 			body: fmt.Sprintf(
 				`"name":"name","description":"desc","containerId":"%s","prototypeId":"%s"`,
 				xid.NilID(),
@@ -94,17 +98,15 @@ func TestObjectHandler_Create(t *testing.T) {
 		},
 	}
 
-	params := map[string]string{cntParamID: xid.NilID().String()}
-
 	for _, pc := range plugins {
 		_, err := psamples.CreatePlugin(mng, pc, protoID)
 		if err != nil {
-			assert.Error(t, err, "Creating plugin")
+			assert.NoError(t, err, "Creating plugin")
 			continue
 		}
 
 		for _, tt := range tests {
-			rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", strings.Concat("{", tt.body, "}"), params, nil)
+			rec, ctx := h.NewHTTP(nethttp.MethodPost, "/api/objects", strings.Concat("{", tt.body, "}"), tt.params, nil)
 			err := handlers.ObjectHandler.Create(ctx, cntParamID, entity.SchCategory, pc)
 
 			if err != nil && tt.status == err.(*echo.HTTPError).Code {
@@ -112,7 +114,7 @@ func TestObjectHandler_Create(t *testing.T) {
 				continue
 			}
 			if err != nil {
-				assert.Error(t, err, "Error creating")
+				assert.NoError(t, err, strings.Concat(tt.name, "Error creating"))
 				continue
 			}
 			assert.Equal(t, tt.status, rec.Code, strings.Concat(tt.name, "Http status"))
@@ -424,7 +426,7 @@ func TestObjectHandler_GetWithError(t *testing.T) {
 	}
 }
 
-func TestObjectHandler_ListQueries(t *testing.T) {
+func TestObjectHandler_ListInstances(t *testing.T) {
 	h := mock.HTTP()
 	cnt, handlers, _, mng := newObjectHandlerFaked(t)
 	defer mng.Close()
@@ -438,7 +440,7 @@ func TestObjectHandler_ListQueries(t *testing.T) {
 		if assert.NoError(t, err) {
 			rec, ctx := h.NewHTTP(
 				nethttp.MethodGet,
-				"/api/queries",
+				"/api/objects",
 				"",
 				map[string]string{"id": xid.NilID().String()},
 				map[string]string{"sname": "name"})
@@ -453,6 +455,25 @@ func TestObjectHandler_ListQueries(t *testing.T) {
 				assert.Equal(t, nethttp.StatusOK, rec.Code, "Http status")
 			}
 		}
+	}
+}
+
+func TestEnteHandler_ListInstancesError(t *testing.T) {
+	tests := tsamples.TestListError()
+
+	h := mock.HTTP()
+	cnt, handlers, crud := newObjectHandlerMocked()
+	defer h.Close(cnt.Log)
+
+	for _, tt := range tests {
+		if tt.MockOper != nil {
+			tt.MockOper(crud)
+		}
+		_, ctx := h.NewHTTP(nethttp.MethodGet, "/api/objects", "", tt.Param, tt.QParam)
+		err := handlers.ObjectHandler.ListInstances(ctx, entity.SchCategory, plugin.Query)
+
+		assert.Equal(t, tt.Status, err.(*echo.HTTPError).Code, tt.Name)
+		assert.Error(t, err, tt.Name)
 	}
 }
 

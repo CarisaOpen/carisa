@@ -45,12 +45,14 @@ func TestObjectService_Create(t *testing.T) {
 	protoID := xid.New()
 	proto, err := psamples.CreatePlugin(mng, plugin.Query, protoID)
 	if err != nil {
-		assert.Error(t, err, "Creating plugin")
+		assert.NoError(t, err, "Creating plugin")
+		return
 	}
 
 	inst, err := instance(mng, proto)
 	if err != nil {
-		assert.Error(t, err, "Creating instance")
+		assert.NoError(t, err, "Creating instance")
+		return
 	}
 
 	ok, foundp, foundc, err := srv.Create(inst)
@@ -70,11 +72,13 @@ func TestObjectService_Put(t *testing.T) {
 	protoID := xid.New()
 	proto, err := psamples.CreatePlugin(mng, plugin.Query, protoID)
 	if err != nil {
-		assert.Error(t, err, "Creating plugin")
+		assert.NoError(t, err, "Creating plugin")
+		return
 	}
 	container, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
-		assert.Error(t, err, "Creating container")
+		assert.NoError(t, err, "Creating container")
+		return
 	}
 
 	tests := []struct {
@@ -138,7 +142,8 @@ func TestObjectService_Get(t *testing.T) {
 	protoID := xid.New()
 	proto, err := psamples.CreatePlugin(mng, plugin.Query, protoID)
 	if err != nil {
-		assert.Error(t, err, "Creating plugin")
+		assert.NoError(t, err, "Creating plugin")
+		return
 	}
 
 	inst, err := instance(mng, proto)

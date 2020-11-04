@@ -54,7 +54,7 @@ func TestCategoryHandler_Create(t *testing.T) {
 
 	space, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -123,7 +123,7 @@ func TestCategoryHandler_Put(t *testing.T) {
 
 	space, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -200,7 +200,7 @@ func TestCategoryHandler_Get(t *testing.T) {
 
 	spc, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 	cat := category.New()
@@ -371,14 +371,14 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 
 	catRoot, err := csamples.CreateCat(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating root category")
+		assert.NoError(t, err, "Creating root category")
 		return
 	}
 	catPropRoot := category.NewProp()
 	catPropRoot.CatID = catRoot.ID
 	_, _, err = srv.CreateProp(&catPropRoot)
 	if err != nil {
-		assert.Error(t, err, "Creating root category property")
+		assert.NoError(t, err, "Creating root category property")
 		return
 	}
 
@@ -391,7 +391,7 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 	catChildProp2.Type = entity.Boolean
 	_, _, err = srv.CreateProp(&catChildProp2)
 	if err != nil {
-		assert.Error(t, err, "Creating a second property in the child category")
+		assert.NoError(t, err, "Creating a second property in the child category")
 		return
 	}
 
@@ -402,7 +402,7 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 
 	enteChild, err := esamples.CreateEnte(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating child ente")
+		assert.NoError(t, err, "Creating child ente")
 		return
 	}
 	enteChildProp := ente.NewProp()
@@ -411,12 +411,12 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 	enteChildProp.Name = "nameep"
 	_, _, err = srve.CreateProp(&enteChildProp)
 	if err != nil {
-		assert.Error(t, err, "Creating child ente property")
+		assert.NoError(t, err, "Creating child ente property")
 		return
 	}
 	_, _, _, err = srve.LinkToCat(enteChild.ID, catRoot.ID)
 	if err != nil {
-		assert.Error(t, err, "Creating linking between category root and ente")
+		assert.NoError(t, err, "Creating linking between category root and ente")
 		return
 	}
 
@@ -482,7 +482,7 @@ func TestCategoryHandler_LinkToProp(t *testing.T) {
 			continue
 		}
 		if err != nil {
-			assert.Error(t, err)
+			assert.NoError(t, err)
 			continue
 		}
 
@@ -511,7 +511,7 @@ func createCat(t *testing.T,
 	catChild.ParentID = catParent.ID
 	_, _, err := service.Create(&catChild)
 	if err != nil {
-		assert.Error(t, err, "Creating child category")
+		assert.NoError(t, err, "Creating child category")
 		return false, category.Category{}, category.Prop{}
 	}
 	catChildProp := category.NewProp()
@@ -520,7 +520,7 @@ func createCat(t *testing.T,
 	catChildProp.Type = typep
 	_, _, err = service.CreateProp(&catChildProp)
 	if err != nil {
-		assert.Error(t, err, "Creating child category property")
+		assert.NoError(t, err, "Creating child category property")
 		return false, category.Category{}, category.Prop{}
 	}
 	return true, catChild, catChildProp
@@ -534,7 +534,7 @@ func TestCategoryHandler_CreateProp(t *testing.T) {
 
 	cat, err := csamples.CreateCat(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -608,7 +608,7 @@ func TestCategoryHandler_PutProp(t *testing.T) {
 
 	cat, err := csamples.CreateCat(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -690,7 +690,7 @@ func TestCategoryHandler_GetProp(t *testing.T) {
 
 	cat, err := csamples.CreateCat(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 	prop := category.NewProp()

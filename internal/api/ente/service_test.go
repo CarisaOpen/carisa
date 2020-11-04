@@ -64,7 +64,8 @@ func TestEnteService_Put(t *testing.T) {
 	defer mng.Close()
 	space, err := spcsamples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating space")
+		assert.NoError(t, err, "Creating space")
+		return
 	}
 
 	tests := []struct {
@@ -142,12 +143,14 @@ func TestEnteService_LinkToCat(t *testing.T) {
 
 	ente, err := createEnte(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating ente")
+		assert.NoError(t, err, "Creating ente")
+		return
 	}
 
 	cat, err := samples.CreateEntityMock(mng, entity.SchCategory)
 	if err != nil {
-		assert.Error(t, err, "Creating category")
+		assert.NoError(t, err, "Creating category")
+		return
 	}
 
 	sfound, tfound, rel, err := srv.LinkToCat(ente.ID, cat.ID)
@@ -213,7 +216,8 @@ func TestEnteService_PutProp(t *testing.T) {
 	defer mng.Close()
 	ente, err := createEnte(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating prop")
+		assert.NoError(t, err, "Creating prop")
+		return
 	}
 
 	tests := []struct {

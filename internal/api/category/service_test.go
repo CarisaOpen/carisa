@@ -80,7 +80,8 @@ func TestCatService_Put(t *testing.T) {
 	defer mng.Close()
 	space, err := spcsamples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating space")
+		assert.NoError(t, err, "Creating space")
+		return
 	}
 
 	tests := []struct {
@@ -168,7 +169,7 @@ func TestCatService_ListCategories(t *testing.T) {
 
 	_, err := s.crud.Create("", s.cnt.StoreWithTimeout, link)
 	if err != nil {
-		assert.Error(t, err, "Create category link to category")
+		assert.NoError(t, err, "Create category link to category")
 		return
 	}
 
@@ -226,7 +227,8 @@ func TestCatService_PutProp(t *testing.T) {
 	defer mng.Close()
 	cat, err := createCat(srv.cnt, srv.crud)
 	if err != nil {
-		assert.Error(t, err, "Creating category")
+		assert.NoError(t, err, "Creating category")
+		return
 	}
 
 	tests := []struct {

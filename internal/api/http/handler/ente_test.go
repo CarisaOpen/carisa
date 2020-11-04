@@ -55,7 +55,7 @@ func TestEnteHandler_Create(t *testing.T) {
 
 	space, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func TestEnteHandler_Put(t *testing.T) {
 
 	space, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -201,7 +201,7 @@ func TestEnteHandler_Get(t *testing.T) {
 
 	spc, err := samples.CreateSpace(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 	ente := ente.New()
@@ -297,7 +297,7 @@ func TestEnteHandler_ListProps(t *testing.T) {
 	}
 }
 
-func TestEnteHandler_GetListPropsError(t *testing.T) {
+func TestEnteHandler_ListPropsError(t *testing.T) {
 	tests := tsamples.TestListError()
 
 	h := mock.HTTP()
@@ -324,11 +324,12 @@ func TestEnteHandler_LinkToCategory(t *testing.T) {
 
 	e, err := esamples.CreateEnte(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating ente")
+		assert.NoError(t, err, "Creating ente")
 	}
 	cat, err := csamples.CreateCat(mng)
 	if err != nil {
-		assert.Error(t, err, "Creating category")
+		assert.NoError(t, err, "Creating category")
+		return
 	}
 
 	test := []struct {
@@ -423,7 +424,7 @@ func TestEnteHandler_CreateProp(t *testing.T) {
 
 	e, err := esamples.CreateEnte(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -492,7 +493,7 @@ func TestEnteHandler_PutProp(t *testing.T) {
 
 	ente, err := esamples.CreateEnte(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 
@@ -569,7 +570,7 @@ func TestEnteHandler_GetProp(t *testing.T) {
 
 	e, err := esamples.CreateEnte(mng)
 	if err != nil {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		return
 	}
 	prop := ente.NewProp()
