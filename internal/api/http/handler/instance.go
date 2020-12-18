@@ -30,7 +30,7 @@ import (
 
 const locInstance = "http.instance"
 
-// Instance hands the http request of the instance
+// Instance hands the http request of the instance.Instance
 type Instance struct {
 	srv instance.Service
 	cnt *runtime.Container
@@ -44,7 +44,7 @@ func NewInstanceHandle(srv instance.Service, cnt *runtime.Container) Instance {
 	}
 }
 
-// Create creates the instance category
+// Create creates the instance.Instance
 func (i *Instance) Create(c httpc.Context) error {
 	inst := instance.Instance{}
 	if err := bind(c, locInstance, i.cnt.Log, &inst); err != nil {
@@ -59,7 +59,7 @@ func (i *Instance) Create(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), inst)
 }
 
-// Put creates or update the instance category
+// Put creates or updates the instance.Instance
 func (i *Instance) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
@@ -80,7 +80,7 @@ func (i *Instance) Put(c httpc.Context) error {
 	return c.JSON(http.PutStatus(updated), inst)
 }
 
-// Get gets the instance by ID
+// Get gets the instance.Instance by ID
 func (i *Instance) Get(c httpc.Context) error {
 	var inst instance.Instance
 
@@ -97,7 +97,7 @@ func (i *Instance) Get(c httpc.Context) error {
 	return c.JSON(http.GetStatus(found), inst)
 }
 
-// ListSpaces list spaces by instance ID and return top spaces.
+// ListSpaces list spaces by instance.Instance ID and return top spaces.
 // If sname query param is not empty, is filtered by spaces which name starts by name parameter
 // If gtname query param is not empty, is filtered by spaces which name is greater than name parameter
 func (i *Instance) ListSpaces(c httpc.Context) error {

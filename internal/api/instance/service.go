@@ -28,14 +28,14 @@ import (
 
 const locService = "instance.service"
 
-// Service implements CRUD operations for the instance category
+// Service implements CRUD operations for the Instance
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a instance service
+// NewService builds a Instance service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -44,20 +44,20 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a instance into of the repository
+// Create creates a Instance into of the repository
 // If the instance exists returns false
 func (s *Service) Create(inst *Instance) (bool, error) {
 	inst.AutoID()
 	return s.crud.Create(locService, s.cnt.StoreWithTimeout, inst)
 }
 
-// Put creates or updates depending of if exists the instance into storage
-// If the instance is updated return true
+// Put creates or updates depending of if exists the Instance into storage
+// If the Instance is updated return true
 func (s *Service) Put(inst *Instance) (bool, error) {
 	return s.crud.Put(locService, s.cnt.StoreWithTimeout, inst)
 }
 
-// Get gets the instance from storage
+// Get gets the Instance from storage
 func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.InstKey(id), inst)

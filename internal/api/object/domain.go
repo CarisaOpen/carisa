@@ -25,10 +25,10 @@ import (
 	"github.com/rs/xid"
 )
 
-// Instance has n dynamic properties and them links with the associated plugin properties
-// Example: Queries. The queries has a plugin prototype where define the metadata of a query type
-// and the instance is the particular information of those metadata configured by users
-// Is similar to classes and objects. Object will be the instance.
+// Instance has n dynamic properties and them links with the associated plugin.Prototype properties
+// Example: Queries. The queries has a plugin.Prototype where define the metadata of a query type
+// and the Instance is the particular information of those metadata configured by users
+// Is similar to classes and objects. Object will be the Instance.
 type Instance struct {
 	entity.Descriptor
 	SchContainer string          `json:"-"`

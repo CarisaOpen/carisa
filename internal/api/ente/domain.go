@@ -24,12 +24,12 @@ import (
 	"github.com/rs/xid"
 )
 
-// The thinks of spaces.
-// The prop are the items of spaces to trace, count, measure, etc.
+// The thinks of space.Space.
+// The ente.Ente are the items of space.Space to trace, count, measure, etc.
 type Ente struct {
 	entity.Descriptor
-	SpaceID xid.ID `json:"spaceId"` // Space container
-	CatID   xid.ID `json:"-"`       // Is used temporarily to connect the entity and the category.
+	SpaceID xid.ID `json:"spaceId"` // space.Space container
+	CatID   xid.ID `json:"-"`       // Is used temporarily to connect the entity and the category.Category.
 }
 
 func New() Ente {
@@ -63,7 +63,7 @@ func (e *Ente) ParentKey() string {
 	return parentID
 }
 
-// Link gets the link between instance and prop
+// Link gets the link between instance.Instance and prop
 func (e *Ente) Link() storage.Entity {
 	cat := true
 	if e.CatID.IsNil() {
@@ -107,7 +107,7 @@ func (e *Ente) Empty() storage.EntityRelation {
 	return &Ente{}
 }
 
-// The prop properties contains the fields
+// The prop are properties contains the fields
 type Prop struct {
 	entity.Descriptor
 	EnteID    xid.ID          `json:"enteId"` // Ente container

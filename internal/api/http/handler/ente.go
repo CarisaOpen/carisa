@@ -31,7 +31,7 @@ import (
 
 const locEnte = "http.ente"
 
-// Ente hands the http request of the ente
+// Ente hands the http request of the ente.Ente
 type Ente struct {
 	srv ente.Service
 	cnt *runtime.Container
@@ -45,7 +45,7 @@ func NewEnteHandle(srv ente.Service, cnt *runtime.Container) Ente {
 	}
 }
 
-// Create creates the ente
+// Create creates the ente.Ente
 func (p *Ente) Create(c httpc.Context) error {
 	ente := ente.Ente{}
 	if err := bind(c, locEnte, p.cnt.Log, &ente); err != nil {
@@ -60,7 +60,7 @@ func (p *Ente) Create(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), ente)
 }
 
-// Put creates or update the ente
+// Put creates or updates the ente.Ente
 func (p *Ente) Put(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
@@ -82,7 +82,7 @@ func (p *Ente) Put(c httpc.Context) error {
 	return c.JSON(http.PutStatus(updated), ente)
 }
 
-// Get gets the ente by ID
+// Get gets the ente.Ente by ID
 func (p *Ente) Get(c httpc.Context) error {
 	var ente ente.Ente
 
@@ -99,7 +99,7 @@ func (p *Ente) Get(c httpc.Context) error {
 	return c.JSON(http.GetStatus(found), ente)
 }
 
-// LinkToCat connects ente to category in the tree
+// LinkToCat connects ente.Ente to category.Category in the tree
 func (p *Ente) LinkToCat(c httpc.Context) error {
 	enteID, err := convert.ParamXID(c, "enteid")
 	if err != nil {
@@ -125,7 +125,7 @@ func (p *Ente) LinkToCat(c httpc.Context) error {
 	return c.JSON(nethttp.StatusOK, rel)
 }
 
-// ListProps list properties by ente ID and return top properties.
+// ListProps list properties by ente.Ente ID and return top properties.
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
 func (p *Ente) ListProps(c httpc.Context) error {
@@ -142,7 +142,7 @@ func (p *Ente) ListProps(c httpc.Context) error {
 	return c.JSON(nethttp.StatusOK, props)
 }
 
-// CreateProp creates the property of ente
+// CreateProp creates the property of ente.Ente
 func (p *Ente) CreateProp(c httpc.Context) error {
 	prop := ente.Prop{}
 	if err := bind(c, locEnte, p.cnt.Log, &prop); err != nil {
@@ -157,7 +157,7 @@ func (p *Ente) CreateProp(c httpc.Context) error {
 	return c.JSON(http.CreateStatus(created), prop)
 }
 
-// PutProp creates or update the property of ente category
+// PutProp creates or update the property of ente category.Category
 func (p *Ente) PutProp(c httpc.Context) error {
 	id, err := convert.ParamID(c)
 	if err != nil {

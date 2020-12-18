@@ -37,7 +37,7 @@ import (
 
 const locObject = "http.object"
 
-// Object hands the http request of the object instance
+// Object hands the http request of the object.Instance
 type Object struct {
 	srv object.Service
 	cnt *runtime.Container
@@ -51,7 +51,7 @@ func NewObjectHandle(srv object.Service, cnt *runtime.Container) Object {
 	}
 }
 
-// Create creates the object instance
+// Create creates the object.Instance
 func (o *Object) Create(c httpc.Context, cntParam string, schContainer string, category plugin.Category) error {
 	cntID, err := convert.ParamXID(c, cntParam)
 	if err != nil {
@@ -76,7 +76,7 @@ func (o *Object) Create(c httpc.Context, cntParam string, schContainer string, c
 	return c.JSON(http.CreateStatus(created), inst)
 }
 
-// Put creates or update the object instance
+// Put creates or update the object.Instance
 func (o *Object) Put(c httpc.Context, cntParam string, schContainer string, category plugin.Category) error {
 	cntID, err := convert.ParamXID(c, cntParam)
 	if err != nil {
@@ -121,7 +121,7 @@ func (o *Object) bindInstance(
 	return inst, nil
 }
 
-// Get gets the object instance by ID
+// Get gets the object.Instance by ID
 func (o *Object) Get(c httpc.Context) error {
 	var inst object.Instance
 

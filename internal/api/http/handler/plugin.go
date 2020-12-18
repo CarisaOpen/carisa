@@ -47,7 +47,7 @@ func NewPluginHandle(srv plugin.Service, cnt *runtime.Container) Plugin {
 	}
 }
 
-// Create creates the plugin
+// Create creates the plugin.Prototype
 func (p *Plugin) Create(c httpc.Context, category plugin.Category) error {
 	proto := plugin.Prototype{}
 	if err := bind(c, locPlugin, p.cnt.Log, &proto); err != nil {
@@ -63,7 +63,7 @@ func (p *Plugin) Create(c httpc.Context, category plugin.Category) error {
 	return c.JSON(http.CreateStatus(created), proto)
 }
 
-// Put creates or update the plugin
+// Put creates or updates the plugin.Prototype
 func (p *Plugin) Put(c httpc.Context, category plugin.Category) error {
 	id, err := convert.ParamID(c)
 	if err != nil {
@@ -87,7 +87,7 @@ func (p *Plugin) Put(c httpc.Context, category plugin.Category) error {
 	return c.JSON(http.PutStatus(updated), proto)
 }
 
-// Get gets the plugin by ID
+// Get gets the plugin.Prototype by ID
 func (p *Plugin) Get(c httpc.Context) error {
 	var proto plugin.Prototype
 
@@ -104,7 +104,7 @@ func (p *Plugin) Get(c httpc.Context) error {
 	return c.JSON(http.GetStatus(found), proto)
 }
 
-// ListProps list properties by ente ID and return top properties.
+// ListProps list properties by ente.Ente ID and return top properties.
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
 func (p *Plugin) ListPlugins(c httpc.Context, cat plugin.Category) error {

@@ -29,7 +29,7 @@ import (
 
 const locService = "object.service"
 
-// Service implements CRUD operations for the plugin
+// Service implements CRUD operations for the Instance
 type Service struct {
 	cnt    *runtime.Container
 	ext    *service.Extension
@@ -37,7 +37,7 @@ type Service struct {
 	plugin *plugin.Service
 }
 
-// NewService builds a plugin service
+// NewService builds a Instance service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation, plugin *plugin.Service) Service {
 	return Service{
 		cnt:    cnt,
@@ -47,9 +47,9 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a instance into of the repository.
-// If the instance exists return false in the first param returned.
-// If the plugin prototype doesn't exist return false in the second param returned.
+// Create creates a Instance into of the repository.
+// If the Instance exists return false in the first param returned.
+// If the plugin.Prototype doesn't exist return false in the second param returned.
 // If the container doesn't exist return false in the third param returned.
 func (s *Service) Create(inst *Instance) (bool, bool, bool, error) {
 	inst.AutoID()
@@ -66,9 +66,9 @@ func (s *Service) Create(inst *Instance) (bool, bool, bool, error) {
 	return created, true, foundc, err
 }
 
-// Put creates or updates a instance into of the repository.
-// If the instance exists return true in the first param returned otherwise return false.
-// If the plugin prototype doesn't exist return false in the second param returned.
+// Put creates or updates a Instance into of the repository.
+// If the Instance exists return true in the first param returned otherwise return false.
+// If the plugin.Prototype doesn't exist return false in the second param returned.
 // The plugin is only checked when the instance exists.
 // If the container doesn't exist return false in the third param returned.
 func (s *Service) Put(inst *Instance) (bool, bool, bool, error) {
@@ -95,7 +95,7 @@ func (s *Service) Put(inst *Instance) (bool, bool, bool, error) {
 	return updated, true, foundc, nil
 }
 
-// Get gets the instance from storage
+// Get gets the Instance from storage
 func (s *Service) Get(id xid.ID, inst *Instance) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.ObjectKey(id), inst)

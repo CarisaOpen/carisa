@@ -28,14 +28,14 @@ import (
 
 const locService = "space.service"
 
-// Service implements CRUD operations for the space category
+// Service implements CRUD operations for the space.Space
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a space service
+// NewService builds a space.Space service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -44,22 +44,22 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a space into of the repository and links instance and space.
-// If the space exists return false in the first param returned.
-// If the instance doesn't exist return false in the second param returned.
+// Create creates a space into of the repository and links instance.Instance and space.Space.
+// If the space.Space exists return false in the first param returned.
+// If the instance.Instance doesn't exist return false in the second param returned.
 func (s *Service) Create(space *Space) (bool, bool, error) {
 	space.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, space)
 }
 
-// Put creates or updates a space into of the repository.
+// Put creates or updates a space.Space into of the repository.
 // If the space exists return true in the first param returned otherwise return false.
-// If the instance doesn't exist return false in the second param returned.
+// If the instance.Instance doesn't exist return false in the second param returned.
 func (s *Service) Put(space *Space) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, space)
 }
 
-// Get gets the space from storage
+// Get gets the space.Space from storage
 func (s *Service) Get(id xid.ID, space *Space) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.SpaceKey(id), space)

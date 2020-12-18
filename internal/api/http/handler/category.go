@@ -31,7 +31,7 @@ import (
 
 const locCat = "http.category"
 
-// Category hands the http request of the category
+// Category hands the http request of the category.Category
 type Category struct {
 	srv category.Service
 	cnt *runtime.Container
@@ -45,7 +45,7 @@ func NewCatHandle(srv category.Service, cnt *runtime.Container) Category {
 	}
 }
 
-// Create creates the category
+// Create creates the category.Category
 func (c *Category) Create(ctx httpc.Context) error {
 	cat := category.Category{}
 	if err := bind(ctx, locCat, c.cnt.Log, &cat); err != nil {
@@ -64,7 +64,7 @@ func (c *Category) Create(ctx httpc.Context) error {
 	return ctx.JSON(http.CreateStatus(created), cat)
 }
 
-// Put creates or update the category
+// Put creates or updates the category.Category
 func (c *Category) Put(ctx httpc.Context) error {
 	id, err := convert.ParamID(ctx)
 	if err != nil {
@@ -89,7 +89,7 @@ func (c *Category) Put(ctx httpc.Context) error {
 	return ctx.JSON(http.PutStatus(updated), cat)
 }
 
-// Get gets the category by ID
+// Get gets the category.Category by ID
 func (c *Category) Get(ctx httpc.Context) error {
 	var cat category.Category
 
@@ -123,7 +123,7 @@ func (c *Category) ListCategories(ctx httpc.Context) error {
 	return ctx.JSON(nethttp.StatusOK, props)
 }
 
-// ListProps list properties by category ID and return top properties.
+// ListProps list properties by category.Category ID and return top properties.
 // If sname query param is not empty, is filtered by properties which name starts by name parameter
 // If gtname query param is not empty, is filtered by properties which name is greater than name parameter
 func (c *Category) ListProps(ctx httpc.Context) error {
@@ -140,7 +140,7 @@ func (c *Category) ListProps(ctx httpc.Context) error {
 	return ctx.JSON(nethttp.StatusOK, props)
 }
 
-// CreateProp creates the property of the category
+// CreateProp creates the property of the category.Category
 func (c *Category) CreateProp(ctx httpc.Context) error {
 	prop := category.Prop{}
 	if err := bind(ctx, locCat, c.cnt.Log, &prop); err != nil {
@@ -163,7 +163,7 @@ func (c *Category) CreateProp(ctx httpc.Context) error {
 	return ctx.JSON(http.CreateStatus(created), prop)
 }
 
-// PutProp creates or update the property of the category
+// PutProp creates or updates the property of the category.Category
 func (c *Category) PutProp(ctx httpc.Context) error {
 	id, err := convert.ParamID(ctx)
 	if err != nil {
@@ -188,7 +188,7 @@ func (c *Category) PutProp(ctx httpc.Context) error {
 	return ctx.JSON(http.PutStatus(updated), prop)
 }
 
-// GetProp gets the property of the category by ID
+// GetProp gets the property of the category.Category by ID
 func (c *Category) GetProp(ctx httpc.Context) error {
 	var prop category.Prop
 
@@ -205,7 +205,7 @@ func (c *Category) GetProp(ctx httpc.Context) error {
 	return ctx.JSON(http.GetStatus(found), prop)
 }
 
-// LinkToProp connects a category property or with other or with a ente property
+// LinkToProp connects a category.Category property or with other or with a ente.Ente property
 func (c *Category) LinkToProp(ctx httpc.Context) error {
 	catPropID, err := convert.ParamXID(ctx, "catpropid")
 	if err != nil {

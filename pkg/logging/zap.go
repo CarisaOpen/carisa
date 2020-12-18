@@ -87,112 +87,112 @@ func NewZapWrap(log *zap.Logger, level Level, loc string) Logger {
 	return zq
 }
 
-// Level implements logging.Logger.Level
+// Level implements Logger.Level
 func (z *zapWrap) Level() Level {
 	return z.level
 }
 
-// Info implements logging.Logger.Info
+// Info implements Logger.Info
 func (z *zapWrap) Info(msg string, loc string) {
 	z.log.Info(msg, z.locZap(loc))
 }
 
-// Info1 implements logging.Logger.Info1
+// Info1 implements Logger.Info1
 func (z *zapWrap) Info1(msg string, loc string, f Field) {
 	z.log.Info(msg, z.locZap(loc), convertToZap(f))
 }
 
-// Info2 implements logging.Logger.Info2
+// Info2 implements Logger.Info2
 func (z *zapWrap) Info2(msg string, loc string, f Field, f1 Field) {
 	z.log.Info(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Info3 implements logging.Logger.Info3
+// Info3 implements Logger.Info3
 func (z *zapWrap) Info3(msg string, loc string, f Field, f1 Field, f2 Field) {
 	z.log.Info(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
-// Warn implements logging.Logger.Warn
+// Warn implements Logger.Warn
 func (z *zapWrap) Warn(msg string, loc string) {
 	z.log.Warn(msg, z.locZap(loc))
 }
 
-// Warn1 implements logging.Logger.Warn1
+// Warn1 implements Logger.Warn1
 func (z *zapWrap) Warn1(msg string, loc string, f Field) {
 	z.log.Warn(msg, z.locZap(loc), convertToZap(f))
 }
 
-// Warn2 implements logging.Logger.Warn2
+// Warn2 implements Logger.Warn2
 func (z *zapWrap) Warn2(msg string, loc string, f Field, f1 Field) {
 	z.log.Warn(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Warn3 implements logging.Logger.Warn3
+// Warn3 implements Logger.Warn3
 func (z *zapWrap) Warn3(msg string, loc string, f Field, f1 Field, f2 Field) {
 	z.log.Warn(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
-// Debug implements logging.Logger.Debug
+// Debug implements Logger.Debug
 func (z *zapWrap) Debug(msg string, loc string) {
 	z.log.Debug(msg, z.locZap(loc))
 }
 
-// Debug1 implements logging.Logger.Debug1
+// Debug1 implements Logger.Debug1
 func (z *zapWrap) Debug1(msg string, loc string, f Field) {
 	z.log.Debug(msg, z.locZap(loc), convertToZap(f))
 }
 
-// Debug2 implements logging.Logger.Debug2
+// Debug2 implements Logger.Debug2
 func (z *zapWrap) Debug2(msg string, loc string, f Field, f1 Field) {
 	z.log.Debug(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Debug3 implements logging.Logger.Debug3
+// Debug3 implements Logger.Debug3
 func (z *zapWrap) Debug3(msg string, loc string, f Field, f1 Field, f2 Field) {
 	z.log.Debug(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
-// Error implements logging.Logger.Error
+// Error implements Logger.Error
 func (z *zapWrap) Error(msg string, loc string) {
 	z.log.Error(msg, z.locZap(loc))
 }
 
-// Error1 implements logging.Logger.Error1
+// Error1 implements Logger.Error1
 func (z *zapWrap) Error1(msg string, loc string, f Field) {
 	z.log.Error(msg, z.locZap(loc), convertToZap(f))
 }
 
-// Error2 implements logging.Logger.Error2
+// Error2 implements Logger.Error2
 func (z *zapWrap) Error2(msg string, loc string, f Field, f1 Field) {
 	z.log.Error(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Error3 implements logging.Logger.Error3
+// Error3 implements Logger.Error3
 func (z *zapWrap) Error3(msg string, loc string, f Field, f1 Field, f2 Field) {
 	z.log.Error(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
-// Panic implements logging.Logger.Panic
+// Panic implements Logger.Panic
 func (z *zapWrap) Panic(msg string, loc string) {
 	z.log.Panic(msg, z.locZap(loc))
 }
 
-// Panic1 implements logging.Logger.Panic1
+// Panic1 implements Logger.Panic1
 func (z *zapWrap) Panic1(msg string, loc string, f Field) {
 	z.log.Panic(msg, z.locZap(loc), convertToZap(f))
 }
 
-// Panic2 implements logging.Logger.Panic2
+// Panic2 implements Logger.Panic2
 func (z *zapWrap) Panic2(msg string, loc string, f Field, f1 Field) {
 	z.log.Panic(msg, z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Panic3 implements logging.Logger.Panic3
+// Panic3 implements Logger.Panic3
 func (z *zapWrap) Panic3(msg string, loc string, f Field, f1 Field, f2 Field) {
 	z.log.Panic(msg, z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }
 
-// Check implements logging.Logger.Check
+// Check implements Logger.Check
 func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
 	if ce := z.log.Check(ConvertZapLevel(l), msg); ce != nil {
 		return &CheckWrap{ce}
@@ -200,22 +200,22 @@ func (z *zapWrap) Check(l Level, msg string) *CheckWrap {
 	return nil
 }
 
-// Write implements logging.Logger.Write
+// Write implements Logger.Write
 func (z *zapWrap) Write(wrap *CheckWrap, loc string) {
 	wrap.zapCheck.Write(z.locZap(loc))
 }
 
-// Write1 implements logging.Logger.Write1
+// Write1 implements Logger.Write1
 func (z *zapWrap) Write1(wrap *CheckWrap, loc string, f Field) {
 	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f))
 }
 
-// Write2 implements logging.Logger.Write2
+// Write2 implements Logger.Write2
 func (z *zapWrap) Write2(wrap *CheckWrap, loc string, f Field, f1 Field) {
 	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f), convertToZap(f1))
 }
 
-// Write3 implements logging.Logger.Write3
+// Write3 implements Logger.Write3
 func (z *zapWrap) Write3(wrap *CheckWrap, loc string, f Field, f1 Field, f2 Field) {
 	wrap.zapCheck.Write(z.locZap(loc), convertToZap(f), convertToZap(f1), convertToZap(f2))
 }

@@ -29,14 +29,14 @@ import (
 
 const locService = "ente.service"
 
-// Service implements CRUD operations for the ente
+// Service implements CRUD operations for the Ente
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a ente service
+// NewService builds a Ente service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -45,22 +45,22 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a ente into of the repository and links ente and space.
-// If the ente exists return false in the first param returned.
-// If the space doesn't exist return false in the second param returned.
+// Create creates a Ente into of the repository and links Ente and space.Space.
+// If the Ente exists return false in the first param returned.
+// If the space.Space doesn't exist return false in the second param returned.
 func (s *Service) Create(ente *Ente) (bool, bool, error) {
 	ente.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
 
-// Put creates or updates a ente into of the repository.
-// If the ente exists return true in the first param returned otherwise return false.
-// If the space doesn't exist return false in the second param returned.
+// Put creates or updates a Ente into of the repository.
+// If the Ente exists return true in the first param returned otherwise return false.
+// If the space.Space doesn't exist return false in the second param returned.
 func (s *Service) Put(ente *Ente) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, ente)
 }
 
-// Get gets the ente from storage
+// Get gets the Ente from storage
 func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.EnteKey(id), ente)
@@ -68,9 +68,9 @@ func (s *Service) Get(id xid.ID, ente *Ente) (bool, error) {
 	return ok, err
 }
 
-// LinkToCat connect ente to category
-// If the ente exists return true in the first param returned otherwise return false.
-// If the category exists return true in the second param returned otherwise return false.
+// LinkToCat connect Ente to category.Category
+// If the Ente exists return true in the first param returned otherwise return false.
+// If the category.Category exists return true in the second param returned otherwise return false.
 func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relation.Hierarchy, error) {
 	ente := New()
 	ente.ID = enteID
@@ -101,7 +101,7 @@ func (s *Service) LinkToCat(enteID xid.ID, categoryID xid.ID) (bool, bool, relat
 }
 
 // ListProps lists properties depending ranges parameter.
-// Look at service.List
+// Look at service.Extension
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
 		entity.EnteKey(id),
@@ -111,7 +111,7 @@ func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]sto
 		func() storage.Entity { return &relation.EnteProp{} })
 }
 
-// CreateProp creates a property into of the repository and links ente property and property.
+// CreateProp creates a property into of the repository and links Ente property and property.
 // If the property exists return false in the first param returned.
 // If the prop doesn't exist return false in the second param returned.
 func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
@@ -119,7 +119,7 @@ func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
 
-// PutProp creates or updates a peroperty into of the repository.
+// PutProp creates or updates a property into of the repository.
 // If the property exists return true in the first param returned otherwise return false.
 // If the prop doesn't exist return false in the second param returned.
 func (s *Service) PutProp(prop *Prop) (bool, bool, error) {

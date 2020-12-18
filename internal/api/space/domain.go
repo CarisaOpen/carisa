@@ -24,8 +24,8 @@ import (
 	"github.com/rs/xid"
 )
 
-// The space splits the instance in logic categories.
-// Each space can have several entes, dashboard, etc...
+// The space splits the instance.Instance in logic categories.
+// Each space.Space can have several entes, dashboard, etc...
 type Space struct {
 	entity.Descriptor
 	InstID xid.ID `json:"instanceId"` // Instance container
@@ -58,7 +58,7 @@ func (s *Space) ParentKey() string {
 	return entity.InstKey(s.InstID)
 }
 
-// Link gets the link between instance and space
+// Link gets the link between instance.Instance and space.Space
 func (s *Space) Link() storage.Entity {
 	return s.link(s.ParentKey())
 }

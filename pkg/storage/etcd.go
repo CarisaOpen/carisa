@@ -125,7 +125,7 @@ func config(cnf EtcdConfig) clientv3.Config {
 	}
 }
 
-// Put implements storage.interface.CRUD.Put
+// Put implements CRUD.Put
 func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 	encode, err := encoding.Encode(entity)
 	if err != nil {
@@ -139,17 +139,17 @@ func (s *etcdStore) Put(entity Entity) (OpeWrap, error) {
 	return OpeWrap{clientv3.OpPut(entity.Key(), encode)}, err
 }
 
-// PutRaw implements storage.interface.CRUD.PutRaw
+// PutRaw implements CRUD.PutRaw
 func (s *etcdStore) PutRaw(key string, value string) OpeWrap {
 	return OpeWrap{clientv3.OpPut(key, value)}
 }
 
-// Remove implements storage.interface.CRUD.Remove
+// Remove implements CRUD.Remove
 func (s *etcdStore) Remove(key string) OpeWrap {
 	return OpeWrap{clientv3.OpDelete(key)}
 }
 
-// Get implements storage.interface.CRUD.Get
+// Get implements CRUD.Get
 func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, error) {
 	res, err := s.client.Get(ctx, key)
 	if err != nil {
@@ -166,7 +166,7 @@ func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, e
 	return false, nil
 }
 
-// Exists implements storage.interface.CRUD.Exists
+// Exists implements CRUD.Exists
 func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
 	res, err := s.client.Get(ctx, key, clientv3.WithKeysOnly())
 	if err != nil {
@@ -178,7 +178,7 @@ func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
 	return false, nil
 }
 
-// StartKey implements storage.interface.CRUD.StartKey
+// StartKey implements CRUD.StartKey
 func (s *etcdStore) StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error) {
 	return s.list(
 		ctx,
@@ -190,7 +190,7 @@ func (s *etcdStore) StartKey(ctx context.Context, key string, top int, empty fun
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 }
 
-// Range implements storage.interface.CRUD.Range
+// Range implements CRUD.Range
 func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
 	return s.list(
 		ctx,
@@ -203,7 +203,7 @@ func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 }
 
-// RangeRaw implements storage.interface.CRUD.RangeRaw
+// RangeRaw implements CRUD.RangeRaw
 func (s *etcdStore) RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error) {
 	res, err := s.client.Get(
 		ctx,
@@ -262,7 +262,7 @@ func errWithKey(err error, key string, msg string) error {
 		logging.Compose(msg, logging.String("Key", key)))
 }
 
-// Put implements storage.interface.CRUD.Close
+// Put implements CRUD.Close
 func (s *etcdStore) Close() error {
 	return s.client.Close()
 }
@@ -277,12 +277,12 @@ type etcdTxn struct {
 	keyValue   string
 }
 
-// Exists implements storage.interface.Txn.Exists
+// Exists implements Txn.Find
 func (txn *etcdTxn) Find(keyValue string) {
 	txn.keyValue = keyValue
 }
 
-// DoFound implements storage.interface.Txn.DoFound
+// DoFound implements Txn.DoFound
 func (txn *etcdTxn) DoFound(ope OpeWrap) {
 	if txn.indexF > operTrans-1 {
 		panic(fmt.Sprintf("the transaction cannot have more than %v operations for found", operTrans))
@@ -291,7 +291,7 @@ func (txn *etcdTxn) DoFound(ope OpeWrap) {
 	txn.indexF++
 }
 
-// DoNotFound implements storage.interface.Txn.DoNotFound
+// DoNotFound implements Txn.DoNotFound
 func (txn *etcdTxn) DoNotFound(ope OpeWrap) {
 	if txn.indexNf > operTrans-1 {
 		panic(fmt.Sprintf("the transaction cannot have more than %v operations for found", operTrans))
@@ -300,7 +300,7 @@ func (txn *etcdTxn) DoNotFound(ope OpeWrap) {
 	txn.indexNf++
 }
 
-// Commit implements storage.interface.Txn.Commit
+// Commit implements Txn.Commit
 func (txn *etcdTxn) Commit(ctx context.Context) (bool, error) {
 	if txn.indexF == 0 && txn.indexNf == 0 {
 		panic("commit. there isn't condition")

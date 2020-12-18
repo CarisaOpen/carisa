@@ -29,14 +29,14 @@ import (
 
 const locService = "plugin.service"
 
-// Service implements CRUD operations for the plugin
+// Service implements CRUD operations for the plugin.Prototype
 type Service struct {
 	cnt  *runtime.Container
 	ext  *service.Extension
 	crud storage.CrudOperation
 }
 
-// NewService builds a plugin service
+// NewService builds a plugin.Prototype service
 func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.CrudOperation) Service {
 	return Service{
 		cnt:  cnt,
@@ -45,22 +45,22 @@ func NewService(cnt *runtime.Container, ext *service.Extension, crud storage.Cru
 	}
 }
 
-// Create creates a plugin into of the repository and links plugin and platform.
-// If the plugin exists return false in the first param returned.
+// Create creates a plugin.Prototype into of the repository and links plugin.Prototype and platform.
+// If the plugin.Prototype exists return false in the first param returned.
 func (s *Service) Create(proto *Prototype) (bool, error) {
 	proto.AutoID()
 	created, _, err := s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, proto)
 	return created, err
 }
 
-// Put creates or updates a plugin into of the repository.
-// If the plugin exists return true in the first param returned otherwise return false.
+// Put creates or updates a plugin.Prototype into of the repository.
+// If the plugin.Prototype exists return true in the first param returned otherwise return false.
 func (s *Service) Put(proto *Prototype) (bool, error) {
 	updated, _, err := s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, proto)
 	return updated, err
 }
 
-// Get gets the plugin from storage
+// Get gets the plugin.Prototype from storage
 func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.PluginKey(id), proto)
@@ -68,7 +68,7 @@ func (s *Service) Get(id xid.ID, proto *Prototype) (bool, error) {
 	return ok, err
 }
 
-// Exists checks if the plugin exists
+// Exists checks if the plugin.Prototype exists
 func (s *Service) Exists(id xid.ID) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	found, err := s.crud.Store().Exists(ctx, entity.PluginKey(id))
@@ -84,7 +84,7 @@ func (s *Service) Exists(id xid.ID) (bool, error) {
 	return found, err
 }
 
-// ListPlugins lists the plugins depending 'ranges' parameter.
+// ListPlugins lists the plugin.Prototype depending 'ranges' parameter.
 // Look at service.List
 func (s *Service) ListPlugins(cat Category, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(

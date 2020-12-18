@@ -21,8 +21,8 @@ import (
 	"github.com/carisa/pkg/strings"
 )
 
-// Instance represents a set of spaces. Each space can have several dashboard.
-// Each instance is independently of another instance in all system
+// Instance represents a set of spaces. Each space.Space can have several dashboard.
+// Each Instance is independently of another Instance in all system
 type Instance struct {
 	entity.Descriptor
 }

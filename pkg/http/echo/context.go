@@ -39,27 +39,27 @@ type context struct {
 	ctx echo.Context
 }
 
-// Param implements http.interface.Context.Param
+// Param implements Context.Param
 func (c *context) Param(name string) string {
 	return c.ctx.Param(name)
 }
 
-// QueryParam implements http.interface.Context.QueryParam
+// QueryParam implements Context.QueryParam
 func (c *context) QueryParam(name string) string {
 	return c.ctx.QueryParam(name)
 }
 
-// Bind implements http.interface.Context.Bind
+// Bind implements Context.Bind
 func (c *context) Bind(i interface{}) error {
 	return c.ctx.Bind(i)
 }
 
-// JSON implements http.interface.Context.JSON
+// JSON implements Context.JSON
 func (c *context) JSON(code int, i interface{}) error {
 	return c.ctx.JSON(code, i)
 }
 
-// HTTPErrorLog implements http.interface.Context.HTTPErrorLog
+// HTTPErrorLog implements Context.HTTPErrorLog
 func (c *context) HTTPErrorLog(
 	status int,
 	msg string, err error,
@@ -78,12 +78,12 @@ func (c *context) HTTPErrorLog(
 	return echo.NewHTTPError(status, logging.Compose(msg, fields...))
 }
 
-// HTTPError implements http.interface.Context.HTTPError
+// HTTPError implements Context.HTTPError
 func (c *context) HTTPError(code int, message ...interface{}) error {
 	return echo.NewHTTPError(code, message)
 }
 
-// NoEmpty implements http.interface.Context.NoEmpty
+// NoEmpty implements Context.NoEmpty
 func (c *context) NoEmpty(name string, value string) error {
 	if len(value) == 0 {
 		return c.HTTPError(nethttp.StatusBadRequest, strings.Concat("the property: '", name, "' can not be empty"))
@@ -91,7 +91,7 @@ func (c *context) NoEmpty(name string, value string) error {
 	return nil
 }
 
-// NoEmpty implements http.interface.Context.NoEmpty
+// MaxLen implements Context.MaxLen
 func (c *context) MaxLen(name string, value string, length int) error {
 	if len(value) > length {
 		return c.HTTPError(

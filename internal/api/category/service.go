@@ -30,7 +30,7 @@ import (
 
 const locService = "category.service"
 
-// Service implements CRUD operations for the category
+// Service implements CRUD operations for the Category
 type Service struct {
 	cnt     *runtime.Container
 	ext     *service.Extension
@@ -38,7 +38,7 @@ type Service struct {
 	entesrv *ente.Service
 }
 
-// NewService builds a category service
+// NewService builds a Category service
 func NewService(
 	cnt *runtime.Container,
 	ext *service.Extension,
@@ -53,22 +53,22 @@ func NewService(
 	}
 }
 
-// Create creates a category into of the repository and links category and space or other category.
-// If the category exists return false in the first param returned.
-// If the space or category doesn't exist return false in the second param returned.
+// Create creates a Category into of the repository and links Category and space.Space or other Category.
+// If the Category exists return false in the first param returned.
+// If the space.Space or Category doesn't exist return false in the second param returned.
 func (s *Service) Create(cat *Category) (bool, bool, error) {
 	cat.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, cat)
 }
 
-// Put creates or updates a category into of the repository.
-// If the category exists return true in the first param returned otherwise return false.
-// If the space or cat doesn't exist return false in the second param returned.
+// Put creates or updates a Category into of the repository.
+// If the Category exists return true in the first param returned otherwise return false.
+// If the space.Space or cat doesn't exist return false in the second param returned.
 func (s *Service) Put(cat *Category) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, cat)
 }
 
-// Get gets the category from storage
+// Get gets the Category from storage
 func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 	ctx, cancel := s.cnt.StoreWithTimeout()
 	ok, err := s.crud.Store().Get(ctx, entity.CategoryKey(id), cat)
@@ -77,13 +77,13 @@ func (s *Service) Get(id xid.ID, cat *Category) (bool, error) {
 }
 
 // ListCategories lists categories depending of 'ranges' parameter.
-// Look at service.List
+// Look at service.Extension
 func (s *Service) ListCategories(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(entity.CategoryKey(id), name, ranges, top, func() storage.Entity { return &relation.Hierarchy{} })
 }
 
 // ListProps lists properties depending ranges parameter.
-// Look at service.List
+// Look at service.Extension
 func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]storage.Entity, error) {
 	return s.ext.List(
 		entity.CategoryKey(id),
@@ -93,9 +93,9 @@ func (s *Service) ListProps(id xid.ID, name string, ranges bool, top int) ([]sto
 		func() storage.Entity { return &relation.CategoryProp{} })
 }
 
-// CreateProp creates a property into of the repository and links category property and category.
+// CreateProp creates a property into of the repository and links Category property and Category.
 // If the property exists return false in the first param returned.
-// If the category doesn't exist return false in the second param returned.
+// If the Category doesn't exist return false in the second param returned.
 func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 	prop.AutoID()
 	return s.crud.CreateWithRel(locService, s.cnt.StoreWithTimeout, prop)
@@ -103,7 +103,7 @@ func (s *Service) CreateProp(prop *Prop) (bool, bool, error) {
 
 // PutProp creates or updates a property into of the repository.
 // If the property exists return true in the first param returned otherwise return false.
-// If the category doesn't exist return false in the second param returned.
+// If the Category doesn't exist return false in the second param returned.
 func (s *Service) PutProp(prop *Prop) (bool, bool, error) {
 	return s.crud.PutWithRel(locService, s.cnt.StoreWithTimeout, prop)
 }
@@ -116,8 +116,8 @@ func (s *Service) GetProp(id xid.ID, prop *Prop) (bool, error) {
 	return ok, err
 }
 
-// LinkToProp links a category property with other category property or ente property
-// of the child category. tPropID can be category property or ente property.
+// LinkToProp links a Category property with other Category property or ente.Ente property
+// of the child Category. tPropID can be category property or ente.Ente property.
 // The source an target must have the same type of data.
 // The first parameter returned is true if the catPropID is found.
 // The second parameter returned is true if the tPropID is found.

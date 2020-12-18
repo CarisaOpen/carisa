@@ -14,7 +14,7 @@
  *
  */
 
-// As in a key value database there is not scheme. This package generates keys keep mind the scheme
+// As in a key value database there is not scheme, this package generates keys keep mind the scheme
 package entity
 
 import (

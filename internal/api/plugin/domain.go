@@ -35,12 +35,12 @@ func Plugins() []Category {
 }
 
 // It allows make prototype of dynamic object.
-// Each object have n dynamic properties.
-// Each object define the representative name.
+// Each object.Instance have n dynamic properties.
+// Each object.Instance define the representative name.
 // The plugin developers could define the necessary information what the plugin needs
 // with the Prototype and PrototypeProperty.
 // The user interface will be built dynamically with this information.
-// External users could make dynamic object instance using plugin prototype.
+// External users could make dynamic object object.Instance using plugin Prototype.
 // See object.Instance
 type Prototype struct {
 	entity.Descriptor

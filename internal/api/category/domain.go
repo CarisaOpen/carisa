@@ -24,8 +24,8 @@ import (
 	"github.com/rs/xid"
 )
 
-// Category represents a hierarchy to organize the entes and how the information spreads between the different categories
-// Each category references to cat properties or properties of other categories.
+// Category represents a hierarchy to organize the ente.Ente and how the information spreads between the different categories
+// Each Category references to cat properties or properties of other categories.
 // If it is Root, the parent is a space.
 type Category struct {
 	entity.Descriptor
@@ -62,8 +62,8 @@ func (c *Category) ParentKey() string {
 	return entity.CategoryKey(c.ParentID)
 }
 
-// Link gets the link between category and space if the Root field is true
-// If the Root field is false gets the link between category and others category
+// Link gets the link between Category and space.Space if the Root field is true
+// If the Root field is false gets the link between category and others Category
 func (c *Category) Link() storage.Entity {
 	return c.link(c.Root, c.ParentKey())
 }
@@ -103,15 +103,15 @@ func (c *Category) Empty() storage.EntityRelation {
 	return &Category{}
 }
 
-// Prop are the properties of category. Each property represents a generalization
-// of the properties of the entes or of the properties of the categories
-// Each category property can inherit properties of child (category or ente)
-// All of them have the same type. The type is assigned when is linked the first property so ente as the category
+// Prop are the properties of Category. Each property represents a generalization
+// of the properties of the ente.Ente or of the properties of the categories
+// Each Category property can inherit properties of child (Category or ente.Ente)
+// All of them have the same type. The type is assigned when is linked the first property so ente.Ente as the Category
 type Prop struct {
 	entity.Descriptor
 	CatID     xid.ID          `json:"categoryId"` // Category container
 	Type      entity.TypeProp `json:"type"`
-	catPropID xid.ID          // Is used temporarily to connect the property and the category property.
+	catPropID xid.ID          // Is used temporarily to connect the property and the Category property.
 }
 
 func NewProp() Prop {

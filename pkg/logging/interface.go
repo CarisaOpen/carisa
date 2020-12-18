@@ -160,55 +160,55 @@ type loggerComp struct {
 	log Logger
 }
 
-// ErrorE implements logging.Logger.ErrorE
+// ErrorE implements Logger.ErrorE
 func (l *loggerComp) ErrorE(err error, loc string) {
 	l.log.Error(err.Error(), loc)
 }
 
-// ErrorE1 implements logging.Logger.ErrorE
+// ErrorE1 implements Logger.ErrorE1
 func (l *loggerComp) ErrorE1(err error, loc string, f Field) {
 	l.log.Error1(err.Error(), loc, f)
 }
 
-// ErrorE2 implements logging.Logger.ErrorE1
+// ErrorE2 implements Logger.ErrorE2
 func (l *loggerComp) ErrorE2(err error, loc string, f Field, f1 Field) {
 	l.log.Error2(err.Error(), loc, f, f1)
 }
 
-// ErrorE3 implements logging.Logger.ErrorE2
+// ErrorE3 implements Logger.ErrorE3
 func (l *loggerComp) ErrorE3(err error, loc string, f Field, f1 Field, f2 Field) {
 	l.log.Error3(err.Error(), loc, f, f1, f2)
 }
 
-// ErrWrap implements logging.Logger.ErrWrap
+// ErrWrap implements Logger.ErrWrap
 func (l *loggerComp) ErrWrap(err error, msg string, loc string) error {
 	errW := errors.Wrap(err, msg)
 	l.log.Error(errW.Error(), loc)
 	return errW
 }
 
-// ErrWrap1 implements logging.Logger.ErrWrap1
+// ErrWrap1 implements Logger.ErrWrap1
 func (l *loggerComp) ErrWrap1(err error, msg string, loc string, f Field) error {
 	errW := errors.Wrap(err, Compose(msg, f))
 	l.log.Error(errW.Error(), loc)
 	return errW
 }
 
-// ErrWrap2 implements logging.Logger.ErrWrap2
+// ErrWrap2 implements Logger.ErrWrap2
 func (l *loggerComp) ErrWrap2(err error, msg string, loc string, f Field, f1 Field) error {
 	errW := errors.Wrap(err, Compose(msg, f, f1))
 	l.log.Error(errW.Error(), loc)
 	return errW
 }
 
-// ErrWrap3 implements logging.Logger.ErrWrap3
+// ErrWrap3 implements Logger.ErrWrap3
 func (l *loggerComp) ErrWrap3(err error, msg string, loc string, f Field, f1 Field, f2 Field) error {
 	errW := errors.Wrap(err, Compose(msg, f, f1, f2))
 	l.log.Error(errW.Error(), loc)
 	return errW
 }
 
-// PanicE implements logging.Logger.PanicE
+// PanicE implements Logger.PanicE
 func (l *loggerComp) PanicE(err error, loc string) {
 	l.log.Panic(err.Error(), loc)
 }

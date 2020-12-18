@@ -30,7 +30,7 @@ const (
 	CatPropPropLn = "CPP"
 )
 
-// InstSpace represents the link between instance and space
+// InstSpace represents the link between instance.Instance and space.Space
 type InstSpace struct {
 	ID      string `json:"-"`
 	Name    string `json:"name"`
@@ -45,7 +45,7 @@ func (l *InstSpace) Key() string {
 	return l.ID
 }
 
-// SpaceEnte represents the link between space and ente
+// SpaceEnte represents the link between space.Space and ente.Ente
 type SpaceEnte struct {
 	ID     string `json:"-"`
 	Name   string `json:"name"`
@@ -60,7 +60,7 @@ func (s *SpaceEnte) Key() string {
 	return s.ID
 }
 
-// EnteProp represents the link between ente and her properties
+// EnteProp represents the link between ente.Ente and her properties
 type EnteProp struct {
 	ID         string `json:"-"`
 	Name       string `json:"name"`
@@ -75,7 +75,7 @@ func (s *EnteProp) Key() string {
 	return s.ID
 }
 
-// SpaceCategory represents the link between space and category
+// SpaceCategory represents the link between space.Space and category.Category
 type SpaceCategory struct {
 	ID    string `json:"-"`
 	Name  string `json:"name"`
@@ -90,12 +90,12 @@ func (s *SpaceCategory) Key() string {
 	return s.ID
 }
 
-// Hierarchy represents the link between category and others category or ente
+// Hierarchy represents the link between category.Category and others category.Category or ente.Ente
 type Hierarchy struct {
 	ID       string `json:"-"`
 	Name     string `json:"name"`
 	LinkID   string `json:"linkId"`
-	Category bool   `json:"category"` // Category=false the hierarchy link to a ente
+	Category bool   `json:"category"` // Category=false the hierarchy link to a ente.Ente
 }
 
 func (h *Hierarchy) ToString() string {
@@ -106,7 +106,7 @@ func (h *Hierarchy) Key() string {
 	return h.ID
 }
 
-// CategoryProp represents the link between category and her properties
+// CategoryProp represents the link between category.Category and her properties
 type CategoryProp struct {
 	ID        string `json:"-"`
 	Name      string `json:"name"`
@@ -121,13 +121,13 @@ func (c *CategoryProp) Key() string {
 	return c.ID
 }
 
-// CatPropProp represents the link between category property and others category property or ente property
+// CatPropProp represents the link between category.Category property and others category property or ente.Ente property
 // of the children
 type CatPropProp struct {
 	ID       string `json:"-"`
 	Name     string `json:"name"`
 	PropID   string `json:"propertyId"`
-	Category bool   `json:"category"` // Category=false the property links to a ente property
+	Category bool   `json:"category"` // Category=false the property links to a ente.Ente property
 }
 
 func (l *CatPropProp) ToString() string {
@@ -138,7 +138,7 @@ func (l *CatPropProp) Key() string {
 	return l.ID
 }
 
-// PlatformPlugin represents the link between platform and plugin prototype
+// PlatformPlugin represents the link between platform and plugin.Prototype
 type PlatformPlugin struct {
 	ID       string `json:"-"`
 	Name     string `json:"name"`
@@ -154,7 +154,7 @@ func (p *PlatformPlugin) Key() string {
 	return p.ID
 }
 
-// PlatformInstance represents the link between platform and plugin instance
+// PlatformInstance represents the link between platform and plugin instance.Instance
 type PlatformInstance struct {
 	ID       string `json:"-"`
 	Name     string `json:"name"`
