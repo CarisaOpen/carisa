@@ -17,27 +17,26 @@
 package runtime
 
 import (
-	"strconv"
-
 	"github.com/carisa/pkg/runtime"
-	"github.com/carisa/pkg/strings"
+	"github.com/rs/xid"
 )
 
-const envConfig = "CARISA_API"
+const envConfig = "CARISA_SPLITTER"
 
-// Server describes the http configuration
+// Server describes the information about splitter server
 type Server struct {
-	Port int `json:"port"`
+	Name xid.ID // Unique identifier for each splitter
 }
 
-// Address returns address to connection server
-func (s *Server) Address() string {
-	return strings.Concat(":", strconv.Itoa(s.Port))
+func newServer() Server {
+	return Server{
+		Name: xid.New(),
+	}
 }
 
 // Config defines the global information
 type Config struct {
-	Server `json:"server,omitempty"`
+	Server `json:"-"`
 	runtime.CommonConfig
 }
 
@@ -48,9 +47,7 @@ func (c *Config) Common() *runtime.CommonConfig {
 // LoadConfig loads the configuration from environment variable
 func LoadConfig() Config {
 	cnf := Config{
-		Server: Server{
-			Port: 8080,
-		},
+		Server: newServer(),
 	}
 	runtime.LoadConfig(envConfig, &cnf)
 	return cnf

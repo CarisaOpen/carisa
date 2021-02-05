@@ -25,12 +25,16 @@ import (
 
 	"github.com/carisa/internal/api/runtime"
 	"github.com/stretchr/testify/assert"
+
+	pkgr "github.com/carisa/pkg/runtime"
 )
 
-func TestController_Build(t *testing.T) {
+func TestTemplate_Build(t *testing.T) {
 	cnf := runtime.Config{
-		Server:     runtime.Server{Port: 8080},
-		EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
+		Server: runtime.Server{Port: 8080},
+		CommonConfig: pkgr.CommonConfig{
+			EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
+		},
 	}
 
 	sMock := mock.NewStorageFake(t)

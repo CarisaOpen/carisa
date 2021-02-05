@@ -27,8 +27,8 @@ import (
 
 const locBuild = "factory.build"
 
-// Controller builds the application flow
-type Controller struct {
+// Template builds the dependencies for the application
+type Template struct {
 	Config   runtime.Config
 	Handlers handler.Handlers
 	Echo     *echo.Echo
@@ -37,7 +37,7 @@ type Controller struct {
 	cnt   *runtime.Container
 }
 
-func (c *Controller) Close() {
+func (c *Template) Close() {
 	const loc = "factory.close"
 	c.cnt.Log.Info("closing connections", loc)
 	if err := c.store.Close(); err != nil {
@@ -48,17 +48,17 @@ func (c *Controller) Close() {
 }
 
 // Build builds the services, store, log, etc..
-func Build() Controller {
+func Build() Template {
 	return build(nil)
 }
 
-func build(mng storage.Integration /*for test*/) Controller {
+func build(mng storage.Integration /*for test*/) Template {
 	cnf, cnt, store, e := servers(mng)
 	srv := services(cnt, store)
 	handlers := handlers(srv, cnt)
 	cnt.Log.Info1("http server started", locBuild, logging.String("address", cnf.Server.Address()))
 
-	return Controller{
+	return Template{
 		Config:   cnf,
 		Handlers: handlers,
 		Echo:     e,

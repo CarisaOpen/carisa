@@ -20,18 +20,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/runtime"
 	"github.com/carisa/pkg/storage"
+	"github.com/rs/xid"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestServer_Address(t *testing.T) {
-	s := Server{
-		Port: 1212,
-	}
-	assert.Equal(t, ":1212", s.Address())
-}
 
 func TestRuntime_LoadConfig(t *testing.T) {
 	tests := []struct {
@@ -43,26 +38,28 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			name: "Default configuration",
 			envC: "",
 			cnf: Config{
-				Server: Server{
-					Port: 8080,
-				},
+				Server: Server{},
 				CommonConfig: runtime.CommonConfig{
 					EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 				},
 			},
 		},
 		{
-			name: "Server configuration",
+			name: "Log configuration",
 			envC: `{
-  "server": {
-    "port": 1212
+  "log": {
+    "development": true, 
+    "level": 2, 
+    "encoding": "json"
   }
-}`,
-			cnf: Config{
-				Server: Server{
-					Port: 1212,
-				},
+}`, cnf: Config{
+				Server: Server{},
 				CommonConfig: runtime.CommonConfig{
+					ZapConfig: logging.ZapConfig{
+						Development: true,
+						Level:       2,
+						Encoding:    "json",
+					},
 					EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 				},
 			},
@@ -73,6 +70,8 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			_ = os.Setenv(envConfig, tt.envC)
 		}
 		cnf := LoadConfig()
+		tt.cnf.Server = cnf.Server
 		assert.Equalf(t, tt.cnf, cnf, tt.name)
+		assert.NotEqualf(t, cnf.Server.Name, xid.NilID(), tt.name)
 	}
 }

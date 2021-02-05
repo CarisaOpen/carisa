@@ -28,7 +28,7 @@ import (
 
 func TestRuntime_NewContainer(t *testing.T) {
 	cnf := Config{
-		Server: Server{Port: 8080},
+		Server: newServer(),
 		CommonConfig: runtime.CommonConfig{
 			EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 		},

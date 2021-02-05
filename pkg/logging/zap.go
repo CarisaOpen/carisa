@@ -23,11 +23,11 @@ import (
 
 // ZapConfig defines the configuration for log framework
 type ZapConfig struct {
-	// Development mode. Default value: false
+	// Development mode. Common value: false
 	Development bool `json:"development,omitempty"`
-	// Level. See logging.Level. Default value: Depending of Development flag
+	// Level. See logging.Level. Common value: Depending of Development flag
 	Level Level `json:"level,omitempty"`
-	// Encoding type. Default value: Depending of Development flag
+	// Encoding type. Common value: Depending of Development flag
 	// The values can be: j -> json format, c -> console format
 	Encoding string `json:"encoding,omitempty"`
 }
