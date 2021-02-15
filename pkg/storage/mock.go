@@ -9,8 +9,10 @@ import (
 // For testing other functions use storage.Integration
 type ErrMockCRUD struct {
 	put      bool
+	putRaw   bool
 	remove   bool
 	get      bool
+	getRaw   bool
 	exists   bool
 	startKey bool
 	rang     bool
@@ -41,6 +43,13 @@ func (e *ErrMockCRUD) Get(ctx context.Context, key string, entity Entity) (bool,
 		return false, errors.New("get")
 	}
 	return true, nil
+}
+
+func (e *ErrMockCRUD) GetRaw(ctx context.Context, key string) (bool, string, error) {
+	if e.get {
+		return false, "", errors.New("getRaw")
+	}
+	return true, "", nil
 }
 
 func (e *ErrMockCRUD) Remove(key string) OpeWrap {
@@ -86,9 +95,13 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 		switch method {
 		case "Put":
 			e.put = true
+		case "PutRaw":
+			e.putRaw = true
 		case "Remove":
 			e.remove = true
 		case "Get":
+			e.get = true
+		case "GetRaw":
 			e.get = true
 		case "Exists":
 			e.exists = true
@@ -109,8 +122,10 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 // Clear deactivates all methods
 func (e *ErrMockCRUD) Clear() {
 	e.put = false
+	e.putRaw = false
 	e.remove = false
 	e.get = false
+	e.getRaw = false
 	e.exists = false
 	e.startKey = false
 	e.rang = false

@@ -83,6 +83,9 @@ type (
 		// Get gets the entity into entity param
 		Get(ctx context.Context, key string, entity Entity) (bool, error)
 
+		// GetRaw gets the value of the key
+		GetRaw(ctx context.Context, key string) (bool, string, error)
+
 		// Exists if the key exists return true
 		Exists(ctx context.Context, key string) (bool, error)
 
@@ -114,6 +117,9 @@ type (
 
 		// Commit commits the transaction. If it is returned true the transaction is successfully
 		Commit(ctx context.Context) (bool, error)
+
+		// Clear clears the internal values to start a new transaction
+		Clear()
 	}
 )
 

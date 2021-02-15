@@ -17,8 +17,8 @@
 package factory
 
 import (
-	"github.com/carisa/internal/splitter"
 	"github.com/carisa/internal/splitter/runtime"
+	"github.com/carisa/internal/splitter/service"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
 )
@@ -27,7 +27,7 @@ const locBuild = "factory.build"
 
 // Template builds the dependencies for the application
 type Template struct {
-	Controller splitter.Controller
+	Controller service.Controller
 
 	store storage.CRUD
 	cnt   *runtime.Container
@@ -52,7 +52,7 @@ func build(mng storage.Integration /*for test*/) Template {
 	cnt, store := servers(mng)
 
 	return Template{
-		Controller: splitter.NewController(store),
+		Controller: service.NewController(cnt, store),
 		store:      store,
 		cnt:        cnt,
 	}
@@ -63,7 +63,7 @@ func servers(mng storage.Integration) (*runtime.Container, storage.CRUD) {
 	log, _ := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info1("loaded configuration", locBuild, logging.String("config", cnf.String()))
 
-	cnt := runtime.NewContainer(cnf, log)
+	cnt := runtime.NewContainer(cnf, storage.NewTxn, log)
 
 	log.Info1("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
 	var store storage.CRUD

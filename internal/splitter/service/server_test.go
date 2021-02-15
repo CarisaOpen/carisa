@@ -14,22 +14,16 @@
  *
  */
 
-package splitter
+package service
 
-import "github.com/carisa/pkg/storage"
+import (
+	"testing"
 
-// Controller implements the functionality when the splitter service starts, stops, etc.
-type Controller struct {
-	store storage.CRUD
-}
+	"github.com/rs/xid"
+	"github.com/stretchr/testify/assert"
+)
 
-// NewController builds a Controller
-func NewController(data storage.CRUD) Controller {
-	return Controller{
-		store: data,
-	}
-}
-
-func (c *Controller) Start() {
-
+func TestServer_New(t *testing.T) {
+	s := newServer()
+	assert.NotEqual(t, xid.NilID(), s.id)
 }

@@ -17,6 +17,8 @@
 package runtime
 
 import (
+	"time"
+
 	"github.com/carisa/pkg/runtime"
 	"github.com/rs/xid"
 )
@@ -37,6 +39,8 @@ func newServer() Server {
 // Config defines the global information
 type Config struct {
 	Server `json:"-"`
+	// RenewHeartbeatInSecs look at Controller.renewHeartbeatInSecs.
+	RenewHeartbeatInSecs time.Duration `json:"renewHeartbeatInSecs,omitempty"`
 	runtime.CommonConfig
 }
 
@@ -47,7 +51,8 @@ func (c *Config) Common() *runtime.CommonConfig {
 // LoadConfig loads the configuration from environment variable
 func LoadConfig() Config {
 	cnf := Config{
-		Server: newServer(),
+		Server:               newServer(),
+		RenewHeartbeatInSecs: 15,
 	}
 	runtime.LoadConfig(envConfig, &cnf)
 	return cnf

@@ -166,6 +166,19 @@ func (s *etcdStore) Get(ctx context.Context, key string, entity Entity) (bool, e
 	return false, nil
 }
 
+// Get implements CRUD.GetRaw
+func (s *etcdStore) GetRaw(ctx context.Context, key string) (bool, string, error) {
+	res, err := s.client.Get(ctx, key)
+	if err != nil {
+		return false, "", err
+	}
+
+	if res.Count > 0 {
+		return true, string(res.Kvs[0].Value), nil
+	}
+	return false, "", nil
+}
+
 // Exists implements CRUD.Exists
 func (s *etcdStore) Exists(ctx context.Context, key string) (bool, error) {
 	res, err := s.client.Get(ctx, key, clientv3.WithKeysOnly())
@@ -358,6 +371,12 @@ func (txn *etcdTxn) ifThen(tx clientv3.Txn, compare string, opes [operTrans]OpeW
 	default:
 		return tx.Then(opes[0].opeEtcd, opes[1].opeEtcd, opes[2].opeEtcd, opes[3].opeEtcd)
 	}
+}
+
+func (txn *etcdTxn) Clear() {
+	txn.indexF = 0
+	txn.indexNf = 0
+	txn.keyValue = ""
 }
 
 type etcdIntegra struct {

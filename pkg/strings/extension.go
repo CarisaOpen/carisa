@@ -13,3 +13,11 @@ func Concat(params ...string) string {
 	}
 	return b.String()
 }
+
+func Lpad(s1 string, length int, s2 string) string {
+	s1l := len(s1)
+	if length <= s1l {
+		return s1
+	}
+	return Concat(strings.Repeat(s2, length-s1l), s1)
+}

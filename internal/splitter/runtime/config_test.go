@@ -38,7 +38,8 @@ func TestRuntime_LoadConfig(t *testing.T) {
 			name: "Default configuration",
 			envC: "",
 			cnf: Config{
-				Server: Server{},
+				Server:               Server{},
+				RenewHeartbeatInSecs: 15,
 				CommonConfig: runtime.CommonConfig{
 					EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
 				},
@@ -47,13 +48,15 @@ func TestRuntime_LoadConfig(t *testing.T) {
 		{
 			name: "Log configuration",
 			envC: `{
+  "RenewHeartbeatInSecs": 25,	
   "log": {
     "development": true, 
     "level": 2, 
     "encoding": "json"
   }
 }`, cnf: Config{
-				Server: Server{},
+				Server:               Server{},
+				RenewHeartbeatInSecs: 25,
 				CommonConfig: runtime.CommonConfig{
 					ZapConfig: logging.ZapConfig{
 						Development: true,
@@ -66,9 +69,7 @@ func TestRuntime_LoadConfig(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if len(tt.envC) != 0 {
-			_ = os.Setenv(envConfig, tt.envC)
-		}
+		_ = os.Setenv(envConfig, tt.envC)
 		cnf := LoadConfig()
 		tt.cnf.Server = cnf.Server
 		assert.Equalf(t, tt.cnf, cnf, tt.name)

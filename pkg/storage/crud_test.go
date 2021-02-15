@@ -544,7 +544,6 @@ func TestCRUDOperation_PutWithRelError(t *testing.T) {
 	tests := []struct {
 		name  string
 		mockS func(*ErrMockCRUD)
-		mockT func(*ErrMockTxn)
 		err   string
 	}{
 		{

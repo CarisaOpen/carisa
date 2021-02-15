@@ -6,3 +6,4 @@ internal/api/mock
 internal/api/samples
 internal/api/space/samples
 internal/api/test
+internal/splitter/mock

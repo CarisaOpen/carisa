@@ -14,30 +14,33 @@
  *
  */
 
-package runtime
+package mock
 
 import (
 	"testing"
 
-	"github.com/carisa/pkg/runtime"
-
+	"github.com/carisa/internal/splitter/runtime"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestRuntime_NewContainer(t *testing.T) {
-	cnf := Config{
-		Server: newServer(),
-		CommonConfig: runtime.CommonConfig{
-			EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
-		},
+func NewContainerFake() *runtime.Container {
+	log, err := logging.NewZapWrapDev()
+	if err != nil {
+		panic(err)
 	}
+	return runtime.NewContainer(runtime.LoadConfig(), storage.NewTxn, log)
+}
 
-	log, _ := logging.NewZapLogger(cnf.ZapConfig)
+func NewContainerMock() (*runtime.Container, *storage.ErrMockTxn) {
+	log, err := logging.NewZapWrapDev()
+	if err != nil {
+		panic(err)
+	}
+	txnMock := &storage.ErrMockTxn{}
+	return runtime.NewContainer(runtime.LoadConfig(), func(s storage.CRUD) storage.Txn { return txnMock }, log), txnMock
+}
 
-	ctn := NewContainer(cnf, nil, log)
-
-	assert.Equal(t, cnf, ctn.Config, "Config")
-	assert.NotNil(t, ctn.Log, "Log")
+func NewStorageFake(t *testing.T) storage.Integration {
+	return storage.NewEctdIntegra(t)
 }

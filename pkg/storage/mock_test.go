@@ -25,7 +25,7 @@ import (
 
 func TestErrMockCRUD_Activate(t *testing.T) {
 	m := ErrMockCRUD{}
-	m.Activate("Put", "Remove", "Get", "Exists", "StartKey", "Range", "RangeRaw", "Close")
+	m.Activate("Put", "PutRaw", "Remove", "Get", "GetRaw", "Exists", "StartKey", "Range", "RangeRaw", "Close")
 	_, err := m.Put(nil)
 	assert.Error(t, err, "Put")
 	opew := m.PutRaw("", "")
@@ -34,6 +34,8 @@ func TestErrMockCRUD_Activate(t *testing.T) {
 	assert.Error(t, err, "Remove")
 	_, err = m.Get(context.TODO(), "", nil)
 	assert.Error(t, err, "Get")
+	_, _, err = m.GetRaw(context.TODO(), "")
+	assert.Error(t, err, "GetRaw")
 	_, err = m.Exists(context.TODO(), "")
 	assert.Error(t, err, "Exists")
 	_, err = m.StartKey(context.TODO(), "", 0, nil)
@@ -55,8 +57,10 @@ func TestErrMockCRUD_Clear(t *testing.T) {
 	m := ErrMockCRUD{}
 	m.Clear()
 	assert.False(t, m.put, "Put")
+	assert.False(t, m.putRaw, "Put")
 	assert.False(t, m.remove, "Remove")
 	assert.False(t, m.get, "Get")
+	assert.False(t, m.getRaw, "GetRaw")
 	assert.False(t, m.exists, "Exists")
 	assert.False(t, m.startKey, "StartKey")
 	assert.False(t, m.rang, "Range")

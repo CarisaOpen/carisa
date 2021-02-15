@@ -394,6 +394,45 @@ func TestEtcd_Get(t *testing.T) {
 	}
 }
 
+func TestEtcd_GetRaw(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	const key = "key1"
+	const kvalue = "value"
+
+	result := []struct {
+		name  string
+		key   string
+		found bool
+	}{
+		{
+			name:  "Getting. Found.",
+			key:   key,
+			found: true,
+		},
+		{
+			name:  "Getting. Not found.",
+			key:   "key2",
+			found: false,
+		},
+	}
+
+	_, err := client.Put(ctx, key, kvalue)
+	if assert.NoErrorf(t, err, "Put value") {
+		for _, tt := range result {
+			found, value, err := store.GetRaw(ctx, tt.key)
+			if assert.NoErrorf(t, err, strings.Concat(tt.name, "Get value")) {
+				assert.Equal(t, tt.found, found, strings.Concat(tt.name, "Key found"))
+				if found {
+					assert.Equal(t, kvalue, value, strings.Concat(tt.name, "Get result"))
+				}
+			}
+		}
+	}
+}
+
 func TestEtcd_Remove(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
@@ -756,6 +795,20 @@ func TestEtcd_RangeRaw(t *testing.T) {
 			assert.Equal(t, tt.res, res, strings.Concat(tt.name, "Range result"))
 		}
 	}
+}
+
+func TestEtcdTransaction_Clear(t *testing.T) {
+	cluster, _, store := newStore(t)
+	defer cluster.Terminate(t)
+
+	txn := NewTxn(store).(*etcdTxn)
+	txn.indexF = 2
+	txn.indexNf = 5
+	txn.Find("key")
+	txn.Clear()
+	assert.Equal(t, uint8(0), txn.indexF)
+	assert.Equal(t, uint8(0), txn.indexNf)
+	assert.Equal(t, "", txn.keyValue)
 }
 
 func sampling(ctx context.Context, t *testing.T, samples []EntityTest, client *clientv3.Client) bool {

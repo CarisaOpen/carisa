@@ -14,24 +14,16 @@
  *
  */
 
-package runtime
+package service
 
-import (
-	"github.com/carisa/pkg/logging"
-	"github.com/carisa/pkg/storage"
-)
+import "github.com/rs/xid"
 
-// Container defines the info and tools for the splitter service
-type Container struct {
-	Config
-	TxnF storage.BuildTxn // Transaction factory
-	Log  logging.Logger
+type server struct {
+	id xid.ID
 }
 
-func NewContainer(cnf Config, txnf storage.BuildTxn, log logging.Logger) *Container {
-	return &Container{
-		Config: cnf,
-		TxnF:   txnf,
-		Log:    log,
+func newServer() server {
+	return server{
+		id: xid.New(),
 	}
 }
