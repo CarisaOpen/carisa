@@ -50,17 +50,16 @@ func TestController_StartWithError(t *testing.T) {
 
 func TestController_RenewHeartbeat(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
-	ctrl.cnt.RenewHeartbeatInSecs = 1
 	defer mng.Close()
+	ctrl.cnt.RenewHeartbeatInSecs = 1
 
 	pticks := ctrl.tick
 	ctrl.Start()
 
 	time.Sleep(2 * time.Second)
 	ctrl.notifyStop <- struct{}{}
-	<-ctrl.notifyStop // Wait
 
-	assert.Equal(t, pticks.timeStamp, ctrl.tick.previousTimeStamp)
+	assert.Equal(t, pticks.timeStamp, ctrl.tick.previousTimeStamp, "Timestamp")
 	exists, err := mng.Store().Exists(context.TODO(), strings.Concat(pticks.tstring(), ctrl.srv.id.String()))
 	if assert.NoError(t, err) {
 		assert.False(t, exists, "Previous tick")
@@ -71,6 +70,20 @@ func TestController_RenewHeartbeat(t *testing.T) {
 	}
 }
 
+func TestController_RenewConsumption(t *testing.T) {
+	ctrl, mng := newControllerFaked(t)
+	defer mng.Close()
+	ctrl.cnt.RenewHeartbeatInSecs = 1
+
+	ctrl.Start()
+	time.Sleep(1 * time.Second)
+	ctrl.notifyStop <- struct{}{}
+
+	_, srvID, err := mng.Store().GetRaw(context.TODO(), ctrl.keyConsumption(ctrl.cons.pmeasure))
+	if assert.NoError(t, err) {
+		assert.Equal(t, ctrl.srv.id.String(), srvID)
+	}
+}
 func TestController_Stop(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
 	ctrl.cnt.RenewHeartbeatInSecs = 1
@@ -93,6 +106,7 @@ func TestController_StopWithError(t *testing.T) {
 func newControllerFaked(t *testing.T) (Controller, storage.Integration) {
 	mng := mock.NewStorageFake(t)
 	cnt := mock.NewContainerFake()
+	cnt.RenewConsumptionInSecs = 1
 	return NewController(cnt, mng.Store()), mng
 }
 

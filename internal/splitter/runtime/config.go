@@ -41,6 +41,11 @@ type Config struct {
 	Server `json:"-"`
 	// RenewHeartbeatInSecs look at Controller.renewHeartbeatInSecs.
 	RenewHeartbeatInSecs time.Duration `json:"renewHeartbeatInSecs,omitempty"`
+	// RenewConsumptionInSecs look at Controller.renewConsumptionInSecs.
+	// This value should be at least 4 times more than RenewHeartbeatInSecs,
+	// because it calculates an average and would need at least n values.
+	// Each sample is taken every RenewHeartbeatInSecs seconds
+	RenewConsumptionInSecs time.Duration `json:"renewConsumptionInSecs,omitempty"`
 	runtime.CommonConfig
 }
 
@@ -51,8 +56,9 @@ func (c *Config) Common() *runtime.CommonConfig {
 // LoadConfig loads the configuration from environment variable
 func LoadConfig() Config {
 	cnf := Config{
-		Server:               newServer(),
-		RenewHeartbeatInSecs: 15,
+		Server:                 newServer(),
+		RenewHeartbeatInSecs:   15,
+		RenewConsumptionInSecs: 60,
 	}
 	runtime.LoadConfig(envConfig, &cnf)
 	return cnf
