@@ -165,7 +165,7 @@ func (c *Controller) updateConsumption(txn storage.Txn) {
 
 		txn.Find(key)
 		txn.DoFound(c.store.Remove(key))
-		put := c.store.PutRaw(newKey, splitterID)
+		put := c.store.PutRaw(newKey, "1024")
 		txn.DoFound(put)
 		txn.DoNotFound(put)
 		ctx, cancel := c.cnt.StoreWithTimeout()

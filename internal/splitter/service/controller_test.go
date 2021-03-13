@@ -79,9 +79,9 @@ func TestController_RenewConsumption(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	ctrl.notifyStop <- struct{}{}
 
-	_, srvID, err := mng.Store().GetRaw(context.TODO(), ctrl.keyConsumption(ctrl.cons.pmeasure))
+	_, enteMem, err := mng.Store().GetRaw(context.TODO(), ctrl.keyConsumption(ctrl.cons.pmeasure))
 	if assert.NoError(t, err) {
-		assert.Equal(t, ctrl.srv.id.String(), srvID)
+		assert.Equal(t, enteMem, "1024")
 	}
 }
 func TestController_Stop(t *testing.T) {
