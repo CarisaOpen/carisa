@@ -21,6 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"go.etcd.io/etcd/clientv3"
+
+	"go.etcd.io/etcd/integration"
+
 	"github.com/carisa/pkg/strings"
 
 	"github.com/carisa/internal/splitter/mock"
@@ -30,27 +34,19 @@ import (
 
 func TestController_Start(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
-	defer mng.Close()
+	defer mng.Terminate(t)
 
 	ctrl.Start()
 
-	_, srvID, err := mng.Store().GetRaw(context.TODO(), ctrl.keyTick())
+	res, err := ctrl.store.Get(context.TODO(), ctrl.keyTick())
 	if assert.NoError(t, err) {
-		assert.Equal(t, ctrl.srv.id.String(), srvID)
+		assert.Equal(t, ctrl.srv.id.String(), string(res.Kvs[0].Value))
 	}
-}
-
-func TestController_StartWithError(t *testing.T) {
-	ctrl, txnMock, mng := newControllerMock(t)
-	defer mng.Close()
-	txnMock.Activate("Commit")
-
-	assert.Panics(t, func() { ctrl.Start() })
 }
 
 func TestController_RenewHeartbeat(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
-	defer mng.Close()
+	defer mng.Terminate(t)
 	ctrl.cnt.RenewHeartbeatInSecs = 1
 
 	pticks := ctrl.tick
@@ -60,34 +56,34 @@ func TestController_RenewHeartbeat(t *testing.T) {
 	ctrl.notifyStop <- struct{}{}
 
 	assert.Equal(t, pticks.timeStamp, ctrl.tick.previousTimeStamp, "Timestamp")
-	exists, err := mng.Store().Exists(context.TODO(), strings.Concat(pticks.tstring(), ctrl.srv.id.String()))
+	res, err := ctrl.store.Get(context.TODO(), strings.Concat(pticks.tstring(), ctrl.srv.id.String()), clientv3.WithKeysOnly())
 	if assert.NoError(t, err) {
-		assert.False(t, exists, "Previous tick")
-		_, srvID, err := mng.Store().GetRaw(context.TODO(), ctrl.keyTick())
+		assert.True(t, res.Count == 0, "Previous tick")
+		res, err = ctrl.store.Get(context.TODO(), ctrl.keyTick())
 		if assert.NoError(t, err) {
-			assert.Equal(t, ctrl.srv.id.String(), srvID, "Actual tick")
+			assert.Equal(t, ctrl.srv.id.String(), string(res.Kvs[0].Value), "Actual tick")
 		}
 	}
 }
 
 func TestController_RenewConsumption(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
-	defer mng.Close()
+	defer mng.Terminate(t)
 	ctrl.cnt.RenewHeartbeatInSecs = 1
 
 	ctrl.Start()
 	time.Sleep(1 * time.Second)
 	ctrl.notifyStop <- struct{}{}
 
-	_, enteMem, err := mng.Store().GetRaw(context.TODO(), ctrl.keyConsumption(ctrl.cons.pmeasure))
+	res, err := ctrl.store.Get(context.TODO(), ctrl.keyConsumption(ctrl.cons.pmeasure))
 	if assert.NoError(t, err) {
-		assert.Equal(t, enteMem, "1024")
+		assert.NotEmpty(t, res.Kvs[0].Value)
 	}
 }
 func TestController_Stop(t *testing.T) {
 	ctrl, mng := newControllerFaked(t)
 	ctrl.cnt.RenewHeartbeatInSecs = 1
-	defer mng.Close()
+	defer mng.Terminate(t)
 
 	ctrl.Start()
 	removed := ctrl.Stop(true)
@@ -95,23 +91,9 @@ func TestController_Stop(t *testing.T) {
 	assert.True(t, removed)
 }
 
-func TestController_StopWithError(t *testing.T) {
-	ctrl, txnMock, mng := newControllerMock(t)
-	defer mng.Close()
-	txnMock.Activate("Commit")
-
-	assert.Panics(t, func() { ctrl.Stop(false) })
-}
-
-func newControllerFaked(t *testing.T) (Controller, storage.Integration) {
-	mng := mock.NewStorageFake(t)
+func newControllerFaked(t *testing.T) (Controller, *integration.ClusterV3) {
+	mng := storage.IntegraEtcd(t)
 	cnt := mock.NewContainerFake()
 	cnt.RenewConsumptionInSecs = 1
-	return NewController(cnt, mng.Store()), mng
-}
-
-func newControllerMock(t *testing.T) (Controller, *storage.ErrMockTxn, storage.Integration) {
-	mng := mock.NewStorageFake(t)
-	cnt, txnMock := mock.NewContainerMock()
-	return NewController(cnt, &storage.ErrMockCRUD{}), txnMock, mng
+	return NewController(cnt, mng.RandClient()), mng
 }

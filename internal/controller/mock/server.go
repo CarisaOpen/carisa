@@ -17,7 +17,7 @@
 package mock
 
 import (
-	"github.com/carisa/internal/splitter/runtime"
+	"github.com/carisa/internal/controller/runtime"
 	"github.com/carisa/pkg/logging"
 )
 

@@ -14,24 +14,21 @@
  *
  */
 
-package factory
+package runtime
 
 import (
-	"testing"
-
-	"github.com/carisa/pkg/storage"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/carisa/pkg/logging"
 )
 
-func TestTemplate_Build(t *testing.T) {
-	mng := storage.IntegraEtcd(t)
-	defer mng.Terminate(t)
+// Container defines the info and tools for the controller service
+type Container struct {
+	Config
+	Log logging.Logger
+}
 
-	factory := build(mng)
-
-	assert.NotNil(t, factory.cnt, "Container")
-	assert.NotNil(t, factory.store, "Store")
-
-	assert.NotNil(t, factory.Controller, "Controller")
+func NewContainer(cnf Config, log logging.Logger) *Container {
+	return &Container{
+		Config: cnf,
+		Log:    log,
+	}
 }

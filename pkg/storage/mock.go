@@ -8,16 +8,17 @@ import (
 // ErrMockCRUD allows test the errors.
 // For testing other functions use storage.Integration
 type ErrMockCRUD struct {
-	put      bool
-	putRaw   bool
-	remove   bool
-	get      bool
-	getRaw   bool
-	exists   bool
-	startKey bool
-	rang     bool
-	rangRaw  bool
-	close    bool
+	put         bool
+	putRaw      bool
+	remove      bool
+	get         bool
+	getRaw      bool
+	exists      bool
+	startKey    bool
+	startKeyRaw bool
+	rang        bool
+	rangRaw     bool
+	close       bool
 }
 
 func (e *ErrMockCRUD) Close() error {
@@ -71,6 +72,13 @@ func (e *ErrMockCRUD) StartKey(ctx context.Context, key string, top int, empty f
 	return list, nil
 }
 
+func (e *ErrMockCRUD) StartKeyRaw(ctx context.Context, key string, asc bool, top int, res map[string][]byte) error {
+	if e.startKeyRaw {
+		return errors.New("startKeyRaw")
+	}
+	return nil
+}
+
 func (e *ErrMockCRUD) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
 	if e.startKey {
 		return nil, errors.New("range")
@@ -79,12 +87,11 @@ func (e *ErrMockCRUD) Range(ctx context.Context, skey string, ekey string, top i
 	return list, nil
 }
 
-func (e *ErrMockCRUD) RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error) {
+func (e *ErrMockCRUD) RangeRaw(ctx context.Context, skey string, ekey string, top int, res map[string][]byte) error {
 	if e.startKey {
-		return nil, errors.New("rangeraw")
+		return errors.New("rangeraw")
 	}
-	list := make(map[string]string, top)
-	return list, nil
+	return nil
 }
 
 // Activate activates the methods to throw a error
@@ -107,6 +114,8 @@ func (e *ErrMockCRUD) Activate(methods ...string) {
 			e.exists = true
 		case "StartKey":
 			e.startKey = true
+		case "StartKeyRaw":
+			e.startKeyRaw = true
 		case "Range":
 			e.rang = true
 		case "RangeRaw":
@@ -128,6 +137,7 @@ func (e *ErrMockCRUD) Clear() {
 	e.getRaw = false
 	e.exists = false
 	e.startKey = false
+	e.startKeyRaw = false
 	e.rang = false
 	e.rangRaw = false
 	e.close = false

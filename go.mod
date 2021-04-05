@@ -3,6 +3,7 @@ module github.com/carisa
 go 1.14
 
 require (
+	github.com/beorn7/perks v1.0.0
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/labstack/gommon v0.3.0
 	github.com/pkg/errors v0.8.0

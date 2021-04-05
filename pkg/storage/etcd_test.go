@@ -97,7 +97,7 @@ func TestEtcd_Config(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		r := config(tt.s)
+		r := NewEtcdClientConfig(tt.s)
 		assert.Equal(t, tt.t.DialTimeout, r.DialTimeout, strings.Concat(tt.name, "DialTimeout"))
 		assert.Equal(t, tt.t.DialKeepAliveTime, r.DialKeepAliveTime, strings.Concat(tt.name, "DialKeepAliveTime"))
 		assert.Equal(t, tt.t.DialKeepAliveTimeout, r.DialKeepAliveTimeout, strings.Concat(tt.name, "DialKeepAliveTimeout"))
@@ -607,6 +607,72 @@ func TestEtcd_StartKey(t *testing.T) {
 	}
 }
 
+func TestEtcd_StartKeyRaw(t *testing.T) {
+	cluster, ctx, store := newStore(t)
+	defer cluster.Terminate(t)
+	client := cluster.RandClient()
+
+	if samplingRaw(ctx, client, t) {
+		return
+	}
+
+	tests := []struct {
+		name string
+		key  string
+		top  int
+		asc  bool
+		res  map[string][]byte
+	}{
+		{
+			name: "Not found.",
+			key:  "y1",
+			top:  5,
+			asc:  true,
+			res:  map[string][]byte{},
+		},
+		{
+			name: "Found. < 10. Top 10. ASC.",
+			key:  "key",
+			top:  10,
+			asc:  true,
+			res: map[string][]byte{
+				"key0": []byte("0"),
+				"key1": []byte("1"),
+				"key2": []byte("2"),
+			},
+		},
+		{
+			name: "Found. = 3. Top 3. DSC.",
+			key:  "key",
+			top:  3,
+			asc:  false,
+			res: map[string][]byte{
+				"key2": []byte("2"),
+				"key1": []byte("1"),
+				"key0": []byte("0"),
+			},
+		},
+		{
+			name: "Found > 2. Top 2. DSC.",
+			key:  "k",
+			top:  2,
+			asc:  false,
+			res: map[string][]byte{
+				"ky1":  []byte("1"),
+				"key2": []byte("2"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		src := make(map[string][]byte)
+		err := store.StartKeyRaw(ctx, tt.key, tt.asc, tt.top, src)
+		if assert.NoErrorf(t, err, "StartKeyRaw") {
+			assert.Equal(t, tt.res, src, strings.Concat(tt.name, "Range result"))
+		}
+	}
+}
+
 func TestEtcd_Range(t *testing.T) {
 	cluster, ctx, store := newStore(t)
 	defer cluster.Terminate(t)
@@ -727,19 +793,8 @@ func TestEtcd_RangeRaw(t *testing.T) {
 	defer cluster.Terminate(t)
 	client := cluster.RandClient()
 
-	samples := map[string]string{
-		"key1": "1",
-		"key0": "0",
-		"key2": "2",
-		"ky1":  "1",
-	}
-
-	for k, v := range samples {
-		_, err := client.Put(ctx, k, v)
-		if err != nil {
-			assert.NoError(t, err, "Putting samples")
-			return
-		}
+	if samplingRaw(ctx, client, t) {
+		return
 	}
 
 	tests := []struct {
@@ -747,23 +802,23 @@ func TestEtcd_RangeRaw(t *testing.T) {
 		skey string
 		ekey string
 		top  int
-		res  map[string]string
+		res  map[string][]byte
 	}{
 		{
 			name: "Not found.",
 			skey: "y1",
 			ekey: "y",
 			top:  5,
-			res:  map[string]string{},
+			res:  map[string][]byte{},
 		},
 		{
 			name: "Found. < 10. Top 10.",
 			skey: "key1",
 			ekey: "key",
 			top:  10,
-			res: map[string]string{
-				"key1": "1",
-				"key2": "2",
+			res: map[string][]byte{
+				"key1": []byte("1"),
+				"key2": []byte("2"),
 			},
 		},
 		{
@@ -771,10 +826,10 @@ func TestEtcd_RangeRaw(t *testing.T) {
 			skey: "key",
 			ekey: "key",
 			top:  3,
-			res: map[string]string{
-				"key0": "0",
-				"key1": "1",
-				"key2": "2",
+			res: map[string][]byte{
+				"key0": []byte("0"),
+				"key1": []byte("1"),
+				"key2": []byte("2"),
 			},
 		},
 		{
@@ -782,17 +837,17 @@ func TestEtcd_RangeRaw(t *testing.T) {
 			skey: "key1",
 			ekey: "key",
 			top:  1,
-			res: map[string]string{
-				"key1": "1",
+			res: map[string][]byte{
+				"key1": []byte("1"),
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		res, err := store.RangeRaw(ctx, tt.skey, tt.ekey, tt.top)
+		src := make(map[string][]byte)
+		err := store.RangeRaw(ctx, tt.skey, tt.ekey, tt.top, src)
 		if assert.NoErrorf(t, err, "RangeRaw") {
-			assert.Equal(t, len(tt.res), len(res), strings.Concat(tt.name, "Count"))
-			assert.Equal(t, tt.res, res, strings.Concat(tt.name, "Range result"))
+			assert.Equal(t, tt.res, src, strings.Concat(tt.name, "Range result"))
 		}
 	}
 }
@@ -809,6 +864,24 @@ func TestEtcdTransaction_Clear(t *testing.T) {
 	assert.Equal(t, uint8(0), txn.indexF)
 	assert.Equal(t, uint8(0), txn.indexNf)
 	assert.Equal(t, "", txn.keyValue)
+}
+
+func samplingRaw(ctx context.Context, client *clientv3.Client, t *testing.T) bool {
+	samples := map[string]string{
+		"key1": "1",
+		"key0": "0",
+		"key2": "2",
+		"ky1":  "1",
+	}
+
+	for k, v := range samples {
+		_, err := client.Put(ctx, k, v)
+		if err != nil {
+			assert.NoError(t, err, "Putting samples")
+			return true
+		}
+	}
+	return false
 }
 
 func sampling(ctx context.Context, t *testing.T, samples []EntityTest, client *clientv3.Client) bool {

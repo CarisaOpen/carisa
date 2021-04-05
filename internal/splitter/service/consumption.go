@@ -20,17 +20,23 @@ import (
 	rx "runtime"
 	"time"
 
+	"github.com/rs/xid"
+
+	"github.com/carisa/pkg/encoding"
+
 	"github.com/carisa/pkg/runtime"
 )
+
+const consumptionSchema = "SC"
 
 // consumption updates the actual consumption each wutime in seconds
 type consumption struct {
 	actual time.Time
 	wutime time.Duration
 
-	pmeasure int
+	pmeasure uint32
 	cpu      uint8
-	mem      int
+	mem      uint32
 }
 
 func newConsumption(wutime time.Duration) consumption {
@@ -53,7 +59,7 @@ func (c *consumption) wake() bool {
 func (c *consumption) renew() error {
 	var m rx.MemStats
 	rx.ReadMemStats(&m)
-	c.mem = int(m.Alloc / 1024 / 1024) // MB
+	c.mem = uint32(m.Alloc / 1024 / 1024) // MB
 
 	cpu, err := runtime.CPU()
 	if err != nil {
@@ -63,22 +69,19 @@ func (c *consumption) renew() error {
 	return nil
 }
 
+// reg returns a struct of consumption
+func (c *consumption) reg(id xid.ID, entesMemAvg uint32) string {
+	sc := encoding.SimpleEncoder{}
+	sc.WriteBytes(id.Bytes())
+	sc.WriteUint8(c.cpu)
+	sc.WriteUint32(c.mem)
+	sc.WriteUint32(entesMemAvg)
+	return sc.String()
+}
+
 // measure getting measure based on the cpu range and memory
-func (c *consumption) measure() int {
-	u := 1
-	if c.cpu > 20 && c.cpu <= 40 {
-		u = 2
-	}
-	if c.cpu > 40 && c.cpu <= 60 {
-		u = 3
-	}
-	if c.cpu > 60 && c.cpu <= 80 {
-		u = 4
-	}
-	if c.cpu > 80 {
-		u = 5
-	}
-	return (u * 1000000) + c.mem
+func (c *consumption) measure() uint32 {
+	return runtime.Meassure(c.cpu, c.mem)
 }
 
 // saveMeasure saves the actual measure

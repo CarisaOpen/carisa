@@ -23,6 +23,8 @@ import (
 	"github.com/carisa/pkg/strings"
 )
 
+const ticksSchema = "ST"
+
 // ticks defines a timestamp to let the controller know if the splitter service is dead
 // This timestamp by splitter must be updated each n time
 type ticks struct {

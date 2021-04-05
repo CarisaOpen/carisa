@@ -93,12 +93,17 @@ type (
 		// Top = 0 is configured as unlimited
 		StartKey(ctx context.Context, key string, top int, empty func() Entity) ([]Entity, error)
 
+		// StartKeyRaw lists all values that start by key with the limit of the top parameter.
+		// If asc=true is sorted ascending otherwise descending
+		// Top = 0 is configured as unlimited
+		StartKeyRaw(ctx context.Context, key string, asc bool, top int, res map[string][]byte) error
+
 		// Range lists all entities that is greater than skey and ended by eKey with the limit of the top parameter.
 		// Top = 0 is configured as unlimited
 		Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error)
 
 		// RangeRaw lists all keys and values that is greater than skey and ended by eKey with the limit of the top parameter.
-		RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error)
+		RangeRaw(ctx context.Context, skey string, ekey string, top int, res map[string][]byte) error
 
 		// Close closes resources
 		Close() error

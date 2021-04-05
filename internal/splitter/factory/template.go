@@ -21,6 +21,9 @@ import (
 	"github.com/carisa/internal/splitter/service"
 	"github.com/carisa/pkg/logging"
 	"github.com/carisa/pkg/storage"
+	"github.com/carisa/pkg/strings"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/integration"
 )
 
 const locBuild = "factory.build"
@@ -29,7 +32,7 @@ const locBuild = "factory.build"
 type Template struct {
 	Controller service.Controller
 
-	store storage.CRUD
+	store *clientv3.Client
 	cnt   *runtime.Container
 }
 
@@ -48,7 +51,7 @@ func Build() Template {
 	return build(nil)
 }
 
-func build(mng storage.Integration /*for test*/) Template {
+func build(mng *integration.ClusterV3 /*for test*/) Template {
 	cnt, store := servers(mng)
 
 	return Template{
@@ -58,19 +61,23 @@ func build(mng storage.Integration /*for test*/) Template {
 	}
 }
 
-func servers(mng storage.Integration) (*runtime.Container, storage.CRUD) {
+func servers(mng *integration.ClusterV3) (*runtime.Container, *clientv3.Client) {
 	cnf := runtime.LoadConfig()
 	log, _ := logging.NewZapLogger(cnf.ZapConfig)
 	log.Info1("loaded configuration", locBuild, logging.String("config", cnf.String()))
 
-	cnt := runtime.NewContainer(cnf, storage.NewTxn, log)
+	cnt := runtime.NewContainer(cnf, log)
 
 	log.Info1("starting etcd client", locBuild, logging.String("endpoints", cnf.EPSString()))
-	var store storage.CRUD
+	var store *clientv3.Client
 	if mng != nil {
-		store = mng.Store()
+		store = mng.RandClient()
 	} else {
-		store = storage.NewEtcdConfig(cnf.EtcdConfig)
+		client, err := clientv3.New(storage.NewEtcdClientConfig(cnf.EtcdConfig))
+		if err != nil {
+			panic(strings.Concat("Error creating etcd client: ", err.Error()))
+		}
+		store = client
 	}
 	return cnt, store
 }

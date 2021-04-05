@@ -14,24 +14,54 @@
  *
  */
 
-package factory
+package runtime
 
 import (
 	"testing"
 
-	"github.com/carisa/pkg/storage"
-
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTemplate_Build(t *testing.T) {
-	mng := storage.IntegraEtcd(t)
-	defer mng.Terminate(t)
+func TestSystem_Meassure(t *testing.T) {
+	tests := []struct {
+		name     string
+		cpu      uint8
+		mem      uint32
+		meassure uint32
+	}{
+		{
+			name:     "10% CPU",
+			cpu:      10,
+			mem:      1024,
+			meassure: 1001024,
+		},
+		{
+			name:     "40% CPU",
+			cpu:      40,
+			mem:      256,
+			meassure: 2000256,
+		},
+		{
+			name:     "60% CPU",
+			cpu:      60,
+			mem:      2048,
+			meassure: 3002048,
+		},
+		{
+			name:     "70% CPU",
+			cpu:      70,
+			mem:      512,
+			meassure: 4000512,
+		},
+		{
+			name:     "81% CPU",
+			cpu:      81,
+			mem:      1024,
+			meassure: 5001024,
+		},
+	}
 
-	factory := build(mng)
-
-	assert.NotNil(t, factory.cnt, "Container")
-	assert.NotNil(t, factory.store, "Store")
-
-	assert.NotNil(t, factory.Controller, "Controller")
+	for _, tt := range tests {
+		assert.Equal(t, tt.meassure, Meassure(tt.cpu, tt.mem))
+	}
 }

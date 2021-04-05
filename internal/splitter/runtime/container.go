@@ -18,20 +18,17 @@ package runtime
 
 import (
 	"github.com/carisa/pkg/logging"
-	"github.com/carisa/pkg/storage"
 )
 
 // Container defines the info and tools for the splitter service
 type Container struct {
 	Config
-	TxnF storage.BuildTxn // Transaction factory
-	Log  logging.Logger
+	Log logging.Logger
 }
 
-func NewContainer(cnf Config, txnf storage.BuildTxn, log logging.Logger) *Container {
+func NewContainer(cnf Config, log logging.Logger) *Container {
 	return &Container{
 		Config: cnf,
-		TxnF:   txnf,
 		Log:    log,
 	}
 }

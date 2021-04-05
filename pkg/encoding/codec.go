@@ -18,6 +18,10 @@ package encoding
 import (
 	"bytes"
 	"encoding/gob"
+
+	"github.com/carisa/pkg/strings"
+
+	"github.com/pkg/errors"
 )
 
 // Encode encodes data to string using encoding gob
@@ -40,4 +44,29 @@ func Decode(encode string, data interface{}) error {
 func DecodeByte(encode []byte, data interface{}) error {
 	enc := gob.NewDecoder(bytes.NewBuffer(encode))
 	return enc.Decode(data)
+}
+
+// EncodeUI32Desc encodes a uint32 into letters
+// that allow the uint32 to be sorted in descending order
+// by applying ascending order
+func EncodeUI32Desc(u uint32) (string, error) {
+	return EncodeStrDesc(strings.Convertuint32(u))
+}
+
+// EncodeStrDesc encodes a string with positive real numbers into letters
+// that allow the source number to be sorted in descending order
+// by applying ascending order
+func EncodeStrDesc(str string) (string, error) {
+	const ascii0 = 48
+	const ascii9 = 57
+	const asciij = 106
+
+	b := []byte(str)
+	for i, c := range b {
+		if !(c >= ascii0 && c <= ascii9) {
+			return "", errors.New("The parameter must be a positive real number")
+		}
+		b[i] = asciij - (c - ascii0)
+	}
+	return strings.ConvertBytes(b), nil
 }

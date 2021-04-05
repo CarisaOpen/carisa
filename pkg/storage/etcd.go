@@ -75,17 +75,17 @@ func NewEtcd(client *clientv3.Client) CRUD {
 	return &etcdStore{client}
 }
 
-// NewEtcdConfig builds a store to CRUD operations based on etcd3 from config
+// NewEtcdConfig builds a store to CRUD operations based on etcd3 from NewEtcdClientConfig
 func NewEtcdConfig(cnf EtcdConfig) CRUD {
-	client, err := clientv3.New(config(cnf))
+	client, err := clientv3.New(NewEtcdClientConfig(cnf))
 	if err != nil {
 		panic(strings.Concat("Error creating etcd client: ", err.Error()))
 	}
 	return &etcdStore{client: client}
 }
 
-// Done for test
-func config(cnf EtcdConfig) clientv3.Config {
+// NewEtcdClientConfig builds etcd client from config
+func NewEtcdClientConfig(cnf EtcdConfig) clientv3.Config {
 	var dialTimeout time.Duration
 	var dialKeepAliveTime time.Duration
 	var dialKeepAliveTimeout time.Duration
@@ -174,7 +174,7 @@ func (s *etcdStore) GetRaw(ctx context.Context, key string) (bool, string, error
 	}
 
 	if res.Count > 0 {
-		return true, string(res.Kvs[0].Value), nil
+		return true, strings.ConvertBytes(res.Kvs[0].Value), nil
 	}
 	return false, "", nil
 }
@@ -203,6 +203,28 @@ func (s *etcdStore) StartKey(ctx context.Context, key string, top int, empty fun
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 }
 
+// StartKeyRaw implements CRUD.StartKeyRaw
+func (s *etcdStore) StartKeyRaw(ctx context.Context, key string, asc bool, top int, res map[string][]byte) error {
+	sort := clientv3.SortDescend
+	if asc {
+		sort = clientv3.SortAscend
+	}
+
+	list, err := s.client.Get(
+		ctx,
+		key,
+		clientv3.WithLimit(int64(top)),
+		clientv3.WithPrefix(),
+		clientv3.WithSort(clientv3.SortByKey, sort))
+	if err != nil {
+		return errWithKey(err, key, "unexpected error listing values of the keys from etcd store using StartKeyRaw")
+	}
+	for _, r := range list.Kvs {
+		res[strings.ConvertBytes(r.Key)] = r.Value
+	}
+	return nil
+}
+
 // Range implements CRUD.Range
 func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int, empty func() Entity) ([]Entity, error) {
 	return s.list(
@@ -217,8 +239,8 @@ func (s *etcdStore) Range(ctx context.Context, skey string, ekey string, top int
 }
 
 // RangeRaw implements CRUD.RangeRaw
-func (s *etcdStore) RangeRaw(ctx context.Context, skey string, ekey string, top int) (map[string]string, error) {
-	res, err := s.client.Get(
+func (s *etcdStore) RangeRaw(ctx context.Context, skey string, ekey string, top int, res map[string][]byte) error {
+	list, err := s.client.Get(
 		ctx,
 		skey,
 		clientv3.WithLimit(int64(top)),
@@ -226,14 +248,13 @@ func (s *etcdStore) RangeRaw(ctx context.Context, skey string, ekey string, top 
 		clientv3.WithRange(clientv3.GetPrefixRangeEnd(ekey)),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
-		return nil, errWithKey(err, skey, "unexpected error listing value of the keys from etcd store")
+		return errWithKey(err, skey, "unexpected error listing values of the keys from etcd store using RangeRaw")
 	}
 
-	list := make(map[string]string, len(res.Kvs))
-	for _, r := range res.Kvs {
-		list[string(r.Key)] = string(r.Value)
+	for _, r := range list.Kvs {
+		res[strings.ConvertBytes(r.Key)] = r.Value
 	}
-	return list, nil
+	return nil
 }
 
 func (s *etcdStore) list(
@@ -290,7 +311,7 @@ type etcdTxn struct {
 	keyValue   string
 }
 
-// Exists implements Txn.Find
+// Find implements Txn.Find
 func (txn *etcdTxn) Find(keyValue string) {
 	txn.keyValue = keyValue
 }
@@ -386,9 +407,13 @@ type etcdIntegra struct {
 
 func NewEctdIntegra(t *testing.T) Integration {
 	return &etcdIntegra{
-		integra: integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1}),
+		integra: IntegraEtcd(t),
 		t:       t,
 	}
+}
+
+func IntegraEtcd(t *testing.T) *integration.ClusterV3 {
+	return integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1})
 }
 
 func (e *etcdIntegra) Store() CRUD {

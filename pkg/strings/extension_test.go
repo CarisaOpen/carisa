@@ -11,6 +11,16 @@ func TestStrings_Concat(t *testing.T) {
 	assert.Equal(t, c, "ab")
 }
 
+func TestStrings_Convert(t *testing.T) {
+	c := ConvertBytes([]byte("string"))
+	assert.Equal(t, c, "string")
+}
+
+func TestStrings_ConvertFromuint64(t *testing.T) {
+	c := Convertuint32(uint32(1324432324))
+	assert.Equal(t, c, "1324432324")
+}
+
 func TestStrings_Lpad(t *testing.T) {
 	tests := []struct {
 		name   string

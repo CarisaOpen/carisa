@@ -14,24 +14,12 @@
  *
  */
 
-package factory
+package controller
 
-import (
-	"testing"
+import "github.com/rs/xid"
 
-	"github.com/carisa/pkg/storage"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestTemplate_Build(t *testing.T) {
-	mng := storage.IntegraEtcd(t)
-	defer mng.Terminate(t)
-
-	factory := build(mng)
-
-	assert.NotNil(t, factory.cnt, "Container")
-	assert.NotNil(t, factory.store, "Store")
-
-	assert.NotNil(t, factory.Controller, "Controller")
+// splitter defines the selected splitter and the number of entities to be accommodated
+type splitter struct {
+	id    xid.ID
+	entes uint32
 }

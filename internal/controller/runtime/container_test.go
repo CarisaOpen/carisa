@@ -14,17 +14,29 @@
  *
  */
 
-package mock
+package runtime
 
 import (
-	"github.com/carisa/internal/splitter/runtime"
+	"testing"
+
+	"github.com/carisa/pkg/runtime"
+
 	"github.com/carisa/pkg/logging"
+	"github.com/carisa/pkg/storage"
+	"github.com/stretchr/testify/assert"
 )
 
-func NewContainerFake() *runtime.Container {
-	log, err := logging.NewZapWrapDev()
-	if err != nil {
-		panic(err)
+func TestRuntime_NewContainer(t *testing.T) {
+	cnf := Config{
+		CommonConfig: runtime.CommonConfig{
+			EtcdConfig: storage.EtcdConfig{RequestTimeout: 10},
+		},
 	}
-	return runtime.NewContainer(runtime.LoadConfig(), log)
+
+	log, _ := logging.NewZapLogger(cnf.ZapConfig)
+
+	ctn := NewContainer(cnf, log)
+
+	assert.Equal(t, cnf, ctn.Config, "Config")
+	assert.NotNil(t, ctn.Log, "Log")
 }

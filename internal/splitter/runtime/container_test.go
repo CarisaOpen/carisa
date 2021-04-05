@@ -36,7 +36,7 @@ func TestRuntime_NewContainer(t *testing.T) {
 
 	log, _ := logging.NewZapLogger(cnf.ZapConfig)
 
-	ctn := NewContainer(cnf, nil, log)
+	ctn := NewContainer(cnf, log)
 
 	assert.Equal(t, cnf, ctn.Config, "Config")
 	assert.NotNil(t, ctn.Log, "Log")

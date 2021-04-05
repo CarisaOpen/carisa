@@ -17,12 +17,14 @@
 package service
 
 import (
-	"strconv"
 	"time"
+
+	"github.com/carisa/pkg/encoding"
+
+	"go.etcd.io/etcd/clientv3"
 
 	"github.com/carisa/internal/splitter/runtime"
 	"github.com/carisa/pkg/logging"
-	"github.com/carisa/pkg/storage"
 	"github.com/carisa/pkg/strings"
 )
 
@@ -34,9 +36,13 @@ const loc = "splitter.controller"
 // If the server is dead the timestamp will not be updated and therefore the platform controller
 // will know that the particular splitter is dead. The splitter controller manages
 // this timestamp through ticks.
+// Controller also
 type Controller struct {
-	cnt   *runtime.Container
-	store storage.CRUD
+	cnt *runtime.Container
+	// Instead of using storage.CRUD I use the etcd client directly
+	// because this service is critical and I need it not to escape to the heap.
+	// If one day the DB will change there are not many places where etcd is used directly.
+	store *clientv3.Client
 
 	srv  server
 	tick ticks
@@ -46,10 +52,10 @@ type Controller struct {
 }
 
 // NewController builds a Controller
-func NewController(cnt *runtime.Container, data storage.CRUD) Controller {
+func NewController(cnt *runtime.Container, store *clientv3.Client) Controller {
 	return Controller{
 		cnt:        cnt,
-		store:      data,
+		store:      store,
 		tick:       newTicks(),
 		cons:       newConsumption(cnt.RenewConsumptionInSecs),
 		srv:        newServer(),
@@ -67,26 +73,14 @@ func (c *Controller) Start() {
 		logging.String("splitter", splitterID),
 		logging.String("ticks", c.tick.tstring()))
 
-	txn := c.cnt.TxnF(c.store)
-
-	key := c.keyTick()
-	txn.Find(key)
-	txn.DoNotFound(c.store.PutRaw(key, splitterID))
 	ctx, cancel := c.cnt.StoreWithTimeout()
-	inserted, err := txn.Commit(ctx)
+	_, err := c.store.KV.Put(ctx, c.keyTick(), splitterID)
 	cancel()
-
 	if err != nil {
 		c.cnt.Log.Panic1(
 			strings.Concat("starting splitter. error saving ticks. ", err.Error()),
 			loc,
 			logging.String("splitter", c.srv.id.String()))
-	}
-	if !inserted {
-		c.cnt.Log.Panic1(
-			"starting splitter. the ticks key already exists",
-			loc,
-			logging.String("ticks key", key))
 	}
 
 	go c.renewHeartbeat()
@@ -95,23 +89,20 @@ func (c *Controller) Start() {
 // renewHeartbeat renews the timestamp and the consumption (memory + cpu) of the splitter
 // each runtime.Config.renewHeartbeatInSecs seconds
 func (c *Controller) renewHeartbeat() {
-	txn := c.cnt.TxnF(c.store)
-
 	for {
 		select {
 		case <-c.notifyStop: // The stop service requests to terminate
 			close(c.notifyStop)
 			return
 		case <-time.After(c.cnt.RenewHeartbeatInSecs * time.Second):
-			c.updateTimestamp(txn)
-			c.updateConsumption(txn)
-			txn.Clear()
+			c.updateTimestamp()
+			c.updateConsumption()
 		}
 	}
 }
 
 // updateTimestamp updates timestamp of the splitter into db
-func (c *Controller) updateTimestamp(txn storage.Txn) {
+func (c *Controller) updateTimestamp() {
 	splitterID := c.srv.id.String()
 	key := c.keyTick()
 	c.tick.renew()
@@ -124,13 +115,12 @@ func (c *Controller) updateTimestamp(txn storage.Txn) {
 		logging.String("actual tick", key),
 		logging.String("new tick", newKey))
 
-	txn.Find(key)
-	txn.DoFound(c.store.Remove(key))
-	put := c.store.PutRaw(newKey, splitterID)
-	txn.DoFound(put)
-	txn.DoNotFound(put)
 	ctx, cancel := c.cnt.StoreWithTimeout()
-	_, err := txn.Commit(ctx)
+	txn := c.store.KV.Txn(ctx).If(clientv3.Compare(clientv3.ModRevision(key), ">", 0))
+	put := clientv3.OpPut(newKey, splitterID)
+	txn.Then(clientv3.OpDelete(key), put)
+	txn.Else(put)
+	_, err := txn.Commit()
 	cancel()
 	if err != nil {
 		c.tick.undo()
@@ -142,8 +132,8 @@ func (c *Controller) updateTimestamp(txn storage.Txn) {
 	}
 }
 
-// updateTimestamp updates the consumption (cpu + memory) of the splitter into db
-func (c *Controller) updateConsumption(txn storage.Txn) {
+// updateConsumption updates the consumption (cpu + memory) of the splitter into db
+func (c *Controller) updateConsumption() {
 	if err := c.cons.renew(); err != nil {
 		c.cnt.Log.Panic1(
 			strings.Concat("updating consumption. error getting CPU. ", err.Error()),
@@ -163,13 +153,16 @@ func (c *Controller) updateConsumption(txn storage.Txn) {
 			logging.String("actual consumption", key),
 			logging.String("new consumption", newKey))
 
-		txn.Find(key)
-		txn.DoFound(c.store.Remove(key))
-		put := c.store.PutRaw(newKey, "1024")
-		txn.DoFound(put)
-		txn.DoNotFound(put)
 		ctx, cancel := c.cnt.StoreWithTimeout()
-		_, err := txn.Commit(ctx)
+		txn := c.store.KV.Txn(ctx).If(clientv3.Compare(clientv3.ModRevision(key), ">", 0))
+		if c.cons.cpu > 80 {
+			txn.Then(clientv3.OpDelete(key))
+		} else {
+			put := clientv3.OpPut(newKey, c.cons.reg(c.srv.id, 1024))
+			txn.Then(clientv3.OpDelete(key), put)
+			txn.Else(put)
+		}
+		_, err := txn.Commit()
 		cancel()
 		if err == nil {
 			c.cons.saveMeasure()
@@ -192,18 +185,17 @@ func (c *Controller) Stop(wait bool) bool {
 	}
 
 	key := c.keyTick()
-	txn := storage.NewTxn(c.store)
-	txn.Find(key)
-	txn.DoFound(c.store.Remove(key))
 	ctx, cancel := c.cnt.StoreWithTimeout()
-	removed, err := txn.Commit(ctx)
+	res, err := c.store.KV.Delete(ctx, key)
 	cancel()
 	if err != nil {
 		c.cnt.Log.Panic1(
 			strings.Concat("stopping splitter. error removing ticks. ", err.Error()),
 			loc,
 			logging.String("splitter", c.srv.id.String()))
+		return false
 	}
+	removed := res.Deleted > 0
 	if !removed {
 		c.cnt.Log.Warn1(
 			"stopping splitter. the ticks key is not found",
@@ -215,9 +207,10 @@ func (c *Controller) Stop(wait bool) bool {
 }
 
 func (c *Controller) keyTick() string {
-	return strings.Concat(c.tick.tstring(), c.srv.id.String())
+	return strings.Concat(ticksSchema, c.tick.tstring(), c.srv.id.String())
 }
 
-func (c *Controller) keyConsumption(key int) string {
-	return strings.Concat(strconv.Itoa(key), c.srv.id.String())
+func (c *Controller) keyConsumption(key uint32) string {
+	keyc, _ := encoding.EncodeUI32Desc(key)
+	return strings.Concat(consumptionSchema, keyc, c.srv.id.String())
 }

@@ -16,6 +16,7 @@
 package encoding
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,4 +60,29 @@ func TestEncoding_DecodeByte(t *testing.T) {
 	assert.NoError(t, err, "unexpected decode error")
 
 	assert.Equal(t, data, decode, "Encode and decode values are not equal")
+}
+
+func TestEncoding_Encodeuint32Desc(t *testing.T) {
+	codec, _ := EncodeUI32Desc(1234567890)
+	assert.Equal(t, "ihgfedcbaj", codec)
+}
+
+func TestEncoding_EncodeStrDesc(t *testing.T) {
+	codec, _ := EncodeStrDesc("0123456789")
+	assert.Equal(t, "jihgfedcba", codec)
+}
+
+func TestEncoding_EncodeStrDesc_Err(t *testing.T) {
+	_, err := EncodeStrDesc("1234A5789")
+	assert.Error(t, err)
+}
+
+func TestEncoding_EncodeStrDesc_Sort(t *testing.T) {
+	array := make([]string, 4)
+	array[0], _ = EncodeStrDesc("3000256")
+	array[1], _ = EncodeStrDesc("4000266")
+	array[2], _ = EncodeStrDesc("4000256")
+	array[3], _ = EncodeStrDesc("4010256")
+	sort.Strings(array)
+	assert.Equal(t, []string{"3232", "23232"}, array)
 }

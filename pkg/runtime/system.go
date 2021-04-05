@@ -14,24 +14,22 @@
  *
  */
 
-package factory
+package runtime
 
-import (
-	"testing"
-
-	"github.com/carisa/pkg/storage"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestTemplate_Build(t *testing.T) {
-	mng := storage.IntegraEtcd(t)
-	defer mng.Terminate(t)
-
-	factory := build(mng)
-
-	assert.NotNil(t, factory.cnt, "Container")
-	assert.NotNil(t, factory.store, "Store")
-
-	assert.NotNil(t, factory.Controller, "Controller")
+// meassure gets a meassure of use of the CPU and memory (MB)
+func Meassure(cpu uint8, mem uint32) uint32 {
+	var u uint32 = 1
+	if cpu > 20 && cpu <= 40 {
+		u = 2
+	}
+	if cpu > 40 && cpu <= 60 {
+		u = 3
+	}
+	if cpu > 60 && cpu <= 80 {
+		u = 4
+	}
+	if cpu > 80 {
+		u = 5
+	}
+	return (u * 1000000) + mem
 }

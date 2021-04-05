@@ -20,20 +20,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/carisa/pkg/encoding"
+
+	"github.com/rs/xid"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConsumption_Renew(t *testing.T) {
 	c := newConsumption(1 * time.Second)
 	_ = c.renew()
-	assert.GreaterOrEqual(t, c.measure(), 1000000)
+	assert.GreaterOrEqual(t, c.measure(), uint32(1000000))
 }
 
 func TestConsumption_Meassure(t *testing.T) {
 	tests := []struct {
 		name     string
 		cpu      uint8
-		meassure int
+		meassure uint32
 	}{
 		{
 			name:     "10% CPU",
@@ -86,4 +90,23 @@ func TestConsumption_Wake(t *testing.T) {
 func TestConsumption_No_Wake(t *testing.T) {
 	c := newConsumption(5)
 	assert.False(t, c.wake())
+}
+
+func TestConsumption_Reg(t *testing.T) {
+	c := newConsumption(1)
+	c.cpu = 5
+	c.mem = 1024
+	id := xid.New()
+	reg := c.reg(id, 1024)
+
+	d := encoding.NewSimpleDecoder([]byte(reg))
+	idb, _ := d.ReadBytes()
+	idr, _ := xid.FromBytes(idb)
+	assert.Equal(t, id, idr, "id")
+	cpu, _ := d.ReadUint8()
+	assert.Equal(t, c.cpu, cpu, "cpu")
+	mem, _ := d.ReadUint32()
+	assert.Equal(t, c.mem, mem, "mem")
+	enteMemAvg, _ := d.ReadUint32()
+	assert.Equal(t, uint32(1024), enteMemAvg, "enteMemAvg")
 }
